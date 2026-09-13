@@ -238,26 +238,142 @@
     return t;
   }
 
-  /** Bryła prostopadłościenna: górna, przednia (y+d) i prawa (x+w) ściana. */
-  function box(parent, level, x, y, w, d, h, cls = "", label, labelOpts = {}) {
-    const g = svgEl("g", { class: `bx ${cls}` }, parent);
+  /* ---------- prymitywy ---------- */
+  const Pl = (x, y, z = 0) => [x + SH * y, FY * y - z];      // projekcja lokalna (dla obiektów ruchomych)
+
+  function drawBox(g, Pf, x, y, w, d, h, cls = "") {
+    const b = svgEl("g", { class: `bx ${cls}` }, g);
     if (h > 0) {
-      svgEl("polygon", { class: "f-front", points: pts([P(x, y + d, h, level), P(x + w, y + d, h, level), P(x + w, y + d, 0, level), P(x, y + d, 0, level)]) }, g);
-      svgEl("polygon", { class: "f-right", points: pts([P(x + w, y, h, level), P(x + w, y + d, h, level), P(x + w, y + d, 0, level), P(x + w, y, 0, level)]) }, g);
+      svgEl("polygon", { class: "f-front", points: pts([Pf(x, y + d, h), Pf(x + w, y + d, h), Pf(x + w, y + d, 0), Pf(x, y + d, 0)]) }, b);
+      svgEl("polygon", { class: "f-right", points: pts([Pf(x + w, y, h), Pf(x + w, y + d, h), Pf(x + w, y + d, 0), Pf(x + w, y, 0)]) }, b);
     }
-    svgEl("polygon", { class: "f-top" + (labelOpts.hatch ? " hatch" : ""), points: pts([P(x, y, h, level), P(x + w, y, h, level), P(x + w, y + d, h, level), P(x, y + d, h, level)]) }, g);
+    svgEl("polygon", { class: "f-top", points: pts([Pf(x, y, h), Pf(x + w, y, h), Pf(x + w, y + d, h), Pf(x, y + d, h)]) }, b);
+    return b;
+  }
+
+  /** Bryła prostopadłościenna na danym poziomie z opcjonalną etykietą. */
+  function box(parent, level, x, y, w, d, h, cls = "", label, labelOpts = {}) {
+    const g = drawBox(parent, (a, b, c) => P(a, b, c, level), x, y, w, d, h, cls);
+    if (labelOpts.hatch) g.querySelector(".f-top").classList.add("hatch");
     if (label) {
-      const pos = labelOpts.pos || "top";
-      if (pos === "top") { const [cx, cy] = P(x + w / 2, y + d / 2, h, level); text(g, cx, cy + 3, label, labelOpts.cls || "lbl"); }
-      else if (pos === "above") { const [cx, cy] = P(x + w / 2, y, h, level); text(g, cx, cy - 4, label, labelOpts.cls || "lbl"); }
-      else if (pos === "below") { const [cx, cy] = P(x + w / 2, y + d, 0, level); text(g, cx, cy + 9, label, labelOpts.cls || "lbl sm"); }
-      else if (pos === "aboveRight") { const [cx, cy] = P(x + w - 2, y, h, level); text(g, cx, cy - 4, label, labelOpts.cls || "lbl sm", "end"); }
-      else if (pos === "aboveLeft") { const [cx, cy] = P(x + 2, y, h, level); text(g, cx, cy - 4, label, labelOpts.cls || "lbl sm", "start"); }
-      else if (pos === "right") { const [cx, cy] = P(x + w, y + d / 2, h, level); text(g, cx + 6, cy + 3, label, labelOpts.cls || "lbl sm", "start"); }
-      else if (pos === "belowLeft") { const [cx, cy] = P(x + 2, y + d, 0, level); text(g, cx, cy + 9, label, labelOpts.cls || "lbl sm", "start"); }
+      const pos = labelOpts.pos || "top", lc = labelOpts.cls;
+      let cx, cy, anchor = "middle";
+      if (pos === "top") { [cx, cy] = P(x + w / 2, y + d / 2, h, level); cy += 3; }
+      else if (pos === "above") { [cx, cy] = P(x + w / 2, y, h, level); cy -= 4; }
+      else if (pos === "below") { [cx, cy] = P(x + w / 2, y + d, 0, level); cy += 9; }
+      else if (pos === "aboveRight") { [cx, cy] = P(x + w - 2, y, h, level); cy -= 4; anchor = "end"; }
+      else if (pos === "aboveLeft") { [cx, cy] = P(x + 2, y, h, level); cy -= 4; anchor = "start"; }
+      else if (pos === "right") { [cx, cy] = P(x + w, y + d / 2, h, level); cx += 6; cy += 3; anchor = "start"; }
+      else if (pos === "left") { [cx, cy] = P(x, y + d / 2, h, level); cx -= 5; cy += 3; anchor = "end"; }
+      else if (pos === "belowLeft") { [cx, cy] = P(x + 2, y + d, 0, level); cy += 9; anchor = "start"; }
+      text(g, cx, cy, label, lc || (pos === "top" ? "lbl" : "lbl sm"), anchor);
     }
     return g;
   }
+
+  /** Walec (komin, zbiornik, osadnik). */
+  function cyl(parent, level, cx, cy, r, h, cls = "", label, labelPos = "below") {
+    const g = svgEl("g", { class: `cy ${cls}` }, parent);
+    const N = 28, top = [], tf = [], bf = [];
+    for (let i = 0; i <= N; i++) {
+      const th = (2 * Math.PI * i) / N;
+      top.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), h, level));
+    }
+    for (let i = 0; i <= N / 2; i++) {
+      const th = (Math.PI * i) / (N / 2);
+      tf.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), h, level));
+      bf.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), 0, level));
+    }
+    svgEl("polygon", { class: "f-front", points: pts(tf.concat(bf.reverse())) }, g);
+    svgEl("polygon", { class: "f-top", points: pts(top) }, g);
+    if (label) {
+      if (labelPos === "below") { const [x, y] = P(cx, cy + r, 0, level); text(g, x, y + 9, label, "lbl sm"); }
+      else { const [x, y] = P(cx, cy, h, level); text(g, x, y - r * FY - 4, label, "lbl sm"); }
+    }
+    return g;
+  }
+
+  /** Kratownicowa wieża szybowa z kołami linowymi. */
+  function headframe(parent, level, x, y, w, d, h) {
+    const g = svgEl("g", { class: "lattice" }, parent);
+    const ins = 5;
+    const base = [[x, y], [x + w, y], [x + w, y + d], [x, y + d]];
+    const topc = [[x + ins, y + ins], [x + w - ins, y + ins], [x + w - ins, y + d - ins], [x + ins, y + d - ins]];
+    // podstawa (zrąb szybu)
+    drawBox(g, (a, b, c) => P(a, b, c, level), x - 3, y - 3, w + 6, d + 6, 4, "");
+    // nogi
+    base.forEach(([bx, by], i) => {
+      const a = P(bx, by, 4, level), b = P(topc[i][0], topc[i][1], h, level);
+      svgEl("line", { class: "leg", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+    });
+    // stężenia poziome i ukośne (ściana przednia i prawa)
+    for (let k = 1; k <= 3; k++) {
+      const f = k / 4, z = 4 + (h - 4) * f;
+      const lerp = (i) => [base[i][0] + (topc[i][0] - base[i][0]) * f, base[i][1] + (topc[i][1] - base[i][1]) * f];
+      const c = [0, 1, 2, 3].map(lerp);
+      [[3, 2], [1, 2]].forEach(([i, j]) => {
+        const a = P(c[i][0], c[i][1], z, level), b = P(c[j][0], c[j][1], z, level);
+        svgEl("line", { class: "brace", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+        const z2 = 4 + (h - 4) * ((k - 1) / 4);
+        const lerp2 = (m) => [base[m][0] + (topc[m][0] - base[m][0]) * ((k - 1) / 4), base[m][1] + (topc[m][1] - base[m][1]) * ((k - 1) / 4)];
+        const p1 = lerp2(i), p2 = lerp2(j);
+        const d1 = P(p1[0], p1[1], z2, level), d2 = P(c[j][0], c[j][1], z, level);
+        svgEl("line", { class: "brace", x1: d1[0], y1: d1[1], x2: d2[0], y2: d2[1] }, g);
+        const d3 = P(p2[0], p2[1], z2, level), d4 = P(c[i][0], c[i][1], z, level);
+        svgEl("line", { class: "brace", x1: d3[0], y1: d3[1], x2: d4[0], y2: d4[1] }, g);
+      });
+    }
+    // platforma + koła linowe
+    drawBox(g, (a, b, c) => P(a, b, c + h, level), x + ins - 1, y + ins - 1, w - 2 * ins + 2, d - 2 * ins + 2, 3, "tower");
+    const [wx, wy] = P(x + w / 2, y + d / 2, h + 3, level);
+    svgEl("circle", { class: "wheel", cx: wx - 4, cy: wy - 8, r: 6 }, g);
+    svgEl("circle", { class: "wheel", cx: wx + 4, cy: wy - 8, r: 6 }, g);
+    svgEl("line", { class: "wheel-axle", x1: wx - 4, y1: wy - 8, x2: wx + 4, y2: wy - 8 }, g);
+    return g;
+  }
+
+  /** Obudowa łukowa: poprzeczne „żebra” wzdłuż chodnika. */
+  function arches(parent, level, x1, y1, x2, y2, width, step = 10) {
+    const g = svgEl("g", { class: "arches" }, parent);
+    const horiz = y1 === y2;
+    if (horiz) for (let x = x1 + step / 2; x < x2; x += step) { const a = P(x, y1, 5, level), b = P(x, y1 + width, 5, level); svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); }
+    else for (let y = y1 + step / 2; y < y2; y += step) { const a = P(x1, y, 5, level), b = P(x1 + width, y, 5, level); svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); }
+    return g;
+  }
+  /** Tory w chodniku. */
+  function rails(parent, level, x1, y1, x2, y2, off = 2.2, z = 5) {
+    const g = svgEl("g", { class: "rails" }, parent);
+    const horiz = y1 === y2;
+    [-off, off].forEach((o) => {
+      const a = horiz ? P(x1, y1 + o, z, level) : P(x1 + o, y1, z, level);
+      const b = horiz ? P(x2, y2 + o, z, level) : P(x2 + o, y2, z, level);
+      svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+    });
+    return g;
+  }
+  /** Linia (taśmociąg / rurociąg / przepływ powietrza) między punktami świata. */
+  function wline(parent, level, cls, points, z = 6) {
+    const p = points.map(([x, y]) => P(x, y, z, level));
+    return svgEl("polyline", { class: cls, points: pts(p) }, parent);
+  }
+  /** Rząd sekcji obudowy zmechanizowanej wzdłuż frontu ściany (front równoległy do osi y). */
+  function supports(parent, level, x, y1, y2, step = 5) {
+    const g = svgEl("g", { class: "supports" }, parent);
+    for (let y = y1; y < y2; y += step) drawBox(g, (a, b, c) => P(a, b, c, level), x, y, 4, step - 1, 3, "support");
+    return g;
+  }
+  /** Obiekt ruchomy wzdłuż ścieżki (punkty świata + poziomy). */
+  function mover(parent, cls, pathPts, dur, draw, begin = "0s") {
+    const g = svgEl("g", { class: `mover ${cls}` }, parent);
+    draw(g);
+    const p = pathPts.map(([x, y, l, z]) => P(x, y, z || 0, l));
+    const d = "M " + p.map((q) => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(" L ");
+    svgEl("animateMotion", { dur, repeatCount: "indefinite", path: d, begin }, g);
+    return g;
+  }
+  const people = (parent, level, x1, x2, y, n, dur) => {
+    for (let i = 0; i < n; i++) mover(parent, "person", [[x1, y, level, 6], [x2, y, level, 6], [x1, y, level, 6]], dur, (g) => svgEl("circle", { r: 1.7 }, g), `-${(dur.replace("s", "") * i / n).toFixed(1)}s`);
+  };
 
   /** Płyta poziomu: górna powierzchnia z siatką + cienka krawędź. */
   function slab(parent, level, name, sub) {
@@ -268,9 +384,9 @@
     svgEl("polygon", { class: `slab${level === 0 ? " surface" : ""}`, points: pts([P(0, 0, 0, level), P(W, 0, 0, level), P(W, DEPTH, 0, level), P(0, DEPTH, 0, level)]) }, g);
     for (let gx = 40; gx < W; gx += 40) svgEl("line", { class: "gridl", x1: P(gx, 0, 0, level)[0], y1: P(gx, 0, 0, level)[1], x2: P(gx, DEPTH, 0, level)[0], y2: P(gx, DEPTH, 0, level)[1] }, g);
     for (let gy = 40; gy < DEPTH; gy += 40) svgEl("line", { class: "gridl", x1: P(0, gy, 0, level)[0], y1: P(0, gy, 0, level)[1], x2: P(W, gy, 0, level)[0], y2: P(W, gy, 0, level)[1] }, g);
-    const [lx, ly] = P(0, 0, 0, level);
-    text(g, lx, ly - 12, name, "lbl lvl", "start");
-    if (sub) text(g, lx, ly - 3, sub, "lbl lvl-sub", "start");
+    const [lx, ly] = P(0, DEPTH, 0, level);
+    text(g, lx - 7, ly - 7, name, "lbl lvl", "end");
+    if (sub) text(g, lx - 7, ly + 3, sub, "lbl lvl-sub", "end");
     return g;
   }
 
@@ -287,89 +403,193 @@
   function renderScene() {
     els.scene.innerHTML = "";
     const S = els.scene;
-    const levelGroups = {};
     const camGroups = {};
 
-    /* --------- POZIOM −500 (rysowany pierwszy, jest najniżej) --------- */
+    /* linie „stosu” łączące narożniki płyt */
     {
-      const L = 2, g = svgEl("g", { class: "lvl-group lvl-2" }, S); levelGroups[2] = g;
+      const g = svgEl("g", { class: "stack" }, S);
+      [[0, 0], [W, 0], [W, DEPTH], [0, DEPTH]].forEach(([x, y]) => {
+        const a = P(x, y, 0, 0), b = P(x, y, 0, 2);
+        svgEl("line", { class: "stack-line", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+      });
+    }
+
+    /* ==================== POZIOM −500 ==================== */
+    {
+      const L = 2, g = svgEl("g", { class: "lvl-group lvl-2" }, S);
       slab(g, L, "POZIOM −500 m", "POKŁAD 510");
+      // przekop główny + obudowa + tory + powietrze
       box(g, L, 90, 86, 430, 12, 5, "corr", "PRZEKOP GŁÓWNY G-7", { pos: "aboveLeft" });
-      box(g, L, 262, 66, 12, 20, 5, "corr");   // podszybie → przekop
-      box(g, L, 405, 20, 100, 66, 6, "lw", "ŚCIANA W-7 (CZYNNA)", { pos: "above" });
-      box(g, L, 405, 20, 100, 66, 6, "lw", null, { hatch: true });
-      box(g, L, 250, 98, 12, 30, 5, "corr");   // dojście do odmetanowania
-      box(g, L, 140, 98, 12, 30, 5, "corr");   // dojście do komory MW
-      box(g, L, 130, 128, 60, 22, 12, "mag", "KOMORA MW", { pos: "below" });
+      arches(g, L, 90, 86, 520, 86, 12);
+      rails(g, L, 90, 92, 520, 92);
+      wline(g, L, "air", [[95, 89], [515, 89]], 7);
+      box(g, L, 262, 66, 12, 20, 5, "corr"); arches(g, L, 262, 66, 262, 86, 12, 8);
+      // rząpie + pompownia przy szybie
+      box(g, L, 214, 100, 20, 12, 1, "water", "RZĄPIE", { pos: "left" });
+      box(g, L, 238, 100, 20, 12, 8, "", "POMPOWNIA GŁ.", { pos: "below" });
+      // dojścia
+      box(g, L, 140, 98, 12, 30, 5, "corr"); arches(g, L, 140, 98, 140, 128, 12, 8);
+      box(g, L, 250, 98, 12, 30, 5, "corr"); arches(g, L, 250, 98, 250, 128, 12, 8);
+      box(g, L, 408, 98, 12, 30, 5, "corr"); arches(g, L, 408, 98, 408, 128, 12, 8);
+      // komory
+      box(g, L, 118, 128, 56, 22, 12, "mag", "KOMORA MW", { pos: "below" });
+      box(g, L, 174, 130, 14, 14, 8, "mag");
       box(g, L, 236, 128, 60, 22, 12, "", "STACJA ODMETANOWANIA", { pos: "below" });
+      cyl(g, L, 252, 139, 5, 12, "tank"); cyl(g, L, 266, 139, 5, 12, "tank"); cyl(g, L, 280, 139, 5, 12, "tank");
+      wline(g, L, "pipe", [[296, 139], [316, 139], [316, 102], [516, 102]], 9);
+      text(g, P(462, 104, 0, L)[0], P(462, 104, 0, L)[1] + 10, "RUROCIĄG CH₄", "lbl sm", "start");
+      box(g, L, 300, 100, 28, 14, 8, "", "LOKOMOTYWOWNIA", { pos: "below" });
       box(g, L, 396, 128, 44, 22, 12, "ref", "KOMORA RATUNKOWA KR-2", { pos: "below" });
-      box(g, L, 388, 98, 12, 30, 5, "corr");
+      // przodek chodnika z kombajnem chodnikowym
+      box(g, L, 340, 40, 12, 46, 5, "corr"); arches(g, L, 340, 40, 340, 86, 12, 8);
+      drawBox(g, (a, b, c) => P(a, b, c, L), 342, 42, 8, 12, 5, "machine");
+      text(g, P(338, 44, 5, L)[0] - 4, P(338, 44, 5, L)[1] + 3, "PRZODEK B-3", "lbl sm", "end");
+      // ściana W-7: zroby, front z sekcjami, kombajn, chodniki przyścianowe
+      box(g, L, 405, 30, 100, 56, 6, "lw");
+      box(g, L, 405, 30, 100, 56, 6, "lw goaf", null, { hatch: true });
+      text(g, P(455, 58, 6, L)[0], P(455, 58, 6, L)[1] + 3, "ŚCIANA W-7 · 210 m", "lbl");
+      supports(g, L, 401, 31, 86);
+      const sh2 = drawBox(g, (a, b, c) => P(a, b, c, L), 392, 36, 8, 12, 5, "machine shearer");
+      sh2.setAttribute("class", "bx machine shearer");
+      box(g, L, 395, 22, 110, 8, 5, "corr", "CHODNIK NADŚCIANOWY W-7", { pos: "aboveRight" });
+      box(g, L, 383, 22, 10, 64, 5, "corr"); arches(g, L, 383, 22, 383, 86, 10, 8);
+      wline(g, L, "belt", [[388, 84], [388, 92], [332, 92]], 7);
+      // tamy wentylacyjne
+      [[470, 86], [200, 86]].forEach(([x, y]) => { const a = P(x, y, 0, L), b = P(x, y + 12, 8, L); svgEl("line", { class: "vdoor", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); });
+      people(g, L, 100, 500, 90, 4, "38s");
       camGroups[2] = svgEl("g", { class: "cam-layer" }, g);
     }
 
-    /* --------- POCHYLNIA TAŚMOWA (między poziomami) --------- */
+    /* ==================== POCHYLNIA TAŚMOWA ==================== */
     {
       const g = svgEl("g", { class: "lvl-group lvl-1 lvl-2 drift-group" }, S);
       svgEl("polygon", { class: "drift", points: pts([P(330, 86, 0, 1), P(330, 98, 0, 1), P(292, 98, 0, 2), P(292, 86, 0, 2)]) }, g);
-      const a = P(330, 92, 2, 1), b = P(292, 92, 2, 2);
+      for (let t = 0.1; t < 1; t += 0.12) {
+        const x = 330 - 38 * t, l = 1 + t;
+        const a = P(x, 86, 5, l), b = P(x, 98, 5, l);
+        svgEl("line", { class: "arch", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+      }
+      const a = P(330, 92, 6, 1), b = P(292, 92, 6, 2);
       svgEl("line", { class: "belt", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
       const m = P(311, 92, 10, 1.5);
-      text(g, m[0] + 30, m[1] + 3, "POCHYLNIA TAŚMOWA P-2", "lbl sm", "start");
+      text(g, m[0] + 30, m[1] + 3, "POCHYLNIA TAŚMOWA P-2 · 18°", "lbl sm", "start");
     }
 
-    /* --------- POZIOM −300 --------- */
+    /* ==================== POZIOM −300 ==================== */
     {
-      const L = 1, g = svgEl("g", { class: "lvl-group lvl-1" }, S); levelGroups[1] = g;
+      const L = 1, g = svgEl("g", { class: "lvl-group lvl-1" }, S);
       slab(g, L, "POZIOM −300 m", "POKŁAD 405/1");
       box(g, L, 60, 86, 420, 12, 5, "corr");
-      text(g, P(150, 98, 0, L)[0], P(150, 98, 0, L)[1] + 9, "PRZEKOP GŁÓWNY G-3", "lbl sm", "start");
-      box(g, L, 262, 66, 12, 20, 5, "corr");   // podszybie → przekop
-      box(g, L, 60, 26, 100, 60, 6, "lw", "ŚCIANA L-12 (CZYNNA)", { pos: "above" });
-      box(g, L, 60, 26, 100, 60, 6, "lw", null, { hatch: true });
+      text(g, P(200, 98, 0, L)[0], P(200, 98, 0, L)[1] + 9, "PRZEKOP GŁÓWNY G-3", "lbl sm", "start");
+      arches(g, L, 60, 86, 480, 86, 12);
+      rails(g, L, 60, 92, 480, 92);
+      wline(g, L, "air", [[65, 89], [475, 89]], 7);
+      box(g, L, 262, 66, 12, 20, 5, "corr"); arches(g, L, 262, 66, 262, 86, 12, 8);
+      box(g, L, 238, 100, 20, 12, 8, "", "POMPOWNIA", { pos: "left" });
+      // ściana L-12: zroby na zachód, front przy x=160
+      box(g, L, 60, 30, 100, 56, 6, "lw");
+      box(g, L, 60, 30, 100, 56, 6, "lw goaf", null, { hatch: true });
+      text(g, P(110, 58, 6, L)[0], P(110, 58, 6, L)[1] + 3, "ŚCIANA L-12 · 180 m", "lbl");
+      supports(g, L, 160, 31, 86);
+      const sh1 = drawBox(g, (a, b, c) => P(a, b, c, L), 165, 36, 8, 12, 5, "machine shearer");
+      sh1.setAttribute("class", "bx machine shearer");
+      box(g, L, 60, 22, 118, 8, 5, "corr", "CHODNIK NADŚCIANOWY L-12", { pos: "aboveLeft" });
+      box(g, L, 176, 22, 10, 64, 5, "corr"); arches(g, L, 176, 22, 176, 86, 10, 8);
+      wline(g, L, "belt", [[181, 84], [181, 92], [300, 92]], 7);
+      // rozdzielnia 6 kV + dojście
+      box(g, L, 350, 58, 34, 16, 9, "", "ROZDZIELNIA 6 kV", { pos: "above" });
+      box(g, L, 362, 74, 10, 12, 5, "corr");
+      // stacje
       box(g, L, 300, 98, 40, 14, 8, "", "STACJA ZAŁADOWCZA", { pos: "below" });
       box(g, L, 424, 98, 36, 14, 8, "", "ŁADOWNIA AKUMULATORÓW", { pos: "below" });
-      box(g, L, 482, 60, 12, 26, 5, "corr");   // chodnik do szybu II
+      box(g, L, 482, 60, 12, 26, 5, "corr"); arches(g, L, 482, 60, 482, 86, 12, 8);
+      [[470, 86], [120, 86]].forEach(([x, y]) => { const a = P(x, y, 0, L), b = P(x, y + 12, 8, L); svgEl("line", { class: "vdoor", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); });
+      // lokomotywa akumulatorowa z wozami
+      mover(g, "train", [[440, 92, L, 5], [200, 92, L, 5], [440, 92, L, 5]], "26s", (m) => {
+        drawBox(m, Pl, -6, -3, 12, 6, 5, "loco");
+        drawBox(m, Pl, -22, -3, 12, 6, 4, "wagon");
+        drawBox(m, Pl, -38, -3, 12, 6, 4, "wagon");
+      });
+      people(g, L, 70, 470, 90, 4, "34s");
       camGroups[1] = svgEl("g", { class: "cam-layer" }, g);
     }
 
-    /* --------- POWIERZCHNIA --------- */
+    /* ==================== POWIERZCHNIA ==================== */
     {
-      const L = 0, g = svgEl("g", { class: "lvl-group lvl-0" }, S); levelGroups[0] = g;
-      slab(g, L, "POWIERZCHNIA", "KWK „WSCHÓD-1” · +262 m n.p.m.");
+      const L = 0, g = svgEl("g", { class: "lvl-group lvl-0" }, S);
+      slab(g, L, "POWIERZCHNIA", "+262 m n.p.m.");
       svgEl("polygon", { class: "fence", points: pts([P(6, 6, 2), P(W - 6, 6, 2), P(W - 6, DEPTH - 6, 2), P(6, DEPTH - 6, 2)]) }, g);
+      // maszty oświetleniowe
+      [[6, 6], [W - 6, 6], [W - 6, DEPTH - 6], [6, DEPTH - 6], [150, 150], [300, 150], [420, 6]].forEach(([x, y]) => {
+        const a = P(x, y, 0), b = P(x, y, 22);
+        svgEl("line", { class: "mast-l", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
+        svgEl("circle", { class: "lamp", cx: b[0], cy: b[1], r: 1.6 }, g);
+      });
       // drogi
       svgEl("polygon", { class: "road", points: pts([P(0, 150), P(300, 150), P(300, 162), P(0, 162)]) }, g);
       svgEl("polygon", { class: "road", points: pts([P(290, 40), P(302, 40), P(302, 162), P(290, 162)]) }, g);
-      // tory kolejowe
+      svgEl("polygon", { class: "road", points: pts([P(302, 96), P(330, 96), P(330, 104), P(302, 104)]) }, g);
+      svgEl("polygon", { class: "road", points: pts([P(40, 96), P(290, 96), P(290, 104), P(40, 104)]) }, g);
+      wline(g, L, "lane", [[4, 156], [296, 156], [296, 44]], 0.5);
+      // parking
+      svgEl("polygon", { class: "lot", points: pts([P(50, 166), P(130, 166), P(130, 190), P(50, 190)]) }, g);
+      [56, 68, 80, 92, 110, 122].forEach((x, i) => drawBox(g, (a, b, c) => P(a, b, c), x, 172, 8, 5, 3, `car c${i % 3}`));
+      text(g, P(90, 192)[0], P(90, 192)[1] + 8, "PARKING", "lbl sm");
+      // tory + wagony
       const r1 = P(330, 190), r2 = P(516, 190);
       svgEl("line", { class: "rail", x1: r1[0], y1: r1[1], x2: r2[0], y2: r2[1] }, g);
-      // budynki – kolejność rysowania od tyłu (małe x+y) do przodu
+      [338, 354, 370, 386].forEach((x) => drawBox(g, (a, b, c) => P(a, b, c), x, 187, 13, 6, 5, "wagon"));
+      // budynki – tył → przód
+      box(g, L, 30, 16, 70, 28, 18, "", "ADMINISTRACJA", { pos: "top" });
+      box(g, L, 115, 16, 60, 28, 12, "", "WARSZTAT MECH.", { pos: "top" });
+      box(g, L, 190, 16, 28, 22, 12, "", "KOTŁOWNIA", { pos: "below" });
+      cyl(g, L, 224, 22, 4, 46, "chimney");
+      box(g, L, 160, 60, 40, 24, 8, "", "ROZDZ. 110/6 kV", { pos: "top", cls: "lbl sm" });
+      [166, 178, 190].forEach((x) => drawBox(g, (a, b, c) => P(a, b, c), x, 66, 8, 8, 6, "trafo"));
       box(g, L, 330, 30, 110, 60, 36, "plant", "ZAKŁAD PRZERÓBCZY", { pos: "top" });
-      box(g, L, 255, 40, 26, 26, 64, "tower");                                   // wieża szybu I
-      const [wx, wy] = P(268, 53, 64);
-      svgEl("circle", { class: "wheel", cx: wx, cy: wy - 8, r: 7 }, g);
-      text(g, wx, wy - 22, "SZYB I „PIAST”", "lbl");
+      cyl(g, L, 345, 44, 8, 50, "silo", "SILOSY", "above"); cyl(g, L, 365, 44, 8, 50, "silo");
+      headframe(g, L, 255, 40, 26, 26, 64);
+      text(g, P(268, 53, 64)[0], P(268, 53, 64)[1] - 26, "SZYB I „PIAST” · 612 m", "lbl");
       box(g, L, 285, 40, 34, 18, 14, "", "MASZYNA WYCIĄGOWA", { pos: "below" });
-      const c1 = P(281, 53, 40), c2 = P(330, 60, 26);
-      svgEl("line", { class: "conv", x1: c1[0], y1: c1[1], x2: c2[0], y2: c2[1] }, g);
+      // most przenośnikowy nadszybie → zakład przeróbczy
+      svgEl("polygon", { class: "bridge", points: pts([P(281, 50, 30), P(330, 58, 24), P(330, 58, 18), P(281, 50, 24)]) }, g);
+      // szyb II
       box(g, L, 480, 60, 14, 14, 8, "", "SZYB II (WENT.)", { pos: "below" });
-      box(g, L, 70, 112, 110, 36, 16, "", "LAMPOWNIA · ŁAŹNIA", { pos: "top" });
+      const [w2x, w2y] = P(487, 67, 8); svgEl("circle", { class: "wheel", cx: w2x, cy: w2y - 4, r: 3.5 }, g);
+      // osadniki i zbiorniki
+      cyl(g, L, 350, 112, 13, 5, "thick", "OSADNIKI"); cyl(g, L, 385, 112, 13, 5, "thick");
+      cyl(g, L, 206, 118, 6, 14, "tank"); cyl(g, L, 222, 118, 6, 14, "tank");
+      text(g, P(200, 118, 14)[0] - 4, P(200, 118, 14)[1] + 3, "ZBIORNIKI WODY", "lbl sm", "end");
+      box(g, L, 430, 106, 30, 18, 8, "", "STACJA TRAFO", { pos: "right" });
+      box(g, L, 70, 112, 110, 36, 16, "", "LAMPOWNIA · ŁAŹNIA · CECHOWNIA", { pos: "top" });
       box(g, L, 8, 168, 30, 20, 10, "", "BRAMA GŁÓWNA", { pos: "below" });
-      // hałdy / składowisko
-      [[350, 176, 34, 16], [392, 178, 40, 18], [444, 176, 30, 15]].forEach(([px, py, pw, ph]) => {
+      // szlaban
+      const s1 = P(38, 150, 6), s2 = P(38, 162, 6); svgEl("line", { class: "barrier", x1: s1[0], y1: s1[1], x2: s2[0], y2: s2[1] }, g);
+      // hałdy
+      [[350, 172, 34, 16], [392, 174, 40, 18], [444, 172, 30, 15]].forEach(([px, py, pw, ph]) => {
         svgEl("polygon", { class: "pile", points: pts([P(px, py + 12), P(px + pw, py + 12), P(px + pw / 2, py + 4, ph)]) }, g);
       });
       text(g, P(392, 200)[0], P(392, 200)[1] + 8, "SKŁADOWISKO · ZAŁADUNEK KOLEJOWY", "lbl sm");
       box(g, L, 448, 148, 34, 30, 14, "", "STACJA WENTYLATORÓW", { pos: "right" });
+      cyl(g, L, 468, 142, 7, 20, "diffuser");
       const [fx, fy] = P(465, 163, 14);
       const fan = svgEl("g", { class: "fan" }, g);
       svgEl("circle", { cx: fx, cy: fy, r: 7 }, fan);
       svgEl("line", { x1: fx - 7, y1: fy, x2: fx + 7, y2: fy }, fan);
       svgEl("line", { x1: fx, y1: fy - 7, x2: fx, y2: fy + 7 }, fan);
+      // róża wiatrów + skala
+      const [nx, ny] = P(W - 30, 30, 0);
+      const rose = svgEl("g", { class: "compass" }, g);
+      svgEl("line", { x1: nx, y1: ny + 8, x2: nx, y2: ny - 8 }, rose);
+      svgEl("polygon", { points: `${nx - 3},${ny - 4} ${nx},${ny - 10} ${nx + 3},${ny - 4}` }, rose);
+      text(rose, nx, ny - 13, "N", "lbl sm");
+      const sa = P(430, 8, 0), sb = P(480, 8, 0);
+      svgEl("line", { class: "scale", x1: sa[0], y1: sa[1], x2: sb[0], y2: sb[1] }, g);
+      text(g, (sa[0] + sb[0]) / 2, sa[1] - 3, "50 m", "lbl sm");
       camGroups[0] = svgEl("g", { class: "cam-layer" }, g);
     }
 
-    /* --------- SZYBY (kolumny przez wszystkie poziomy) --------- */
+    /* ==================== SZYBY ==================== */
     {
       const g = svgEl("g", { class: "shafts" }, S);
       const shaft = (x, y, w, d, toLevel) => {
@@ -380,16 +600,18 @@
       };
       shaft(255, 40, 26, 26, 2);
       shaft(480, 60, 14, 14, 1);
+      // klatka jadąca w szybie I
+      mover(g, "cage", [[262, 47, 0, 0], [262, 47, 2, 0], [262, 47, 0, 0]], "18s", (m) => drawBox(m, Pl, 0, 0, 12, 12, 8, "cage"));
     }
 
-    /* --------- czujniki metanu --------- */
+    /* ==================== czujniki metanu ==================== */
     const sg = svgEl("g", { id: "ch4-sensors" }, S);
     D.sensors.forEach((s) => {
       const [x, y] = P(s.x, s.y, 0, s.level);
       text(sg, x, y, "CH₄ —", "sensor", "start").dataset.sensor = s.id;
     });
 
-    /* --------- kamery --------- */
+    /* ==================== kamery ==================== */
     D.cameras.forEach((c) => {
       const layer = camGroups[Math.floor(c.level)] || camGroups[1];
       const g = svgEl("g", { class: `cam${c.offline ? " off" : ""}`, "data-id": c.id, tabindex: 0, role: "button" }, layer);
@@ -409,7 +631,6 @@
       g.addEventListener("mouseleave", hideTooltip);
     });
 
-    // liczniki kamer w panelu poziomów
     [0, 1, 2].forEach((l) => {
       const cams = D.cameras.filter((c) => Math.floor(c.level) === l);
       const off = cams.filter((c) => c.offline).length;
@@ -417,7 +638,6 @@
       if (el) el.textContent = `${cams.length} kamer${off ? ` · ${off} offline` : ""}`;
     });
   }
-
   const camNode = (id) => els.svg.querySelector(`.cam[data-id="${id}"]`);
   function setCamState(id, cls) {
     const n = camNode(id); if (!n) return;
@@ -433,12 +653,54 @@
       b.classList.toggle("hot", !!hot);
     });
   }
+  /* ---------- zoom / pan ---------- */
+  const SCENE = { x: 0, y: 0, w: 680, h: 480 };
+  const VIEW0 = { ...SCENE };
+  const view = { ...VIEW0 };
+  /** Dopasuj proporcje widoku do rzeczywistych proporcji panelu (bez pasów po bokach). */
+  function syncAspect() {
+    const r = els.svg.getBoundingClientRect(); if (!r.width || !r.height) return;
+    const aspect = r.width / r.height;
+    const wasDefault = Math.abs(view.w - VIEW0.w) < 0.5 && Math.abs(view.x - VIEW0.x) < 0.5;
+    if (SCENE.w / SCENE.h < aspect) { VIEW0.h = SCENE.h; VIEW0.w = SCENE.h * aspect; VIEW0.x = SCENE.x - (VIEW0.w - SCENE.w) / 2; VIEW0.y = SCENE.y; }
+    else { VIEW0.w = SCENE.w; VIEW0.h = SCENE.w / aspect; VIEW0.x = SCENE.x; VIEW0.y = SCENE.y - (VIEW0.h - SCENE.h) / 2; }
+    if (wasDefault || state.focusLevel === "all") Object.assign(view, VIEW0);
+    else view.h = view.w / aspect;
+    applyView();
+  }
+  window.addEventListener("resize", syncAspect);
+  function applyView() { els.svg.setAttribute("viewBox", `${view.x.toFixed(1)} ${view.y.toFixed(1)} ${view.w.toFixed(1)} ${view.h.toFixed(1)}`); }
+  function svgPoint(e) { const pt = els.svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(els.svg.getScreenCTM().inverse()); }
+  function zoomAt(px, py, f) {
+    const w = Math.max(80, Math.min(VIEW0.w * 1.3, view.w * f)), h = w * VIEW0.h / VIEW0.w;
+    view.x = px - (px - view.x) * (w / view.w); view.y = py - (py - view.y) * (h / view.h);
+    view.w = w; view.h = h; applyView();
+  }
+  function fitBox(bb, pad = 14) {
+    const w = bb.width + pad * 2, h = bb.height + pad * 2;
+    const ratio = VIEW0.w / VIEW0.h;
+    if (w / h > ratio) { view.w = w; view.h = w / ratio; } else { view.h = h; view.w = h * ratio; }
+    view.x = bb.x + bb.width / 2 - view.w / 2; view.y = bb.y + bb.height / 2 - view.h / 2; applyView();
+  }
+  els.svg.addEventListener("wheel", (e) => { e.preventDefault(); const p = svgPoint(e); zoomAt(p.x, p.y, e.deltaY < 0 ? 0.85 : 1 / 0.85); }, { passive: false });
+  let drag = null;
+  els.svg.addEventListener("pointerdown", (e) => { if (e.button !== 0 || e.target.closest(".cam")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; els.svg.setPointerCapture(e.pointerId); els.svg.classList.add("dragging"); });
+  els.svg.addEventListener("pointermove", (e) => { if (!drag) return; const k = els.svg.getScreenCTM().a; view.x = drag.vx - (e.clientX - drag.x) / k; view.y = drag.vy - (e.clientY - drag.y) / k; applyView(); });
+  ["pointerup", "pointercancel"].forEach((ev) => els.svg.addEventListener(ev, () => { drag = null; els.svg.classList.remove("dragging"); }));
+  $("#btn-zin").addEventListener("click", () => zoomAt(view.x + view.w / 2, view.y + view.h / 2, 0.8));
+  $("#btn-zout").addEventListener("click", () => zoomAt(view.x + view.w / 2, view.y + view.h / 2, 1.25));
+  $("#btn-zreset").addEventListener("click", () => { Object.assign(view, VIEW0); applyView(); });
+
   els.twinSide.addEventListener("click", (e) => {
     const b = e.target.closest(".lvl-btn"); if (!b) return;
     state.focusLevel = b.dataset.level;
     els.twinSide.querySelectorAll(".lvl-btn").forEach((x) => x.classList.toggle("active", x === b));
     els.svg.classList.remove("focus-0", "focus-1", "focus-2");
-    if (state.focusLevel !== "all") els.svg.classList.add(`focus-${state.focusLevel}`);
+    if (state.focusLevel !== "all") {
+      els.svg.classList.add(`focus-${state.focusLevel}`);
+      const grp = els.svg.querySelector(`.lvl-group.lvl-${state.focusLevel}:not(.drift-group)`);
+      if (grp) fitBox(grp.getBBox(), state.focusLevel === "0" ? 6 : 10);
+    } else { Object.assign(view, VIEW0); applyView(); }
   });
 
   function camStatusText(c) {
@@ -797,6 +1059,7 @@ Raport <span class="h">${reportId}</span> zapisany w książce raportów zmiany$
 
   async function boot() {
     renderScene();
+    syncAspect();
     updateKpis();
     tickClock(); setInterval(tickClock, 1000);
     tickSensors(); setInterval(tickSensors, 2000);
