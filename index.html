@@ -14,17 +14,13 @@
       <div class="brand">
         <span class="brand-mark">◈</span>
         <span class="brand-name">SENTINEL<span class="dim">-CI</span></span>
-        <span class="brand-sub">Infrastruktura krytyczna · Analiza wizyjna</span>
       </div>
       <div class="site">
-        <span class="label">OBIEKT</span>
-        <span class="value">KWK „WSCHÓD-1” · Kopalnia węgla kamiennego · Zmiana B</span>
+        <span class="value">KWK „Wschód-1” · Zmiana B</span>
       </div>
       <div class="kpis">
         <div class="kpi"><span class="label">KAMERY</span><span class="value" id="kpi-cams">0/0</span></div>
-        <div class="kpi"><span class="label">ZAŁOGA NA DOLE</span><span class="value" id="kpi-crew">312</span></div>
-        <div class="kpi"><span class="label">CH₄ MAKS</span><span class="value" id="kpi-ch4">0.42%</span></div>
-        <div class="kpi alert"><span class="label">AKTYWNE ALARMY</span><span class="value" id="kpi-alerts">0</span></div>
+        <div class="kpi alert"><span class="label">ALARMY</span><span class="value" id="kpi-alerts">0</span></div>
       </div>
       <div class="clock">
         <span id="clock-date">—</span>
@@ -37,9 +33,7 @@
       <div class="panel-head">
         <span class="panel-title">ASYSTENT OCHRONY</span>
         <span class="panel-meta">
-          <span class="k">DEMO:</span>
-          <span class="pill" id="term-mode">RĘCZNIE</span>
-          <button class="btn tiny" id="btn-auto" title="Scenariusz odtwarza się sam">AUTO ▸</button>
+          <button class="btn tiny" id="btn-auto" title="Scenariusz odtwarza się sam">AUTO</button>
           <button class="btn tiny" id="btn-next" title="Wywołaj następne zaplanowane zdarzenie">NASTĘPNE ZDARZENIE</button>
         </span>
       </div>
@@ -55,29 +49,22 @@
     <!-- ===================== PRAWY GÓRNY: CYFROWY BLIŹNIAK ===================== -->
     <section id="twin" class="panel">
       <div class="panel-head">
-        <span class="panel-title">CYFROWY BLIŹNIAK · WIDOK 3D Z DRONA</span>
+        <span class="panel-title">CYFROWY BLIŹNIAK</span>
         <span class="panel-meta">
-          <span class="legend"><i class="dot ok"></i>nominalna</span>
-          <span class="legend"><i class="dot attn"></i>w procedurze</span>
-          <span class="legend"><i class="dot alert"></i>anomalia</span>
+          <span class="seg" id="lvl-ctl">
+            <button type="button" class="lvl-btn active" data-level="all">Cały obiekt</button>
+            <button type="button" class="lvl-btn" data-level="0">Powierzchnia</button>
+            <button type="button" class="lvl-btn" data-level="1">−300 m</button>
+            <button type="button" class="lvl-btn" data-level="2">−500 m</button>
+          </span>
+          <span class="legend"><i class="dot ok"></i>ok</span>
+          <span class="legend"><i class="dot attn"></i>procedura</span>
+          <span class="legend"><i class="dot alert"></i>alarm</span>
           <span class="legend"><i class="dot off"></i>offline</span>
           <span class="zoom-ctl"><button class="btn tiny" id="btn-zout" title="Oddal">−</button><button class="btn tiny" id="btn-zin" title="Przybliż">+</button><button class="btn tiny" id="btn-zreset" title="Cały obiekt">⟲</button></span>
         </span>
       </div>
       <div class="twin-wrap">
-        <aside class="twin-side" id="twin-side">
-          <div class="side-title">POZIOMY</div>
-          <button type="button" class="lvl-btn active" data-level="all"><span class="lvl-name">CAŁY OBIEKT</span><span class="lvl-sub" id="lvl-sub-all">—</span></button>
-          <button type="button" class="lvl-btn" data-level="0"><span class="lvl-name">POWIERZCHNIA</span><span class="lvl-sub" id="lvl-sub-0">—</span></button>
-          <button type="button" class="lvl-btn" data-level="1"><span class="lvl-name">POZIOM −300 m</span><span class="lvl-sub" id="lvl-sub-1">—</span></button>
-          <button type="button" class="lvl-btn" data-level="2"><span class="lvl-name">POZIOM −500 m</span><span class="lvl-sub" id="lvl-sub-2">—</span></button>
-          <div class="side-title" style="margin-top:12px">WYDOBYCIE</div>
-          <dl class="side-kv small"><dt>L-12</dt><dd>4 800 t/d</dd><dt>W-7</dt><dd>6 200 t/d</dd><dt>zmiana B</dt><dd class="g">98 % planu</dd></dl>
-          <div class="side-title" style="margin-top:12px">WENTYLACJA</div>
-          <dl class="side-kv small"><dt>went. gł.</dt><dd class="g">312 m³/s</dd><dt>kierunek</dt><dd>szyb I → II</dd></dl>
-          <div class="side-title" style="margin-top:12px">METANOMETRIA</div>
-          <dl class="side-kv small" id="twin-ch4"><dt>L-12</dt><dd data-sensor="L12">—</dd><dt>W-7</dt><dd data-sensor="W7">—</dd><dt>odmetan.</dt><dd data-sensor="DR">—</dd></dl>
-        </aside>
         <div class="twin-svg-wrap">
           <svg id="mine-svg" viewBox="0 0 680 480" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cyfrowy bliźniak kopalni – ortofotomapa z warstwami wyrobisk">
             <defs>
@@ -89,7 +76,6 @@
             <g id="scene"></g>
           </svg>
           <div id="twin-tooltip" class="tooltip" hidden></div>
-          <div class="twin-hint">kółko myszy: zoom · przeciągnij: przesuń · kliknij poziom: przybliż</div>
         </div>
       </div>
     </section>
@@ -112,7 +98,6 @@
           <div class="feed-osd top-left"><span id="osd-cam">NIE WYBRANO KAMERY</span></div>
           <div class="feed-osd top-right"><span id="osd-time">--:--:--</span></div>
           <div class="feed-osd bottom-left"><span id="osd-zone">kliknij punkt kamery na modelu 3D</span></div>
-          <div class="feed-osd bottom-right"><span id="osd-model">ai: sentinel-vision v4.2 · 25 kl/s</span></div>
           <div id="feed-placeholder" class="feed-placeholder">
             <div class="nosig">BRAK SYGNAŁU</div>
             <div class="nosig-sub" id="nosig-sub">wybierz kamerę</div>
@@ -128,8 +113,6 @@
             <dl class="side-kv" id="feed-meta">
               <dt>strefa</dt><dd>—</dd>
               <dt>typ</dt><dd>—</dd>
-              <dt>model AI</dt><dd>—</dd>
-              <dt>czas pracy</dt><dd>—</dd>
             </dl>
           </div>
           <div class="side-block grow">

@@ -192,24 +192,17 @@ button { font-family: inherit; }
 /* ---------- digital twin (3D bird's-eye) ---------- */
 #twin { grid-area: twin; }
 .twin-wrap { flex: 1; display: flex; min-height: 0; }
-.twin-side { width: 200px; flex: none; border-right: 1px solid var(--border); padding: 10px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; background: var(--bg-panel); }
-.twin-side .side-title { font-size: 9.5px; letter-spacing: .14em; color: var(--text-faint); margin-bottom: 2px; }
-.lvl-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; text-align: left; background: #0f1922; border: 1px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: 2px; padding: 5px 8px; cursor: pointer; color: var(--text); }
-.lvl-btn:hover { border-color: var(--accent); }
-.lvl-btn.active { border-left-color: var(--accent); background: #10202c; }
-.lvl-btn.hot { border-left-color: var(--alert); }
-.lvl-btn.hot .lvl-sub { color: var(--alert-2); }
-.lvl-name { font-size: 10.5px; letter-spacing: .1em; font-weight: 600; }
-.lvl-sub { font-size: 9.5px; color: var(--text-dim); }
-.side-kv.small { font-size: 10.5px; gap: 1px 8px; margin: 0; }
-.side-kv.small .g { color: var(--ok); }
-.side-kv.small dd.warn { color: var(--attn); } .side-kv.small dd.alert { color: var(--alert); font-weight: 700; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 3px; overflow: hidden; margin-right: 6px; }
+.lvl-btn { background: #0f1922; color: var(--text-dim); border: none; border-right: 1px solid var(--border-strong); padding: 2px 9px; cursor: pointer; font-size: 10px; letter-spacing: .06em; font-family: var(--mono); }
+.lvl-btn:last-child { border-right: none; }
+.lvl-btn:hover { color: var(--accent); }
+.lvl-btn.active { background: #163043; color: var(--accent); }
+.lvl-btn.hot { color: var(--alert); }
 .twin-svg-wrap { flex: 1; position: relative; min-width: 0; padding: 4px; background: radial-gradient(ellipse at 50% 40%, #0e1a26 0%, #0a1017 70%); }
 #mine-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 #mine-svg.dragging { cursor: grabbing; }
 .zoom-ctl { display: inline-flex; gap: 2px; margin-left: 6px; }
 .zoom-ctl .btn { min-width: 20px; padding: 1px 5px; }
-.twin-hint { position: absolute; right: 8px; bottom: 4px; font-size: 9px; color: var(--text-faint); letter-spacing: .06em; pointer-events: none; }
 .twin-svg-wrap { background: #0a0f14; }
 
 /* ---- widok 3D: grunt, bryły, piętra ---- */
@@ -383,5 +376,4 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
   #app { grid-template-columns: 1fr; grid-template-rows: 46px 42vh 42vh 60vh; grid-template-areas: "top" "twin" "feed" "term"; }
   body { overflow: auto; }
   .kpis { display: none; }
-  .twin-side { display: none; }
 }

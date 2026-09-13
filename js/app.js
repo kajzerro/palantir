@@ -33,13 +33,13 @@
 
   const els = {
     log: $("#term-log"), quickBar: $("#quick-bar"),
-    btnAuto: $("#btn-auto"), btnNext: $("#btn-next"), termMode: $("#term-mode"),
-    scene: $("#scene"), svg: $("#mine-svg"), tooltip: $("#twin-tooltip"), twinSide: $("#twin-side"),
+    btnAuto: $("#btn-auto"), btnNext: $("#btn-next"),
+    scene: $("#scene"), svg: $("#mine-svg"), tooltip: $("#twin-tooltip"), twinSide: $("#lvl-ctl"),
     video: $("#feed-video"), noise: $("#feed-noise"), overlay: $("#feed-overlay"),
     feedMain: document.querySelector(".feed-main"), feedStatus: $("#feed-status"),
     feedCamId: $("#feed-cam-id"), osdCam: $("#osd-cam"), osdZone: $("#osd-zone"), osdTime: $("#osd-time"),
     nosigSub: $("#nosig-sub"), detections: $("#feed-detections"), meta: $("#feed-meta"), events: $("#feed-events"),
-    kpiCams: $("#kpi-cams"), kpiAlerts: $("#kpi-alerts"), kpiCh4: $("#kpi-ch4"),
+    kpiCams: $("#kpi-cams"), kpiAlerts: $("#kpi-alerts"),
     clockDate: $("#clock-date"), clockTime: $("#clock-time"),
   };
 
@@ -284,7 +284,7 @@
     /* ---------------- POZIOM −500 ---------------- */
     {
       const L = 2, g = svgEl("g", { class: "lvl-group lvl-2" }, S);
-      slab(g, L, "POZIOM −500 m · POKŁAD 510", "l2");
+      slab(g, L, "POZIOM −500 m", "l2");
       gallery(g, L, 90, 92, 520, 92, 6);
       gallery(g, L, 268, 53, 268, 92, 4);
       gallery(g, L, 146, 92, 146, 128, 3); gallery(g, L, 256, 92, 256, 128, 3); gallery(g, L, 414, 92, 414, 128, 3);
@@ -319,7 +319,7 @@
     /* ---------------- POZIOM −300 ---------------- */
     {
       const L = 1, g = svgEl("g", { class: "lvl-group lvl-1" }, S);
-      slab(g, L, "POZIOM −300 m · POKŁAD 405/1", "l1");
+      slab(g, L, "POZIOM −300 m", "l1");
       gallery(g, L, 60, 92, 480, 92, 6);
       gallery(g, L, 268, 53, 268, 92, 4);
       gallery(g, L, 60, 26, 181, 26, 4); gallery(g, L, 181, 26, 181, 92, 4);
@@ -376,7 +376,7 @@
         [367, 132, 0, "OSADNIKI"], [214, 118, 18, "ZBIORNIKI WODY"], [445, 115, 8, "STACJA TRAFO"], [125, 130, 16, "LAMPOWNIA · ŁAŹNIA · CECHOWNIA"],
         [465, 163, 14, "STACJA WENTYLATORÓW"], [410, 200, 0, "SKŁADOWISKO · ZAŁADUNEK KOLEJOWY"], [23, 178, 14, "BRAMA GŁÓWNA"], [90, 196, 0, "PARKING"],
       ].forEach(([x, y, z, t]) => { const p = P(x, y, z + 4); text(surf, p[0], p[1], t, "lbl s"); });
-      { const t = P(SITE.x - 12, SITE.y + SITE.h + 12, 0, 0); text(surf, t[0] - 6, t[1] - 2, "POWIERZCHNIA · +262 m n.p.m.", "lbl lvl l0", "end"); }
+      { const t = P(SITE.x - 12, SITE.y + SITE.h + 12, 0, 0); text(surf, t[0] - 6, t[1] - 2, "POWIERZCHNIA", "lbl lvl l0", "end"); }
       camGroups[0] = svgEl("g", { class: "cam-layer surf" }, g);
     }
 
@@ -399,13 +399,6 @@
       g.addEventListener("mouseleave", hideTooltip);
     });
 
-    { const el = $("#lvl-sub-all"); if (el) el.textContent = `3 poziomy · ${D.cameras.length} kamer`; }
-    [0, 1, 2].forEach((l) => {
-      const cams = D.cameras.filter((c) => Math.floor(c.level) === l);
-      const off = cams.filter((c) => c.offline).length;
-      const el = $(`#lvl-sub-${l}`);
-      if (el) el.textContent = `${cams.length} kamer${off ? ` · ${off} offline` : ""}`;
-    });
     setView(state.focusLevel);
   }
 
@@ -518,10 +511,6 @@
       t.textContent = `CH₄ ${pct(v)}`;
       t.setAttribute("class", `sensor ${cls(v)}`);
     });
-    document.querySelectorAll("#twin-ch4 dd[data-sensor]").forEach((d) => { const v = s[d.dataset.sensor]; d.textContent = pct(v); d.className = cls(v); });
-    const max = Math.max(...Object.values(s));
-    els.kpiCh4.textContent = pct(max);
-    els.kpiCh4.style.color = max >= 1.5 ? "var(--alert)" : max >= 1.0 ? "var(--attn)" : "";
   }
 
   /* ==================================================================
@@ -581,7 +570,7 @@
   }
 
   function renderMeta(c) {
-    els.meta.innerHTML = `<dt>strefa</dt><dd>${esc(c.zone)}</dd><dt>typ</dt><dd>${esc(c.type)}</dd><dt>model AI</dt><dd>sentinel-vision v4.2</dd><dt>czas pracy</dt><dd>${c.offline ? "—" : (140 + (parseInt(c.id.slice(4), 10) * 37) % 200) + " dni"}</dd><dt>strumień</dt><dd>${esc(c.video || "—")}</dd>`;
+    els.meta.innerHTML = `<dt>strefa</dt><dd>${esc(c.zone)}</dd><dt>typ</dt><dd>${esc(c.type)}</dd>`;
   }
 
   function setFeedStatus(text, cls) { els.feedStatus.textContent = text; els.feedStatus.className = `pill ${cls || ""}`; }
@@ -643,8 +632,6 @@
     const n = state.active && state.active.status !== "closed" ? 1 : 0;
     els.kpiAlerts.textContent = n;
     els.kpiAlerts.parentElement.classList.toggle("hot", n > 0);
-    els.termMode.textContent = state.auto ? "AUTO" : "RĘCZNIE";
-    els.termMode.className = `pill ${state.auto ? "ok" : ""}`;
     els.btnAuto.classList.toggle("active", state.auto);
     refreshLevelButtons();
   }
