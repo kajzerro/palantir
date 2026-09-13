@@ -1,2 +1,1 @@
-Put your video clips here. Expected file names are listed in the root README
-and in `js/data.js` (`video:` fields). Missing files show a NO SIGNAL placeholder.
+Tu wrzuć klipy wideo. Oczekiwane nazwy plików są w głównym README oraz w `js/data.js` (pola `video:`). Brakujące pliki pokazują planszę BRAK SYGNAŁU.
