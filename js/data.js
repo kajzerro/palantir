@@ -37,6 +37,22 @@ window.MINE_DATA = (function () {
     { id: "KAM-11", name: "Stacja odmetanowania",            zone: "Poziom −500 · Instalacja gazowa",  level: 2,   x: 296, y: 118, dir: 0,   type: "Ex-d IP67 · IR",        video: "videos/cam-11.mp4" },
     { id: "KAM-12", name: "Ściana W-7 · front",              zone: "Poziom −500 · Pokład 510",         level: 2,   x: 404, y: 92,  dir: 0,   type: "Ex-d IP67 · IR",        video: "videos/cam-12.mp4" },
     { id: "KAM-13", name: "Komora ratunkowa KR-2",           zone: "Poziom −500 · Bezpieczeństwo",     level: 2,   x: 418, y: 118, dir: 180, type: "Ex-d · IR",             video: "videos/cam-13.mp4", offline: true },
+    { id: "KAM-14", name: "Parking · wjazd",                 zone: "Powierzchnia · Perymetr",          level: 0,   x: 48,  y: 164, dir: 20,  type: "Kopułkowa 4K",          video: "videos/cam-14.mp4" },
+    { id: "KAM-15", name: "Administracja · wejście",         zone: "Powierzchnia · Biura",             level: 0,   x: 100, y: 47,  dir: 70,  type: "Kopułkowa 4K",          video: "videos/cam-15.mp4" },
+    { id: "KAM-16", name: "Rozdzielnia 110/6 kV",            zone: "Powierzchnia · Energetyka",        level: 0,   x: 158, y: 88,  dir: 320, type: "Termowizja + RGB",      video: "videos/cam-16.mp4" },
+    { id: "KAM-17", name: "Kotłownia · plac",                zone: "Powierzchnia · Zaplecze",          level: 0,   x: 222, y: 42,  dir: 200, type: "Tubowa 4K",             video: "videos/cam-17.mp4" },
+    { id: "KAM-18", name: "Składowisko węgla",               zone: "Powierzchnia · Składowisko",       level: 0,   x: 336, y: 168, dir: 20,  type: "PTZ 4K · termowizja",   video: "videos/cam-18.mp4" },
+    { id: "KAM-19", name: "Osadniki",                        zone: "Powierzchnia · Gospodarka wodna",  level: 0,   x: 404, y: 112, dir: 180, type: "Tubowa 4K",             video: "videos/cam-19.mp4" },
+    { id: "KAM-20", name: "Załadunek kolejowy",              zone: "Powierzchnia · Bocznica",          level: 0,   x: 500, y: 184, dir: 180, type: "PTZ 4K · LPR",          video: "videos/cam-20.mp4" },
+    { id: "KAM-21", name: "Szyb II · wlot wentylacyjny",     zone: "Powierzchnia · Wentylacja",        level: 0,   x: 498, y: 60,  dir: 190, type: "Tubowa 4K · Ex-d",      video: "videos/cam-21.mp4" },
+    { id: "KAM-22", name: "Chodnik nadścianowy L-12",        zone: "Poziom −300 · Pokład 405/1",       level: 1,   x: 120, y: 26,  dir: 0,   type: "Ex-d IP67 · IR",        video: "videos/cam-22.mp4" },
+    { id: "KAM-23", name: "Stacja załadowcza",               zone: "Poziom −300 · Transport",          level: 1,   x: 322, y: 114, dir: 250, type: "Ex-d IP67 · IR",        video: "videos/cam-23.mp4" },
+    { id: "KAM-24", name: "Ładownia akumulatorów",           zone: "Poziom −300 · Transport",          level: 1,   x: 444, y: 114, dir: 250, type: "Ex-d IP67 · IR",        video: "videos/cam-24.mp4" },
+    { id: "KAM-25", name: "Chodnik do szybu II",             zone: "Poziom −300 · Wentylacja",         level: 1,   x: 494, y: 72,  dir: 90,  type: "Ex-d IP67 · IR",        video: "videos/cam-25.mp4" },
+    { id: "KAM-26", name: "Przodek B-3",                     zone: "Poziom −500 · Roboty przygotowawcze", level: 2, x: 352, y: 52, dir: 270, type: "Ex-d IP67 · IR",       video: "videos/cam-26.mp4" },
+    { id: "KAM-27", name: "Pompownia główna · rząpie",       zone: "Poziom −500 · Odwadnianie",        level: 2,   x: 236, y: 116, dir: 270, type: "Ex-d IP67 · IR",        video: "videos/cam-27.mp4" },
+    { id: "KAM-28", name: "Przekop G-7 · wschód",            zone: "Poziom −500 · Transport",          level: 2,   x: 502, y: 96,  dir: 180, type: "Ex-d IP67 · IR",        video: "videos/cam-28.mp4" },
+    { id: "KAM-29", name: "Chodnik nadścianowy W-7",         zone: "Poziom −500 · Pokład 510",         level: 2,   x: 450, y: 22,  dir: 180, type: "Ex-d IP67 · IR",        video: "videos/cam-29.mp4" },
   ];
 
   /* Czujniki metanu – pozycja na modelu */

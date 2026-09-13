@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 W, H, FPS, SEC = 640, 360, 12, 10
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "videos")
+OUT = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.path.join(os.path.dirname(__file__), "..", "videos")
 
 def ffmpeg():
     p = shutil.which("ffmpeg")
@@ -55,6 +55,22 @@ CAMS = {
     "cam-11": ("KAM-11 STACJA ODMETANOWANIA",UG,   "tanks"),
     "cam-12": ("KAM-12 SCIANA W-7",          UG,   "face"),
     "cam-13": ("KAM-13 KOMORA RATUNKOWA",    UG,   "hall"),
+    "cam-14": ("KAM-14 PARKING",             SURF, "gate"),
+    "cam-15": ("KAM-15 ADMINISTRACJA",       SURF, "hall"),
+    "cam-16": ("KAM-16 ROZDZIELNIA 110/6 kV",SURF, "tanks"),
+    "cam-17": ("KAM-17 KOTLOWNIA",           SURF, "plant"),
+    "cam-18": ("KAM-18 SKLADOWISKO WEGLA",   SURF, "plant"),
+    "cam-19": ("KAM-19 OSADNIKI",            SURF, "tanks"),
+    "cam-20": ("KAM-20 ZALADUNEK KOLEJOWY",  SURF, "belt"),
+    "cam-21": ("KAM-21 SZYB II",             SURF, "fan"),
+    "cam-22": ("KAM-22 CHODNIK NADSC. L-12", UG,   "belt"),
+    "cam-23": ("KAM-23 STACJA ZALADOWCZA",   UG,   "cage"),
+    "cam-24": ("KAM-24 LADOWNIA AKUMUL.",    UG,   "hall"),
+    "cam-25": ("KAM-25 CHODNIK DO SZYBU II", UG,   "belt"),
+    "cam-26": ("KAM-26 PRZODEK B-3",         UG,   "face"),
+    "cam-27": ("KAM-27 POMPOWNIA GLOWNA",    UG,   "tanks"),
+    "cam-28": ("KAM-28 PRZEKOP G-7 WSCHOD",  UG,   "belt"),
+    "cam-29": ("KAM-29 CHODNIK NADSC. W-7",  UG,   "belt"),
 }
 # zdarzenia: (kamera bazowa, tone override, animacja)
 INCS = {
@@ -220,8 +236,11 @@ def render(name, label, tone, kind, anim=None, out_dir=OUT):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    only_missing = "--missing" in sys.argv
     for name, (label, tone, kind) in CAMS.items():
+        if only_missing and os.path.exists(os.path.join(OUT, name + ".mp4")): continue
         render(name, label, tone, kind)
     for name, (cam, tone_override, anim) in INCS.items():
+        if only_missing and os.path.exists(os.path.join(OUT, name + ".mp4")): continue
         label, tone, kind = CAMS[cam]
         render(name, label, tone_override or tone, kind, anim)

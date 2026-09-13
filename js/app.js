@@ -399,6 +399,7 @@
       g.addEventListener("mouseleave", hideTooltip);
     });
 
+    { const el = $("#lvl-sub-all"); if (el) el.textContent = `3 poziomy · ${D.cameras.length} kamer`; }
     [0, 1, 2].forEach((l) => {
       const cams = D.cameras.filter((c) => Math.floor(c.level) === l);
       const off = cams.filter((c) => c.offline).length;
@@ -847,9 +848,6 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
     setNoSignal(true, "wybierz kamerę na modelu 3D");
     ["click", "keydown"].forEach((ev) => window.addEventListener(ev, () => { if (!state.audioCtx) { try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} } }, { once: true }));
 
-    await ai(`Dzień dobry! Jestem Twoim asystentem ochrony. Pilnuję <span class="b">12 kamer</span> w kopalni – na powierzchni i pod ziemią.`);
-    await ai(`Jeśli zobaczę coś niebezpiecznego, <span class="b">od razu Ci powiem</span>, pokażę obraz z tej kamery i poprowadzę Cię krok po kroku. Nie musisz nic wpisywać – wystarczy klikać przyciski.`);
-    await sys(`<span class="k">Demo: kliknij <span class="h">NASTĘPNE ZDARZENIE</span> u góry, aby zobaczyć przykładowy alarm, albo <span class="h">AUTO</span>, żeby zdarzenia pojawiały się same.</span>`);
   }
 
   boot();

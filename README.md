@@ -69,7 +69,7 @@ nazwie (wersję `.webm` można usunąć):
 
 | Plik | Użycie |
 |---|---|
-| `videos/cam-01.mp4` … `videos/cam-13.mp4` | Pętla bezczynności każdej kamery (otwieranej z modelu 3D) |
+| `videos/cam-01.mp4` … `videos/cam-29.mp4` | Pętla bezczynności każdej kamery (otwieranej z modelu 3D) |
 | `videos/inc-01-ppe.mp4` | ZD-01 na KAM-02 |
 | `videos/inc-02-magazine.mp4` | ZD-02 na KAM-10 |
 | `videos/inc-03-conveyor-fire.mp4` | ZD-03 na KAM-08 |
