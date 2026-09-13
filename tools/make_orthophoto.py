@@ -98,7 +98,7 @@ def building(x, y, w, d, h, roof, facade=None, texture=True, name=None):
         while k < y + d - 1:
             rd.line([px(x + 1, k), px(x + w - 1, k)], fill=col, width=1); k += step
     rd.rectangle(rect(x, y, w, d), outline=tuple(int(c * 0.75) for c in roof) + (255,), width=1)
-    MODEL.append({"t": "box", "x": x, "y": y, "w": w, "d": d, "h": h, "c": list(roof)})
+    MODEL.append({"t": "box", "x": x, "y": y, "w": w, "d": d, "h": h, "c": list(roof), "k": name or "concrete"})
     return [(x, y), (x + w, y), (x + w, y + d), (x, y + d)]
 
 def cylinder(cx, cy, r, h, col, top=None):
@@ -122,10 +122,9 @@ def road(pts, width, col=(62, 62, 64), dashes=False):
 
 def tree(x, y, r):
     g = int(rng.integers(0, 3))
-    col = [(46, 76, 40), (58, 92, 44), (40, 68, 36)][g]
-    sd.ellipse(rect(x + r * 0.4, y + r * 0.5, 2 * r, 2 * r * 0.8), fill=120)
-    draw.ellipse(rect(x - r, y - r, 2 * r, 2 * r), fill=col)
-    draw.ellipse(rect(x - r * 0.75, y - r * 0.8, r * 1.1, r * 1.1), fill=tuple(min(255, c + 24) for c in col))
+    sd.ellipse(rect(x + r * 0.5, y + r * 0.6, 2 * r, 2 * r * 0.8), fill=120)
+    draw.ellipse(rect(x - r * 0.35, y - r * 0.35, r * 0.7, r * 0.7), fill=(58, 48, 36))      # pień / ściółka
+    MODEL.append({"t": "tree", "x": round(x, 1), "y": round(y, 1), "r": round(r, 2), "v": g})
 
 def pile(cx, cy, rx, ry, h):
     pts = [(cx + rx * (1 + 0.12 * math.sin(a * 3.1)) * math.cos(a), cy + ry * (1 + 0.1 * math.cos(a * 2.3)) * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 40, endpoint=False)]
@@ -183,28 +182,32 @@ for cx in (350, 385):
 for cx in (206, 222): cylinder(cx, 118, 6, 14, (205, 208, 210))
 
 # ---- budynki (od tyłu do przodu)
-building(30, 16, 70, 28, 18, (156, 140, 122), texture=False)        # administracja
+building(30, 16, 70, 28, 18, (156, 140, 122), texture=False, name="office")        # administracja
 for k in range(6): rd.rectangle(rect(34 + k * 11, 20, 6, 2), fill=(90, 90, 95, 255))  # świetliki
-building(115, 16, 60, 28, 12, (128, 132, 136))                       # warsztat
-building(190, 16, 28, 22, 12, (120, 96, 84), texture=False)          # kotłownia
+building(115, 16, 60, 28, 12, (128, 132, 136), name="hall")                       # warsztat
+building(190, 16, 28, 22, 12, (120, 96, 84), texture=False, name="brick")          # kotłownia
 cylinder(224, 22, 4, 46, (150, 150, 150), top=(70, 70, 70))          # komin
 building(160, 60, 40, 24, 8, (138, 142, 146), texture=False)         # rozdzielnia
 for x in (166, 178, 190): building(x, 66, 8, 8, 6, (96, 100, 104), texture=False)
-building(330, 30, 110, 60, 36, (150, 154, 158))                      # zakład przeróbczy
+building(330, 30, 110, 60, 36, (150, 154, 158), name="plant")                      # zakład przeróbczy
 for k in range(5): rd.rectangle(rect(336 + k * 20, 34, 12, 4), fill=(60, 70, 90, 255))
+for (hx, hy, hw, hd) in [(400, 40, 8, 6), (412, 40, 8, 6), (395, 70, 10, 8), (425, 76, 6, 6)]:
+    rd.rectangle(rect(hx + 0.8, hy + 0.8, hw, hd), fill=(40, 42, 44, 200)); rd.rectangle(rect(hx, hy, hw, hd), fill=(120, 124, 128, 255)); rd.rectangle(rect(hx + 1, hy + 1, hw - 2, hd - 2), fill=(96, 100, 104, 255))
+for (hx, hy) in [(90, 118), (120, 118), (150, 118), (105, 138), (140, 138)]:
+    rd.ellipse(rect(hx, hy, 4, 4), fill=(70, 72, 74, 255)); rd.ellipse(rect(hx + 0.8, hy + 0.8, 2.4, 2.4), fill=(120, 122, 124, 255))
 cylinder(345, 44, 8, 50, (178, 178, 176)); cylinder(365, 44, 8, 50, (178, 178, 176))
 # wieża szybowa (kratownica) – szczupła, wysoki cień; rysowana w JS jako kratownica, tu tylko zrąb i cień
 shadow_poly([(258, 43), (278, 43), (278, 63), (258, 63)], 64)
 building(255, 40, 26, 26, 6, (110, 114, 118), texture=False)
 MODEL.append({"t": "tower", "x": 258, "y": 43, "w": 20, "d": 20, "h": 64})
 draw.line([px(281, 50), px(330, 58)], fill=(150, 150, 154), width=int(3.2 * SCALE)); draw.line([px(281, 50), px(330, 58)], fill=(180, 180, 184), width=int(1.6 * SCALE))
-building(285, 40, 34, 18, 14, (124, 128, 132))                       # maszyna wyciągowa
+building(285, 40, 34, 18, 14, (124, 128, 132), name="hall")                       # maszyna wyciągowa
 building(480, 60, 14, 14, 8, (110, 114, 118), texture=False)         # szyb II
 building(430, 106, 30, 18, 8, (140, 144, 148), texture=False)        # stacja trafo
-building(70, 112, 110, 36, 16, (146, 130, 112))                      # lampownia
-building(448, 148, 34, 30, 14, (130, 134, 138))                      # stacja wentylatorów
+building(70, 112, 110, 36, 16, (146, 130, 112), name="office")                      # lampownia
+building(448, 148, 34, 30, 14, (130, 134, 138), name="hall")                      # stacja wentylatorów
 cylinder(468, 142, 7, 20, (160, 162, 164), top=(50, 52, 54))
-building(8, 168, 30, 20, 10, (150, 140, 128), texture=False)         # brama
+building(8, 168, 30, 20, 10, (150, 140, 128), texture=False, name="office")         # brama
 draw.line([px(38, 150), px(38, 162)], fill=(220, 60, 60), width=3)   # szlaban
 
 # ---- hałdy
@@ -233,6 +236,8 @@ haze = Image.new("RGB", (W, H), (190, 200, 210)); img = Image.blend(img, haze, 0
 img.save(OUT, quality=82, optimize=True, subsampling=1)
 roofs.save(OUT_ROOFS, optimize=True)
 import json
+with open(os.path.join(os.path.dirname(OUT), "site.json"), "w", encoding="utf-8") as f:
+    json.dump({"map": {"x": X0, "y": Y0, "w": WU, "h": HU}, "objects": MODEL}, f)
 with open(OUT_MODEL, "w", encoding="utf-8") as f:
     f.write("/* wygenerowane przez tools/make_orthophoto.py – bryły powierzchni do wyciągnięcia w widoku 3D */\n")
     f.write("window.SITE_MODEL = " + json.dumps({"map": {"x": X0, "y": Y0, "w": WU, "h": HU}, "objects": MODEL}, ensure_ascii=False) + ";\n")

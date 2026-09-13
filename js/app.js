@@ -215,53 +215,7 @@
     return out;
   }
 
-  /* ---------- bryły powierzchni ---------- */
-  const rgb = (c, k) => `rgb(${c.map((v) => Math.max(0, Math.min(255, Math.round(v * k)))).join(",")})`;
-  /** Elewacje: dla każdej krawędzi obrysu (CW w układzie ekranu) widocznej od strony widza. */
-  function facades(g, poly, h, col) {
-    const n = poly.length;
-    for (let i = 0; i < n; i++) {
-      const a = poly[i], b = poly[(i + 1) % n];
-      const ex = b[0] - a[0], ey = b[1] - a[1];
-      const nx = ey, ny = -ex;                                // normalna zewnętrzna dla obrysu CW (y w dół)
-      const vis = nx * SH + ny * 1;                           // widoczne: ściany S i E
-      if (vis <= 0) continue;
-      const len = Math.hypot(nx, ny) || 1;
-      const shade = 0.42 + 0.22 * (nx / len) + 0.10 * (ny / len);    // wschodnia jaśniejsza niż południowa
-      svgEl("polygon", { class: "fc", points: pts([P(a[0], a[1], h), P(b[0], b[1], h), P(b[0], b[1], 0), P(a[0], a[1], 0)]), fill: rgb(col, shade) }, g);
-    }
-  }
   function circlePoly(cx, cy, r, n = 28) { const o = []; for (let i = 0; i < n; i++) { const t = 2 * Math.PI * i / n; o.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); } return o; }
-  function objectPoly(o) {
-    if (o.t === "box" || o.t === "tower") return [[o.x, o.y], [o.x + o.w, o.y], [o.x + o.w, o.y + o.d], [o.x, o.y + o.d]];
-    if (o.t === "cyl") return circlePoly(o.x, o.y, o.r);
-    return o.pts;
-  }
-  function extrude(parent, defs, o, i) {
-    const g = svgEl("g", { class: `obj ${o.t}` }, parent);
-    const poly = objectPoly(o);
-    if (o.t === "tower") { lattice(g, o); return; }
-    facades(g, poly, o.h, o.c || [120, 120, 120]);
-    // dach: fragment warstwy dachów wycięty obrysem i podniesiony o h
-    const cp = svgEl("clipPath", { id: `clip-${i}`, clipPathUnits: "userSpaceOnUse" }, defs);
-    svgEl("polygon", { points: pts(poly) }, cp);
-    const rg = svgEl("g", { transform: `translate(0 ${-o.h}) matrix(1 0 ${SH} ${FY} 0 0)` }, g);
-    svgEl("use", { href: "#roofs-img", "clip-path": `url(#clip-${i})` }, rg);
-    svgEl("polygon", { class: "roof-edge", points: pts(poly.map(([x, y]) => P(x, y, o.h))) }, g);
-  }
-  function lattice(g, o) {
-    const { x, y, w, d, h } = o, ins = 4;
-    const base = [[x, y], [x + w, y], [x + w, y + d], [x, y + d]];
-    const top = [[x + ins, y + ins], [x + w - ins, y + ins], [x + w - ins, y + d - ins], [x + ins, y + d - ins]];
-    base.forEach((b, i) => { const a = P(b[0], b[1], 0), t = P(top[i][0], top[i][1], h); svgEl("line", { class: "leg", x1: a[0], y1: a[1], x2: t[0], y2: t[1] }, g); });
-    for (let k = 1; k <= 4; k++) {
-      const f = k / 5, z = h * f, c = [0, 1, 2, 3].map((i) => [base[i][0] + (top[i][0] - base[i][0]) * f, base[i][1] + (top[i][1] - base[i][1]) * f]);
-      [[3, 2], [1, 2], [0, 1], [0, 3]].forEach(([i, j]) => { const a = P(c[i][0], c[i][1], z), b = P(c[j][0], c[j][1], z); svgEl("line", { class: "brace", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); });
-    }
-    svgEl("polygon", { class: "platform", points: pts(top.map(([px, py]) => P(px, py, h))) }, g);
-    const [wx, wy] = P(x + w / 2, y + d / 2, h);
-    svgEl("circle", { class: "wheel", cx: wx - 3.5, cy: wy - 5, r: 4.5 }, g); svgEl("circle", { class: "wheel", cx: wx + 3.5, cy: wy - 5, r: 4.5 }, g);
-  }
 
   /* ---------- wyrobiska (rzut ukośny) ---------- */
   function gallery(g, L, x1, y1, x2, y2, w = 5) {
@@ -317,7 +271,6 @@
     const S = els.scene;
     const camGroups = {};
     const defs = svgEl("defs", {}, S);
-    svgEl("image", { id: "roofs-img", href: "assets/roofs.png", x: MAP.x, y: MAP.y, width: MAP.w, height: MAP.h, preserveAspectRatio: "none" }, defs);
 
     /* linie stosu (narożniki poziomów) */
     {
@@ -408,17 +361,13 @@
     /* ---------------- POWIERZCHNIA ---------------- */
     {
       const L = 0, g = svgEl("g", { class: "lvl-group lvl-0" }, S);
-      // grunt (ortofotomapa w rzucie ukośnym) + krawędź terenu
-      svgEl("polygon", { class: "ground-edge", points: pts([P(MAP.x, MAP.y + MAP.h, 0), P(MAP.x + MAP.w, MAP.y + MAP.h, 0), P(MAP.x + MAP.w, MAP.y + MAP.h, -6), P(MAP.x, MAP.y + MAP.h, -6)]) }, g);
-      svgEl("polygon", { class: "ground-edge", points: pts([P(MAP.x + MAP.w, MAP.y, 0), P(MAP.x + MAP.w, MAP.y + MAP.h, 0), P(MAP.x + MAP.w, MAP.y + MAP.h, -6), P(MAP.x + MAP.w, MAP.y, -6)]) }, g);
+      // fotorealistyczna scena 3D (render z tools/make_scene3d.py) w układzie ekranu, z maską przezroczystości
+      const sc = (window.SITE_MODEL && window.SITE_MODEL.scene) || { x: -82.5, y: -109, w: 775, h: 244 };
+      const mk = svgEl("mask", { id: "scene-mask", maskUnits: "userSpaceOnUse", x: sc.x, y: sc.y, width: sc.w, height: sc.h }, defs);
+      svgEl("image", { href: "assets/scene_mask.png", x: sc.x, y: sc.y, width: sc.w, height: sc.h, preserveAspectRatio: "none" }, mk);
+      svgEl("image", { class: "scene-img", href: "assets/scene.jpg", x: sc.x, y: sc.y, width: sc.w, height: sc.h, preserveAspectRatio: "none", mask: "url(#scene-mask)" }, g);
       const gg = svgEl("g", { transform: MTX(0) }, g);
-      svgEl("image", { href: "assets/orthophoto.jpg", x: MAP.x, y: MAP.y, width: MAP.w, height: MAP.h, preserveAspectRatio: "none" }, gg);
       svgEl("rect", { class: "site", x: SITE.x, y: SITE.y, width: SITE.w, height: SITE.h }, gg);
-      // bryły – od tyłu do przodu
-      const objs = (window.SITE_MODEL ? window.SITE_MODEL.objects : []).map((o, i) => ({ o, i, key: (o.t === "cyl" ? o.y + o.r : o.t === "poly" ? Math.max(...o.pts.map((p) => p[1])) : o.y + o.d) + 0.001 * (o.x || 0) }));
-      objs.sort((a, b) => a.key - b.key);
-      const ob = svgEl("g", { class: "objects" }, g);
-      objs.forEach(({ o, i }) => extrude(ob, defs, o, i));
       // etykiety obiektów (na wysokości dachu)
       const surf = svgEl("g", { class: "surf" }, g);
       [

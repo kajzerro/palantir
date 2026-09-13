@@ -26,7 +26,7 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 | Panel | Co robi |
 |---|---|
 | **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski w zwykłym języku („Tak, to prawdziwe zagrożenie”, „Powiedz mi więcej”, „To fałszywy alarm”, „Zrobione ✓”). Na dole stałe przyciski: *Co się dzieje?*, *Pokaż kamery*, *Co mam teraz robić?*, *Historia zdarzeń*. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
-| **Prawy górny – cyfrowy bliźniak** | Ukośny widok 3D jak z drona: wygenerowana ortofotomapa terenu (drogi, parking, osadniki, hałdy, tory z wagonami, pola i drzewa wokół) jest płaszczyzną gruntu, a budynki, silosy, komin, zbiorniki i hałdy są wyciągnięte w górę – dachy wycięte ze zdjęcia, elewacje cieniowane, wieża szybowa jako kratownica z kołami linowymi. Pod powierzchnią wiszą, jak szklane piętra, poziomy −300 m i −500 m z podświetlonymi wyrobiskami (przekopy, ściany z sekcjami obudowy, komory, pochylnia, rurociąg CH₄, tamy wentylacyjne, jeżdżąca klatka w szybie, lokomotywa, załoga), a szyby łączą je w pionie. Przyciski poziomów przybliżają i wyróżniają dany poziom; kółko myszy przybliża, przeciąganie przesuwa. Przy alarmie widok sam przechodzi na poziom kamery. Zdjęcie, warstwę dachów i listę brył generuje `tools/make_orthophoto.py` (`assets/orthophoto.jpg`, `assets/roofs.png`, `js/site.js`). |
+| **Prawy górny – cyfrowy bliźniak** | Fotorealistyczny ukośny widok 3D jak z drona, renderowany z wygenerowanej ortofotomapy: budynki z fakturowanymi elewacjami (płyty z oknami, blacha trapezowa, cegła), cieniowane silosy, zbiorniki i komin, kratownicowa wieża szybowa z kołami linowymi, most przenośnikowy na podporach, hałdy, osadniki, tory z wagonami, parking, maszty i ogrodzenie, korony drzew, cienie od słońca, mgiełka atmosferyczna w głębi. Pod powierzchnią wiszą, jak szklane piętra, poziomy −300 m i −500 m z podświetlonymi wyrobiskami (przekopy, ściany, komory, pochylnia, rurociąg CH₄, tamy, klatka w szybie, lokomotywa, załoga), a szyby łączą je w pionie. Kamery z polami widzenia i etykiety są wektorowe na wierzchu. Przyciski poziomów przybliżają i wyróżniają dany poziom; kółko myszy przybliża, przeciąganie przesuwa; alarm sam przełącza widok na poziom kamery. Obraz generują `tools/make_orthophoto.py` (warstwy płaskie) i `tools/make_scene3d.py` (render 3D → `assets/scene.jpg`, `assets/scene_mask.png`, `js/site.js`). |
 | **Prawy dolny – podgląd na żywo** | Odtwarza wideo wybranej kamery z ramkami detekcji AI, listą detekcji, metadanymi kamery i listą ostatnich zdarzeń. Do czasu dodania pliku wideo pokazuje animowaną planszę BRAK SYGNAŁU. |
 
 ## Przebieg demo
@@ -86,6 +86,7 @@ Gdy brakuje klipu zdarzenia, używana jest pętla kamery; gdy brakuje i jej,
 plansza BRAK SYGNAŁU podaje oczekiwaną ścieżkę.
 
 Wszystkie ścieżki, kamery, zdarzenia, ramki detekcji (`boxes`, w % kadru),
-i procedury są w `js/data.js`. Pozycje kamer na mapie
+i procedury są w `js/data.js`. Pozycje kamer
 (`level`, `x`, `y`, `dir`) są we współrzędnych planu obiektu (0–520 × 0–200,
-1 jednostka ≈ 1 m); ortofotomapa obejmuje −60..580 × −50..250.
+1 jednostka ≈ 1 m); rzut ukośny to X = x + 0,45·y, Y = 0,5·y − wysokość, ten sam
+w `js/app.js` (funkcja `P`) i w `tools/make_scene3d.py`.
