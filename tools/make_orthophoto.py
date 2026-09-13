@@ -17,7 +17,10 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops, ImageEnhance
 SCALE = 4
 X0, Y0, WU, HU = -60, -50, 640, 300
 W, H = WU * SCALE, HU * SCALE
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "assets", "orthophoto.jpg")
+ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ASSETS, "orthophoto.jpg")      # teren bez brył (płaszczyzna gruntu)
+OUT_ROOFS = os.path.join(os.path.dirname(OUT), "roofs.png")                                # dachy / wierzchy brył (RGBA)
+OUT_MODEL = os.path.join(os.path.dirname(__file__), "..", "js", "site.js")                # bryły do wyciągnięcia w 3D
 rng = np.random.default_rng(11)
 
 def px(x, y): return ((x - X0) * SCALE, (y - Y0) * SCALE)
@@ -69,6 +72,9 @@ img = terrain()
 shadow = Image.new("L", (W, H), 0)       # cienie (alpha)
 sd = ImageDraw.Draw(shadow)
 draw = ImageDraw.Draw(img)
+roofs = Image.new("RGBA", (W, H), (0, 0, 0, 0))   # dachy – osobna warstwa, w JS podnoszona o wysokość bryły
+rd = ImageDraw.Draw(roofs)
+MODEL = []                                          # bryły: footprint + wysokość (eksport do js/site.js)
 SUN = (0.42, 0.30)                        # kierunek cienia (x, y) na jednostkę wysokości
 
 def shadow_poly(pts, h):
@@ -81,31 +87,27 @@ def shadow_poly(pts, h):
         sd.polygon([a[i], a[j], b[j], b[i]], fill=150)
 
 def building(x, y, w, d, h, roof, facade=None, texture=True, name=None):
-    facade = facade or tuple(int(c * 0.55) for c in roof)
     shadow_poly([(x, y), (x + w, y), (x + w, y + d), (x, y + d)], h)
-    # elewacje widoczne: południowa (dół) i wschodnia (prawo) – rzut lekko ukośny
-    ox, oy = -h * 0.10, -h * 0.16
-    base = [(x, y), (x + w, y), (x + w, y + d), (x, y + d)]
-    top = [(bx + ox, by + oy) for bx, by in base]
-    draw.polygon([px(*base[3]), px(*base[2]), px(*top[2]), px(*top[3])], fill=facade)
-    draw.polygon([px(*base[1]), px(*base[2]), px(*top[2]), px(*top[1])], fill=tuple(int(c * 0.8) for c in facade))
-    draw.polygon([px(*p) for p in top], fill=roof)
+    # ślad budynku na gruncie (fundament) – widoczny, gdy dach jest podniesiony w widoku 3D
+    draw.rectangle(rect(x, y, w, d), fill=tuple(int(c * 0.62) for c in roof))
+    rd.rectangle(rect(x, y, w, d), fill=roof + (255,))
     if texture:
-        # blachy / świetliki na dachu
-        col = tuple(min(255, c + 14) for c in roof)
+        col = tuple(min(255, c + 14) for c in roof) + (255,)
         step = 3 if w > 60 else 2.5
-        k = y + oy + 2
-        while k < y + d + oy - 1:
-            draw.line([px(x + ox + 1, k), px(x + w + ox - 1, k)], fill=col, width=1); k += step
-    return top
+        k = y + 2
+        while k < y + d - 1:
+            rd.line([px(x + 1, k), px(x + w - 1, k)], fill=col, width=1); k += step
+    rd.rectangle(rect(x, y, w, d), outline=tuple(int(c * 0.75) for c in roof) + (255,), width=1)
+    MODEL.append({"t": "box", "x": x, "y": y, "w": w, "d": d, "h": h, "c": list(roof)})
+    return [(x, y), (x + w, y), (x + w, y + d), (x, y + d)]
 
 def cylinder(cx, cy, r, h, col, top=None):
     shadow_poly([(cx + r * math.cos(a), cy + r * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)], h)
-    ox, oy = -h * 0.10, -h * 0.16
-    draw.polygon([px(cx - r, cy), px(cx + r, cy), px(cx + r + ox, cy + oy), px(cx - r + ox, cy + oy)], fill=tuple(int(c * 0.6) for c in col))
     draw.ellipse(rect(cx - r, cy - r, 2 * r, 2 * r), fill=tuple(int(c * 0.6) for c in col))
-    draw.ellipse(rect(cx - r + ox, cy - r + oy, 2 * r, 2 * r), fill=top or col)
-    draw.ellipse(rect(cx - r * 0.55 + ox, cy - r * 0.55 + oy, r * 1.1, r * 1.1), fill=tuple(min(255, c + 12) for c in (top or col)))
+    rd.ellipse(rect(cx - r, cy - r, 2 * r, 2 * r), fill=(top or col) + (255,))
+    rd.ellipse(rect(cx - r * 0.55, cy - r * 0.55, r * 1.1, r * 1.1), fill=tuple(min(255, c + 12) for c in (top or col)) + (255,))
+    rd.ellipse(rect(cx - r, cy - r, 2 * r, 2 * r), outline=tuple(int(c * 0.7) for c in col) + (255,), width=1)
+    MODEL.append({"t": "cyl", "x": cx, "y": cy, "r": r, "h": h, "c": list(col)})
 
 def road(pts, width, col=(62, 62, 64), dashes=False):
     p = [px(*q) for q in pts]
@@ -128,9 +130,11 @@ def tree(x, y, r):
 def pile(cx, cy, rx, ry, h):
     pts = [(cx + rx * (1 + 0.12 * math.sin(a * 3.1)) * math.cos(a), cy + ry * (1 + 0.1 * math.cos(a * 2.3)) * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 40, endpoint=False)]
     shadow_poly(pts, h)
-    draw.polygon([px(*p) for p in pts], fill=(24, 24, 26))
-    draw.ellipse(rect(cx - rx * 0.55 - h * 0.1, cy - ry * 0.55 - h * 0.16, rx * 1.1, ry * 1.1), fill=(40, 40, 42))
-    draw.ellipse(rect(cx - rx * 0.25 - h * 0.12, cy - ry * 0.25 - h * 0.2, rx * 0.5, ry * 0.5), fill=(54, 54, 56))
+    draw.polygon([px(*p) for p in pts], fill=(30, 30, 32))
+    rd.polygon([px(*p) for p in pts], fill=(24, 24, 26, 255))
+    rd.ellipse(rect(cx - rx * 0.55, cy - ry * 0.55, rx * 1.1, ry * 1.1), fill=(40, 40, 42, 255))
+    rd.ellipse(rect(cx - rx * 0.25, cy - ry * 0.25, rx * 0.5, ry * 0.5), fill=(56, 56, 58, 255))
+    MODEL.append({"t": "poly", "pts": [[round(a, 1), round(b, 1)] for a, b in pts], "h": h, "c": [28, 28, 30]})
 
 def car(x, y, ang=0):
     col = [(200, 200, 205), (40, 44, 52), (120, 130, 140), (150, 40, 40), (60, 90, 150)][int(rng.integers(0, 5))]
@@ -180,23 +184,19 @@ for cx in (206, 222): cylinder(cx, 118, 6, 14, (205, 208, 210))
 
 # ---- budynki (od tyłu do przodu)
 building(30, 16, 70, 28, 18, (156, 140, 122), texture=False)        # administracja
-for k in range(6): draw.rectangle(rect(34 + k * 11, 12.5, 6, 2), fill=(90, 90, 95))  # okna dachowe
+for k in range(6): rd.rectangle(rect(34 + k * 11, 20, 6, 2), fill=(90, 90, 95, 255))  # świetliki
 building(115, 16, 60, 28, 12, (128, 132, 136))                       # warsztat
 building(190, 16, 28, 22, 12, (120, 96, 84), texture=False)          # kotłownia
 cylinder(224, 22, 4, 46, (150, 150, 150), top=(70, 70, 70))          # komin
 building(160, 60, 40, 24, 8, (138, 142, 146), texture=False)         # rozdzielnia
 for x in (166, 178, 190): building(x, 66, 8, 8, 6, (96, 100, 104), texture=False)
 building(330, 30, 110, 60, 36, (150, 154, 158))                      # zakład przeróbczy
-for k in range(5): draw.rectangle(rect(336 + k * 20, 26, 12, 4), fill=(60, 70, 90))
+for k in range(5): rd.rectangle(rect(336 + k * 20, 34, 12, 4), fill=(60, 70, 90, 255))
 cylinder(345, 44, 8, 50, (178, 178, 176)); cylinder(365, 44, 8, 50, (178, 178, 176))
-# wieża szybowa (kratownica) – szczupła, wysoki cień
+# wieża szybowa (kratownica) – szczupła, wysoki cień; rysowana w JS jako kratownica, tu tylko zrąb i cień
 shadow_poly([(258, 43), (278, 43), (278, 63), (258, 63)], 64)
 building(255, 40, 26, 26, 6, (110, 114, 118), texture=False)
-tx, ty = px(268 - 6.4, 53 - 10.2)
-draw.rectangle([tx - 12, ty - 12, tx + 12, ty + 12], outline=(72, 76, 82), width=3)
-draw.line([tx - 12, ty - 12, tx + 12, ty + 12], fill=(72, 76, 82), width=2); draw.line([tx - 12, ty + 12, tx + 12, ty - 12], fill=(72, 76, 82), width=2)
-draw.rectangle([tx - 5, ty - 12, tx + 5, ty - 6], fill=(150, 40, 40)); draw.rectangle([tx - 5, ty + 6, tx + 5, ty + 12], fill=(150, 40, 40))
-draw.ellipse([tx - 7, ty - 4, tx - 1, ty + 4], outline=(200, 200, 200), width=1); draw.ellipse([tx + 1, ty - 4, tx + 7, ty + 4], outline=(200, 200, 200), width=1)
+MODEL.append({"t": "tower", "x": 258, "y": 43, "w": 20, "d": 20, "h": 64})
 draw.line([px(281, 50), px(330, 58)], fill=(150, 150, 154), width=int(3.2 * SCALE)); draw.line([px(281, 50), px(330, 58)], fill=(180, 180, 184), width=int(1.6 * SCALE))
 building(285, 40, 34, 18, 14, (124, 128, 132))                       # maszyna wyciągowa
 building(480, 60, 14, 14, 8, (110, 114, 118), texture=False)         # szyb II
@@ -208,7 +208,7 @@ building(8, 168, 30, 20, 10, (150, 140, 128), texture=False)         # brama
 draw.line([px(38, 150), px(38, 162)], fill=(220, 60, 60), width=3)   # szlaban
 
 # ---- hałdy
-pile(367, 181, 17, 8, 9); pile(412, 183, 20, 9, 11); pile(459, 180, 15, 7, 8)
+pile(367, 181, 17, 8, 4); pile(412, 183, 20, 9, 5); pile(459, 180, 15, 7, 4)
 
 # ---- samochody, drzewa
 for (x, y) in [(56, 170), (66, 170), (85, 170), (95, 170), (114, 170), (57, 184), (76, 184), (105, 184), (240, 152), (150, 154)]: car(x, y)
@@ -231,4 +231,9 @@ img = ImageEnhance.Color(img).enhance(0.9)
 img = ImageEnhance.Contrast(img).enhance(1.06)
 haze = Image.new("RGB", (W, H), (190, 200, 210)); img = Image.blend(img, haze, 0.06)
 img.save(OUT, quality=82, optimize=True, subsampling=1)
-print(OUT, img.size, os.path.getsize(OUT) // 1024, "KB")
+roofs.save(OUT_ROOFS, optimize=True)
+import json
+with open(OUT_MODEL, "w", encoding="utf-8") as f:
+    f.write("/* wygenerowane przez tools/make_orthophoto.py – bryły powierzchni do wyciągnięcia w widoku 3D */\n")
+    f.write("window.SITE_MODEL = " + json.dumps({"map": {"x": X0, "y": Y0, "w": WU, "h": HU}, "objects": MODEL}, ensure_ascii=False) + ";\n")
+print(OUT, img.size, os.path.getsize(OUT) // 1024, "KB ·", OUT_ROOFS, os.path.getsize(OUT_ROOFS) // 1024, "KB ·", len(MODEL), "brył")

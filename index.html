@@ -55,7 +55,7 @@
     <!-- ===================== PRAWY GÓRNY: CYFROWY BLIŹNIAK ===================== -->
     <section id="twin" class="panel">
       <div class="panel-head">
-        <span class="panel-title">CYFROWY BLIŹNIAK · ORTOFOTOMAPA Z DRONA · WARSTWY</span>
+        <span class="panel-title">CYFROWY BLIŹNIAK · WIDOK 3D Z DRONA</span>
         <span class="panel-meta">
           <span class="legend"><i class="dot ok"></i>nominalna</span>
           <span class="legend"><i class="dot attn"></i>w procedurze</span>
@@ -66,7 +66,7 @@
       </div>
       <div class="twin-wrap">
         <aside class="twin-side" id="twin-side">
-          <div class="side-title">WARSTWY</div>
+          <div class="side-title">POZIOMY</div>
           <button type="button" class="lvl-btn active" data-level="all"><span class="lvl-name">CAŁY OBIEKT</span><span class="lvl-sub">3 poziomy · 13 kamer</span></button>
           <button type="button" class="lvl-btn" data-level="0"><span class="lvl-name">POWIERZCHNIA</span><span class="lvl-sub" id="lvl-sub-0">—</span></button>
           <button type="button" class="lvl-btn" data-level="1"><span class="lvl-name">POZIOM −300 m</span><span class="lvl-sub" id="lvl-sub-1">—</span></button>
@@ -89,7 +89,7 @@
             <g id="scene"></g>
           </svg>
           <div id="twin-tooltip" class="tooltip" hidden></div>
-          <div class="twin-hint">kółko myszy: zoom · przeciągnij: przesuń · warstwy: poziomy wyrobisk</div>
+          <div class="twin-hint">kółko myszy: zoom · przeciągnij: przesuń · kliknij poziom: przybliż</div>
         </div>
       </div>
     </section>
@@ -142,6 +142,7 @@
 
   </div>
 
+  <script src="js/site.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
 </body>
