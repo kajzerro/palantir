@@ -55,7 +55,7 @@
     <!-- ===================== PRAWY GÓRNY: CYFROWY BLIŹNIAK ===================== -->
     <section id="twin" class="panel">
       <div class="panel-head">
-        <span class="panel-title">CYFROWY BLIŹNIAK · MODEL 3D · WIDOK Z LOTU PTAKA</span>
+        <span class="panel-title">CYFROWY BLIŹNIAK · ORTOFOTOMAPA Z DRONA · WARSTWY</span>
         <span class="panel-meta">
           <span class="legend"><i class="dot ok"></i>nominalna</span>
           <span class="legend"><i class="dot attn"></i>w procedurze</span>
@@ -66,7 +66,7 @@
       </div>
       <div class="twin-wrap">
         <aside class="twin-side" id="twin-side">
-          <div class="side-title">POZIOMY</div>
+          <div class="side-title">WARSTWY</div>
           <button type="button" class="lvl-btn active" data-level="all"><span class="lvl-name">CAŁY OBIEKT</span><span class="lvl-sub">3 poziomy · 13 kamer</span></button>
           <button type="button" class="lvl-btn" data-level="0"><span class="lvl-name">POWIERZCHNIA</span><span class="lvl-sub" id="lvl-sub-0">—</span></button>
           <button type="button" class="lvl-btn" data-level="1"><span class="lvl-name">POZIOM −300 m</span><span class="lvl-sub" id="lvl-sub-1">—</span></button>
@@ -79,7 +79,7 @@
           <dl class="side-kv small" id="twin-ch4"><dt>L-12</dt><dd data-sensor="L12">—</dd><dt>W-7</dt><dd data-sensor="W7">—</dd><dt>odmetan.</dt><dd data-sensor="DR">—</dd></dl>
         </aside>
         <div class="twin-svg-wrap">
-          <svg id="mine-svg" viewBox="0 0 680 480" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cyfrowy bliźniak kopalni – model 3D">
+          <svg id="mine-svg" viewBox="0 0 680 480" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cyfrowy bliźniak kopalni – ortofotomapa z warstwami wyrobisk">
             <defs>
               <pattern id="coalhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
                 <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(140,180,210,0.25)" stroke-width="1"/>
@@ -89,7 +89,7 @@
             <g id="scene"></g>
           </svg>
           <div id="twin-tooltip" class="tooltip" hidden></div>
-          <div class="twin-hint">kółko myszy: zoom · przeciągnij: przesuń · kliknij poziom: przybliż</div>
+          <div class="twin-hint">kółko myszy: zoom · przeciągnij: przesuń · warstwy: poziomy wyrobisk</div>
         </div>
       </div>
     </section>

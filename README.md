@@ -26,7 +26,7 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 | Panel | Co robi |
 |---|---|
 | **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski w zwykłym języku („Tak, to prawdziwe zagrożenie”, „Powiedz mi więcej”, „To fałszywy alarm”, „Zrobione ✓”). Na dole stałe przyciski: *Co się dzieje?*, *Pokaż kamery*, *Co mam teraz robić?*, *Historia zdarzeń*. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
-| **Prawy górny – cyfrowy bliźniak** | Model 3D kopalni w rzucie z lotu ptaka: powierzchnia (kratownicowa wieża szybowa, zakład przeróbczy z silosami, osadniki, kotłownia, rozdzielnia, lampownia, parking, tory z wagonami, stacja wentylatorów), poziom −300 m i poziom −500 m ułożone jeden pod drugim (widok rozstrzelony) z przekopami w obudowie łukowej, torami, ścianami z sekcjami obudowy i kombajnem, chodnikami przyścianowymi, przodkiem, pompownią, komorą MW, stacją odmetanowania, komorą ratunkową, tamami wentylacyjnymi, przepływem powietrza, jeżdżącą klatką w szybie, lokomotywą i przemieszczającą się załogą. Kółko myszy przybliża, przeciąganie przesuwa, kliknięcie poziomu w panelu bocznym przybliża ten poziom. Każdy punkt to kamera CCTV. Kliknięcie otwiera ją na podglądzie. Punkty **pulsują na czerwono** przy anomalii, są **pomarańczowe** w trakcie procedury, **szare** gdy offline. Panel boczny pozwala wyróżnić jeden poziom. |
+| **Prawy górny – cyfrowy bliźniak** | Ortofotomapa terenu kopalni (wygenerowana, wygląda jak zdjęcie z drona: budynki z cieniami i elewacjami, drogi, parking, osadniki, hałdy, tory z wagonami, pola i drzewa wokół) z warstwami GIS: kamery z polami widzenia na powierzchni oraz podświetlone plany wyrobisk poziomów −300 m i −500 m (przekopy, ściany z sekcjami obudowy, komory, szyby, pochylnia, rurociąg CH₄, tamy wentylacyjne, przemieszczająca się załoga). Przyciski w panelu bocznym przełączają warstwy i przybliżają dany poziom; kółko myszy przybliża, przeciąganie przesuwa. Przy alarmie widok sam przełącza się na poziom kamery. Obraz generuje `tools/make_orthophoto.py` (do `assets/orthophoto.jpg`). |
 | **Prawy dolny – podgląd na żywo** | Odtwarza wideo wybranej kamery z ramkami detekcji AI, listą detekcji, metadanymi kamery i listą ostatnich zdarzeń. Do czasu dodania pliku wideo pokazuje animowaną planszę BRAK SYGNAŁU. |
 
 ## Przebieg demo
@@ -86,6 +86,6 @@ Gdy brakuje klipu zdarzenia, używana jest pętla kamery; gdy brakuje i jej,
 plansza BRAK SYGNAŁU podaje oczekiwaną ścieżkę.
 
 Wszystkie ścieżki, kamery, zdarzenia, ramki detekcji (`boxes`, w % kadru),
-i procedury są w `js/data.js`. Pozycje kamer na modelu
-(`level`, `x`, `y`, `dir`) są we współrzędnych planu obiektu (0–520 × 0–200);
-projekcja 3D jest liczona w `js/app.js` (funkcja `P`).
+i procedury są w `js/data.js`. Pozycje kamer na mapie
+(`level`, `x`, `y`, `dir`) są we współrzędnych planu obiektu (0–520 × 0–200,
+1 jednostka ≈ 1 m); ortofotomapa obejmuje −60..580 × −50..250.

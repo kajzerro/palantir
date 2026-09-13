@@ -24,15 +24,15 @@
 window.MINE_DATA = (function () {
 
   const cameras = [
-    { id: "KAM-01", name: "Brama główna",                    zone: "Powierzchnia · Perymetr",          level: 0,   x: 34,  y: 168, dir: 20,  type: "PTZ 4K · LPR",          video: "videos/cam-01.mp4" },
-    { id: "KAM-02", name: "Lampownia / Łaźnia",              zone: "Powierzchnia · Ruch załogi",       level: 0,   x: 165, y: 178, dir: 200, type: "Kopułkowa 4K",          video: "videos/cam-02.mp4" },
-    { id: "KAM-03", name: "Nadszybie szybu I",               zone: "Powierzchnia · Wieża wyciągowa",   level: 0,   x: 268, y: 126, dir: 180, type: "Tubowa 4K · Ex-d",      video: "videos/cam-03.mp4" },
-    { id: "KAM-04", name: "Zakład przeróbczy · hala 1",      zone: "Powierzchnia · Przeróbka",         level: 0,   x: 388, y: 112, dir: 240, type: "Termowizja + RGB",      video: "videos/cam-04.mp4" },
-    { id: "KAM-05", name: "Stacja wentylatorów głównych",    zone: "Powierzchnia · Wentylacja",        level: 0,   x: 470, y: 178, dir: 200, type: "Kopułkowa 4K",          video: "videos/cam-05.mp4" },
-    { id: "KAM-06", name: "Podszybie −300",                  zone: "Poziom −300 · Szyb I",             level: 1,   x: 268, y: 92,  dir: 90,  type: "Ex-d IP67 · IR",        video: "videos/cam-06.mp4" },
+    { id: "KAM-01", name: "Brama główna",                    zone: "Powierzchnia · Perymetr",          level: 0,   x: 40,  y: 166, dir: 300,  type: "PTZ 4K · LPR",          video: "videos/cam-01.mp4" },
+    { id: "KAM-02", name: "Lampownia / Łaźnia",              zone: "Powierzchnia · Ruch załogi",       level: 0,   x: 184, y: 150, dir: 200, type: "Kopułkowa 4K",          video: "videos/cam-02.mp4" },
+    { id: "KAM-03", name: "Nadszybie szybu I",               zone: "Powierzchnia · Wieża wyciągowa",   level: 0,   x: 284, y: 68,  dir: 200, type: "Tubowa 4K · Ex-d",      video: "videos/cam-03.mp4" },
+    { id: "KAM-04", name: "Zakład przeróbczy · hala 1",      zone: "Powierzchnia · Przeróbka",         level: 0,   x: 442, y: 94,  dir: 220, type: "Termowizja + RGB",      video: "videos/cam-04.mp4" },
+    { id: "KAM-05", name: "Stacja wentylatorów głównych",    zone: "Powierzchnia · Wentylacja",        level: 0,   x: 486, y: 150, dir: 200, type: "Kopułkowa 4K",          video: "videos/cam-05.mp4" },
+    { id: "KAM-06", name: "Podszybie −300",                  zone: "Poziom −300 · Szyb I",             level: 1,   x: 254, y: 92,  dir: 0,  type: "Ex-d IP67 · IR",        video: "videos/cam-06.mp4" },
     { id: "KAM-07", name: "Ściana L-12 · front",             zone: "Poziom −300 · Pokład 405/1",       level: 1,   x: 150, y: 92,  dir: 180, type: "Ex-d IP67 · IR",        video: "videos/cam-07.mp4" },
     { id: "KAM-08", name: "Pochylnia taśmowa P-2",           zone: "Pochylnia −300 → −500",            level: 1.5, x: 311, y: 108, dir: 200, type: "Termowizja + RGB Ex-d", video: "videos/cam-08.mp4" },
-    { id: "KAM-09", name: "Podszybie −500",                  zone: "Poziom −500 · Szyb I",             level: 2,   x: 268, y: 92,  dir: 90,  type: "Ex-d IP67 · IR",        video: "videos/cam-09.mp4" },
+    { id: "KAM-09", name: "Podszybie −500",                  zone: "Poziom −500 · Szyb I",             level: 2,   x: 282, y: 92,  dir: 180,  type: "Ex-d IP67 · IR",        video: "videos/cam-09.mp4" },
     { id: "KAM-10", name: "Komora materiałów wybuchowych",   zone: "Poziom −500 · Strefa zastrzeżona", level: 2,   x: 170, y: 118, dir: 180, type: "Ex-d IP67 · IR",        video: "videos/cam-10.mp4" },
     { id: "KAM-11", name: "Stacja odmetanowania",            zone: "Poziom −500 · Instalacja gazowa",  level: 2,   x: 296, y: 118, dir: 0,   type: "Ex-d IP67 · IR",        video: "videos/cam-11.mp4" },
     { id: "KAM-12", name: "Ściana W-7 · front",              zone: "Poziom −500 · Pokład 510",         level: 2,   x: 404, y: 92,  dir: 0,   type: "Ex-d IP67 · IR",        video: "videos/cam-12.mp4" },
@@ -42,8 +42,8 @@ window.MINE_DATA = (function () {
   /* Czujniki metanu – pozycja na modelu */
   const sensors = [
     { id: "L12", level: 1, x: 62,  y: 34,  base: 0.38 },
-    { id: "W7",  level: 2, x: 412, y: 26,  base: 0.42 },
-    { id: "DR",  level: 2, x: 296, y: 148, base: 0.21 },
+    { id: "W7",  level: 2, x: 412, y: 21,  base: 0.42 },
+    { id: "DR",  level: 2, x: 300, y: 124, base: 0.21 },
   ];
 
   /* ------------------------------------------------------------------

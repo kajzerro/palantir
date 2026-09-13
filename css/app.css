@@ -210,100 +210,68 @@ button { font-family: inherit; }
 .zoom-ctl { display: inline-flex; gap: 2px; margin-left: 6px; }
 .zoom-ctl .btn { min-width: 20px; padding: 1px 5px; }
 .twin-hint { position: absolute; right: 8px; bottom: 4px; font-size: 9px; color: var(--text-faint); letter-spacing: .06em; pointer-events: none; }
-#mine-svg .lbl { font-family: var(--mono); font-size: 8.5px; fill: #b8cddd; letter-spacing: 0.06em; pointer-events: none; }
-#mine-svg .lbl.sm { font-size: 7.5px; fill: #8aa0b2; }
-#mine-svg .lbl.lvl { font-size: 10px; fill: #d5e5f0; font-weight: 700; letter-spacing: .14em; }
-#mine-svg .lbl.lvl-sub { font-size: 8px; fill: #6f8697; letter-spacing: .1em; }
-#mine-svg .sensor { font-family: var(--mono); font-size: 8px; fill: var(--ok); letter-spacing: .04em; font-weight: 600; }
-#mine-svg .sensor.warn { fill: var(--attn); } #mine-svg .sensor.alert { fill: var(--alert); }
-#mine-svg .slab { fill: #15202b; stroke: #33506a; stroke-width: 1; }
-#mine-svg .slab.surface { fill: #17231d; stroke: #4a6a55; }
-#mine-svg .slab-side { fill: #0a1016; stroke: #2a3f52; stroke-width: .8; }
-#mine-svg .slab.surface + .slab-side, #mine-svg .slab-side.surface { fill: #0d1512; stroke: #3b5546; }
-#mine-svg .gridl { stroke: rgba(130,180,220,.09); stroke-width: .6; }
-#mine-svg .fence { fill: none; stroke: #5b7f93; stroke-width: 1; stroke-dasharray: 3 2; }
-#mine-svg .road { fill: #101820; stroke: #26384a; stroke-width: .6; }
-#mine-svg .rail { fill: none; stroke: #6b7c86; stroke-width: 1.4; stroke-dasharray: 6 3; }
-#mine-svg .f-top { fill: #2a3d4f; stroke: #6f93a8; stroke-width: .8; stroke-linejoin: round; }
-#mine-svg .f-front { fill: #17242f; stroke: #46627a; stroke-width: .6; }
-#mine-svg .f-right { fill: #1f2f3d; stroke: #46627a; stroke-width: .6; }
-#mine-svg .corr .f-top { fill: #1c2a37; stroke: #4f6f80; }
-#mine-svg .corr .f-front, #mine-svg .corr .f-right { fill: #111b24; }
-#mine-svg .lw .f-top { fill: #1e2f3d; stroke: #6b93a8; stroke-dasharray: 3 2; }
-#mine-svg .lw .f-top.hatch { fill: url(#coalhatch); stroke: none; }
-#mine-svg .mag .f-top { fill: #3a2523; stroke: #b8705e; } #mine-svg .mag .f-front, #mine-svg .mag .f-right { fill: #241616; stroke: #7a4a40; }
-#mine-svg .ref .f-top { fill: #1f3a2a; stroke: #5fa77a; } #mine-svg .ref .f-front, #mine-svg .ref .f-right { fill: #12261a; stroke: #3f7355; }
-#mine-svg .tower .f-top { fill: #3a5065; } #mine-svg .tower .f-front { fill: #1a2734; } #mine-svg .tower .f-right { fill: #24364a; }
-#mine-svg .plant .f-top { fill: #2d4256; }
-#mine-svg .shaft { fill: rgba(122,160,180,.16); stroke: #7aa0b4; stroke-width: .8; }
-#mine-svg .shaft-line { stroke: #7aa0b4; stroke-width: .8; stroke-dasharray: 3 3; opacity: .7; }
-#mine-svg .drift { fill: rgba(60,90,115,.55); stroke: #6b93a8; stroke-width: .8; }
-#mine-svg .belt { stroke: #a9bfd0; stroke-width: 1.2; stroke-dasharray: 5 4; animation: belt 1.4s linear infinite; fill: none; }
-#mine-svg .conv { stroke: #8a9da8; stroke-width: 2.2; fill: none; }
-#mine-svg .pile { fill: #0c0e10; stroke: #3a3f44; stroke-width: .6; }
-#mine-svg .wheel { fill: #0b1420; stroke: #9cc4d8; stroke-width: 1.4; }
-#mine-svg .fan { stroke: #8fc1d6; stroke-width: 1.2; fill: none; transform-box: fill-box; transform-origin: center; animation: spin 2.4s linear infinite; }
-#mine-svg .lvl-group { transition: opacity .25s; }
-#mine-svg.focus-0 .lvl-group:not(.lvl-0), #mine-svg.focus-1 .lvl-group:not(.lvl-1), #mine-svg.focus-2 .lvl-group:not(.lvl-2) { opacity: .18; }
+.twin-svg-wrap { background: #0a0f14; }
 
-/* ---------- detale modelu 3D ---------- */
-#mine-svg .stack-line { stroke: rgba(120,170,210,.18); stroke-width: .6; stroke-dasharray: 2 3; }
-#mine-svg .arches line, #mine-svg .arch { stroke: #5e8196; stroke-width: .5; opacity: .8; }
-#mine-svg .rails line { stroke: #8fa6b6; stroke-width: .45; opacity: .8; }
-#mine-svg .air { fill: none; stroke: rgba(124,247,208,.55); stroke-width: 1; stroke-dasharray: 1.5 7; animation: belt 2.2s linear infinite; }
-#mine-svg .belt { fill: none; }
-#mine-svg .pipe { fill: none; stroke: #c9c24a; stroke-width: 1.1; stroke-dasharray: 4 2; opacity: .9; }
-#mine-svg .lane { fill: none; stroke: #3d4f5e; stroke-width: .5; stroke-dasharray: 3 3; }
-#mine-svg .lot { fill: #0d151d; stroke: #26384a; stroke-width: .5; }
-#mine-svg .goaf .f-top.hatch { fill: url(#coalhatch); stroke: none; }
-#mine-svg .support .f-top { fill: #8fb1c6; stroke: #cfe4f0; stroke-width: .3; }
-#mine-svg .support .f-front, #mine-svg .support .f-right { fill: #4d6e84; stroke: none; }
-#mine-svg .machine .f-top { fill: #e0b23a; stroke: #f5d67a; stroke-width: .4; }
-#mine-svg .machine .f-front, #mine-svg .machine .f-right { fill: #8a6a1c; stroke: #5a4410; stroke-width: .4; }
-#mine-svg .shearer { animation: shear 9s ease-in-out infinite alternate; }
-#mine-svg .vdoor { stroke: #ffb347; stroke-width: 1.6; opacity: .85; }
-#mine-svg .water .f-top { fill: #163a52; stroke: #3d8ab5; }
-#mine-svg .tank .f-top { fill: #3d5568; stroke: #86a9bf; stroke-width: .5; } #mine-svg .tank .f-front { fill: #22333f; stroke: #4c6678; stroke-width: .4; }
-#mine-svg .thick .f-top { fill: #1b3446; stroke: #4c8bb0; stroke-width: .6; } #mine-svg .thick .f-front { fill: #142330; stroke: #355a72; stroke-width: .4; }
-#mine-svg .silo .f-top { fill: #3f5669; stroke: #8db0c6; } #mine-svg .silo .f-front { fill: #24343f; stroke: #4f6b7f; }
-#mine-svg .chimney .f-top { fill: #4a4f55; stroke: #8b949c; } #mine-svg .chimney .f-front { fill: #2a2e33; stroke: #5b6369; }
-#mine-svg .diffuser .f-top { fill: #33505f; stroke: #8fc1d6; } #mine-svg .diffuser .f-front { fill: #1d3039; stroke: #5b8a9c; }
-#mine-svg .trafo .f-top { fill: #55606a; stroke: #9aa7b1; stroke-width: .3; } #mine-svg .trafo .f-front, #mine-svg .trafo .f-right { fill: #2e363d; stroke: none; }
-#mine-svg .car .f-top { fill: #7d8b96; stroke: none; } #mine-svg .car .f-front, #mine-svg .car .f-right { fill: #3f4a53; stroke: none; }
-#mine-svg .car.c1 .f-top { fill: #a8b3bc; } #mine-svg .car.c2 .f-top { fill: #5f7285; }
-#mine-svg .wagon .f-top { fill: #3b3f43; stroke: #6b7176; stroke-width: .4; } #mine-svg .wagon .f-front, #mine-svg .wagon .f-right { fill: #24282b; stroke: #444a4f; stroke-width: .3; }
-#mine-svg .loco .f-top { fill: #d9a23a; stroke: #f0c86a; stroke-width: .4; } #mine-svg .loco .f-front, #mine-svg .loco .f-right { fill: #7d5a1a; stroke: none; }
-#mine-svg .cage .f-top { fill: #cfe4f0; stroke: #fff; stroke-width: .4; } #mine-svg .cage .f-front, #mine-svg .cage .f-right { fill: #6b8ea3; stroke: none; }
-#mine-svg .person circle { fill: #7cf7d0; stroke: #06131c; stroke-width: .5; }
-#mine-svg .lattice .leg { stroke: #9cc4d8; stroke-width: 1.1; }
-#mine-svg .lattice .brace { stroke: #6f93a8; stroke-width: .5; opacity: .9; }
-#mine-svg .wheel-axle { stroke: #9cc4d8; stroke-width: 1; }
-#mine-svg .bridge { fill: #2b3f50; stroke: #7aa0b4; stroke-width: .6; }
-#mine-svg .mast-l { stroke: #6f8797; stroke-width: .6; }
-#mine-svg .lamp { fill: #ffe9a8; filter: url(#glow); }
-#mine-svg .barrier { stroke: #ff6b6b; stroke-width: 1.4; stroke-dasharray: 2 1.5; }
-#mine-svg .compass line, #mine-svg .compass polygon { stroke: #a9bfd0; fill: #a9bfd0; stroke-width: .8; }
-#mine-svg .scale { stroke: #a9bfd0; stroke-width: 1.2; }
-@keyframes shear { from { transform: translate(0, 0); } to { transform: translate(15.3px, 17px); } }
-@media (prefers-reduced-motion: reduce) { #mine-svg .fan, #mine-svg .belt, #mine-svg .air, #mine-svg .shearer { animation: none; } }
+/* ---- ortofotomapa + warstwy ---- */
+#mine-svg .dim { fill: #04080d; opacity: 0; transition: opacity .3s; pointer-events: none; }
+#mine-svg.view-1 .dim, #mine-svg.view-2 .dim { opacity: .66; }
+#mine-svg .lvl-group { transition: opacity .3s; }
+#mine-svg.view-0 .lvl-1, #mine-svg.view-0 .lvl-2, #mine-svg.view-1 .lvl-2, #mine-svg.view-2 .lvl-1 { opacity: 0; pointer-events: none; }
+#mine-svg.view-all .lvl-1, #mine-svg.view-all .lvl-2 { opacity: .8; }
+#mine-svg.view-1 .lvl-0 .surf, #mine-svg.view-2 .lvl-0 .surf { opacity: .35; pointer-events: none; }
+#mine-svg.view-all .lvl-1 .lbl.lvl, #mine-svg.view-all .lvl-2 .lbl.lvl { display: none; }
+#mine-svg.view-1 .lvl-0 .lbl.lvl, #mine-svg.view-2 .lvl-0 .lbl.lvl { display: none; }
+
+#mine-svg .lbl { font-family: var(--mono); font-size: 6px; fill: #eef5fa; letter-spacing: .06em; pointer-events: none; paint-order: stroke; stroke: rgba(0,0,0,.85); stroke-width: 1.6px; stroke-linejoin: round; }
+#mine-svg .lbl.s { font-size: 4.6px; fill: #f2f6f9; letter-spacing: .08em; }
+#mine-svg .lbl.u { font-size: 4.4px; letter-spacing: .06em; }
+#mine-svg .lbl.u.big { font-size: 5.6px; font-weight: 700; }
+#mine-svg .lbl.lvl { font-size: 7px; font-weight: 700; letter-spacing: .14em; }
+#mine-svg .lbl.lvl.l0 { fill: #ffffff; } #mine-svg .lbl.lvl.l1 { fill: #7cf7d0; } #mine-svg .lbl.lvl.l2 { fill: #d3a6ff; }
+#mine-svg .site { fill: none; stroke: rgba(255,255,255,.35); stroke-width: .5; stroke-dasharray: 2 1.5; }
+#mine-svg .sensor { font-family: var(--mono); font-size: 4.6px; fill: var(--ok); font-weight: 700; paint-order: stroke; stroke: rgba(0,0,0,.85); stroke-width: 1.4px; }
+#mine-svg .sensor.warn { fill: var(--attn); } #mine-svg .sensor.alert { fill: var(--alert); }
+
+#mine-svg .lvl-1 { --lv: #7cf7d0; --lvd: rgba(124,247,208,.18); }
+#mine-svg .lvl-2 { --lv: #d3a6ff; --lvd: rgba(211,166,255,.18); }
+#mine-svg .gal { stroke: var(--lv); stroke-linecap: round; opacity: .95; }
+#mine-svg .gal-glow { stroke: var(--lv); stroke-linecap: round; opacity: .28; filter: url(#glow); }
+#mine-svg .room { fill: var(--lvd); stroke: var(--lv); stroke-width: .7; }
+#mine-svg .room.mag { fill: rgba(255,110,90,.28); stroke: #ff8a70; }
+#mine-svg .room.ref { fill: rgba(67,217,160,.28); stroke: #43d9a0; }
+#mine-svg .room.water { fill: rgba(70,150,220,.35); stroke: #6fb4ff; }
+#mine-svg .lw { fill: none; stroke: var(--lv); stroke-width: .8; stroke-dasharray: 2 1.2; }
+#mine-svg .lw-goaf { fill: url(#coalhatch); opacity: .9; }
+#mine-svg .lw-face { stroke: #fff; stroke-width: 1.2; }
+#mine-svg .lw-sup { fill: #fff; opacity: .85; }
+#mine-svg .shaft { fill: rgba(255,255,255,.10); stroke: #fff; stroke-width: .9; stroke-dasharray: 1.5 1; }
+#mine-svg .belt { stroke: #ffd27a; stroke-width: 1.2; stroke-dasharray: 3 2.2; animation: belt 1.4s linear infinite; fill: none; }
+#mine-svg .incline { stroke: #ffffff; stroke-width: 2.4; stroke-dasharray: 1.2 1.6; opacity: .9; }
+#mine-svg .pipe { fill: none; stroke: #e5d85a; stroke-width: .9; stroke-dasharray: 2.4 1.2; }
+#mine-svg .vdoor { stroke: #ffb347; stroke-width: 1.4; }
+#mine-svg .machine { fill: #ffcc44; stroke: #6b4f00; stroke-width: .4; }
+#mine-svg .person circle { fill: #ffffff; stroke: rgba(0,0,0,.6); stroke-width: .4; }
+#mine-svg .rose { fill: rgba(0,0,0,.45); stroke: #fff; stroke-width: .5; }
+#mine-svg .rose-n { fill: #ff5a5a; }
+#mine-svg .scale { fill: #fff; stroke: #000; stroke-width: .3; } #mine-svg .scale.alt { fill: #111; }
+@media (prefers-reduced-motion: reduce) { #mine-svg .belt { animation: none; } }
 
 .cam { cursor: pointer; }
 .cam .hit { fill: transparent; stroke: none; pointer-events: all; }
-.cam .mast { stroke: #9fc3d8; stroke-width: 1; }
-.cam .ring { fill: none; stroke: var(--accent); stroke-width: 1.1; opacity: .6; }
-.cam .core { fill: var(--accent); stroke: #06131c; stroke-width: 1.2; }
-.cam .pulse { fill: none; stroke: var(--alert); stroke-width: 1.5; opacity: 0; }
-.cam .id { font-family: var(--mono); font-size: 7.5px; fill: #dcebf5; letter-spacing: .05em; pointer-events: none; font-weight: 600; paint-order: stroke; stroke: #06131c; stroke-width: 2px; }
-.cam .fov { fill: rgba(79,209,255,0.12); stroke: rgba(79,209,255,0.4); stroke-width: .6; }
-.cam:hover .ring { opacity: 1; stroke-width: 2; }
-.cam.selected .ring { stroke: #ffffff; opacity: 1; stroke-width: 2; }
+.cam .ring { fill: rgba(0,0,0,.35); stroke: #ffffff; stroke-width: .9; }
+.cam .core { fill: var(--accent); stroke: none; }
+.cam .pulse { fill: none; stroke: var(--alert); stroke-width: 1.2; opacity: 0; }
+.cam .id { font-family: var(--mono); font-size: 5px; fill: #ffffff; letter-spacing: .05em; pointer-events: none; font-weight: 700; paint-order: stroke; stroke: rgba(0,0,0,.9); stroke-width: 1.6px; }
+.cam .fov { fill: rgba(79,209,255,0.22); stroke: rgba(79,209,255,0.75); stroke-width: .4; }
+.cam:hover .ring { stroke-width: 1.5; }
+.cam.selected .ring { stroke: var(--accent-2); stroke-width: 1.5; }
 .cam.selected .core { fill: #ffffff; }
-.cam.attn .core { fill: var(--attn); } .cam.attn .ring { stroke: var(--attn); } .cam.attn .fov { fill: rgba(255,179,71,0.16); stroke: rgba(255,179,71,0.55); }
-.cam.alert .core { fill: var(--alert); } .cam.alert .ring { stroke: var(--alert); opacity: 1; }
-.cam.alert .fov { fill: rgba(255,77,94,0.22); stroke: rgba(255,77,94,0.7); }
+.cam.attn .core { fill: var(--attn); } .cam.attn .ring { stroke: var(--attn); } .cam.attn .fov { fill: rgba(255,179,71,0.26); stroke: rgba(255,179,71,0.8); }
+.cam.alert .core { fill: var(--alert); } .cam.alert .ring { stroke: var(--alert); }
+.cam.alert .fov { fill: rgba(255,77,94,0.32); stroke: rgba(255,77,94,0.9); }
 .cam.alert .pulse { animation: pulse 1.2s ease-out infinite; }
 .cam.alert .id { fill: #ffd7db; }
-.cam.off .core { fill: #3a4652; } .cam.off .ring { stroke: #3a4652; } .cam.off .fov { display: none; }
+.cam.off .core { fill: #6b7680; } .cam.off .ring { stroke: #9aa5ae; } .cam.off .fov { display: none; }
 
 .tooltip {
   position: absolute; pointer-events: none; z-index: 5;
@@ -392,7 +360,7 @@ button { font-family: inherit; }
 /* ---------- animations ---------- */
 @keyframes blink { 50% { opacity: .25; } }
 @keyframes fadein { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
-@keyframes pulse { 0% { r: 6; opacity: .9; } 100% { r: 22; opacity: 0; } }
+@keyframes pulse { 0% { r: 4; opacity: .9; } 100% { r: 14; opacity: 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes belt { to { stroke-dashoffset: -18; } }
 @keyframes scan { from { top: 0; } to { top: 100%; } }

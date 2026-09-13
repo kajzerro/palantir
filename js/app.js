@@ -180,16 +180,16 @@
   els.btnAuto.addEventListener("click", () => toggleAuto());
 
   /* ==================================================================
-     CYFROWY BLIŹNIAK – model 3D w rzucie ukośnym z lotu ptaka
+     CYFROWY BLIŹNIAK – ortofotomapa z drona + warstwy wyrobisk (widok GIS)
      ------------------------------------------------------------------
-     Współrzędne świata: x 0–520 (zachód→wschód), y 0–200 (północ→południe),
-     z = wysokość w px. Poziomy są ułożone jeden pod drugim (widok rozstrzelony).
+     Współrzędne świata w jednostkach planu (≈ m): obiekt 0..520 × 0..200,
+     mapa obejmuje −60..580 × −50..250. Poziomy −300 / −500 są rysowane
+     jako podświetlone plany wyrobisk nałożone na zdjęcie.
      ================================================================== */
   const SVGNS = "http://www.w3.org/2000/svg";
-  const SH = 0.45, FY = 0.5, LEVEL_DY = 135, OX = 22, OY = 92;
-  const W = 520, DEPTH = 200;
-  const P = (x, y, z = 0, level = 0) => [OX + x + SH * y, OY + FY * y - z + level * LEVEL_DY];
-  const pts = (arr) => arr.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const MAP = { x: -60, y: -50, w: 640, h: 300 };
+  const SITE = { x: 0, y: 0, w: 520, h: 200 };
+  const PHOTO = "assets/orthophoto.jpg";
 
   function svgEl(tag, attrs = {}, parent) {
     const e = document.createElementNS(SVGNS, tag);
@@ -198,397 +198,156 @@
     return e;
   }
   function text(parent, x, y, str, cls = "lbl", anchor = "middle") {
-    const t = svgEl("text", { x: x.toFixed(1), y: y.toFixed(1), class: cls, "text-anchor": anchor }, parent);
+    const t = svgEl("text", { x: (+x).toFixed(1), y: (+y).toFixed(1), class: cls, "text-anchor": anchor }, parent);
     t.textContent = str;
     return t;
   }
+  const pts = (arr) => arr.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
 
-  /* ---------- prymitywy ---------- */
-  const Pl = (x, y, z = 0) => [x + SH * y, FY * y - z];      // projekcja lokalna (dla obiektów ruchomych)
-
-  function drawBox(g, Pf, x, y, w, d, h, cls = "") {
-    const b = svgEl("g", { class: `bx ${cls}` }, g);
-    if (h > 0) {
-      svgEl("polygon", { class: "f-front", points: pts([Pf(x, y + d, h), Pf(x + w, y + d, h), Pf(x + w, y + d, 0), Pf(x, y + d, 0)]) }, b);
-      svgEl("polygon", { class: "f-right", points: pts([Pf(x + w, y, h), Pf(x + w, y + d, h), Pf(x + w, y + d, 0), Pf(x + w, y, 0)]) }, b);
-    }
-    svgEl("polygon", { class: "f-top", points: pts([Pf(x, y, h), Pf(x + w, y, h), Pf(x + w, y + d, h), Pf(x, y + d, h)]) }, b);
-    return b;
-  }
-
-  /** Bryła prostopadłościenna na danym poziomie z opcjonalną etykietą. */
-  function box(parent, level, x, y, w, d, h, cls = "", label, labelOpts = {}) {
-    const g = drawBox(parent, (a, b, c) => P(a, b, c, level), x, y, w, d, h, cls);
-    if (labelOpts.hatch) g.querySelector(".f-top").classList.add("hatch");
-    if (label) {
-      const pos = labelOpts.pos || "top", lc = labelOpts.cls;
-      let cx, cy, anchor = "middle";
-      if (pos === "top") { [cx, cy] = P(x + w / 2, y + d / 2, h, level); cy += 3; }
-      else if (pos === "above") { [cx, cy] = P(x + w / 2, y, h, level); cy -= 4; }
-      else if (pos === "below") { [cx, cy] = P(x + w / 2, y + d, 0, level); cy += 9; }
-      else if (pos === "aboveRight") { [cx, cy] = P(x + w - 2, y, h, level); cy -= 4; anchor = "end"; }
-      else if (pos === "aboveLeft") { [cx, cy] = P(x + 2, y, h, level); cy -= 4; anchor = "start"; }
-      else if (pos === "right") { [cx, cy] = P(x + w, y + d / 2, h, level); cx += 6; cy += 3; anchor = "start"; }
-      else if (pos === "left") { [cx, cy] = P(x, y + d / 2, h, level); cx -= 5; cy += 3; anchor = "end"; }
-      else if (pos === "belowLeft") { [cx, cy] = P(x + 2, y + d, 0, level); cy += 9; anchor = "start"; }
-      text(g, cx, cy, label, lc || (pos === "top" ? "lbl" : "lbl sm"), anchor);
-    }
-    return g;
-  }
-
-  /** Walec (komin, zbiornik, osadnik). */
-  function cyl(parent, level, cx, cy, r, h, cls = "", label, labelPos = "below") {
-    const g = svgEl("g", { class: `cy ${cls}` }, parent);
-    const N = 28, top = [], tf = [], bf = [];
-    for (let i = 0; i <= N; i++) {
-      const th = (2 * Math.PI * i) / N;
-      top.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), h, level));
-    }
-    for (let i = 0; i <= N / 2; i++) {
-      const th = (Math.PI * i) / (N / 2);
-      tf.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), h, level));
-      bf.push(P(cx + r * Math.cos(th), cy + r * Math.sin(th), 0, level));
-    }
-    svgEl("polygon", { class: "f-front", points: pts(tf.concat(bf.reverse())) }, g);
-    svgEl("polygon", { class: "f-top", points: pts(top) }, g);
-    if (label) {
-      if (labelPos === "below") { const [x, y] = P(cx, cy + r, 0, level); text(g, x, y + 9, label, "lbl sm"); }
-      else { const [x, y] = P(cx, cy, h, level); text(g, x, y - r * FY - 4, label, "lbl sm"); }
-    }
-    return g;
-  }
-
-  /** Kratownicowa wieża szybowa z kołami linowymi. */
-  function headframe(parent, level, x, y, w, d, h) {
-    const g = svgEl("g", { class: "lattice" }, parent);
-    const ins = 5;
-    const base = [[x, y], [x + w, y], [x + w, y + d], [x, y + d]];
-    const topc = [[x + ins, y + ins], [x + w - ins, y + ins], [x + w - ins, y + d - ins], [x + ins, y + d - ins]];
-    // podstawa (zrąb szybu)
-    drawBox(g, (a, b, c) => P(a, b, c, level), x - 3, y - 3, w + 6, d + 6, 4, "");
-    // nogi
-    base.forEach(([bx, by], i) => {
-      const a = P(bx, by, 4, level), b = P(topc[i][0], topc[i][1], h, level);
-      svgEl("line", { class: "leg", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-    });
-    // stężenia poziome i ukośne (ściana przednia i prawa)
-    for (let k = 1; k <= 3; k++) {
-      const f = k / 4, z = 4 + (h - 4) * f;
-      const lerp = (i) => [base[i][0] + (topc[i][0] - base[i][0]) * f, base[i][1] + (topc[i][1] - base[i][1]) * f];
-      const c = [0, 1, 2, 3].map(lerp);
-      [[3, 2], [1, 2]].forEach(([i, j]) => {
-        const a = P(c[i][0], c[i][1], z, level), b = P(c[j][0], c[j][1], z, level);
-        svgEl("line", { class: "brace", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-        const z2 = 4 + (h - 4) * ((k - 1) / 4);
-        const lerp2 = (m) => [base[m][0] + (topc[m][0] - base[m][0]) * ((k - 1) / 4), base[m][1] + (topc[m][1] - base[m][1]) * ((k - 1) / 4)];
-        const p1 = lerp2(i), p2 = lerp2(j);
-        const d1 = P(p1[0], p1[1], z2, level), d2 = P(c[j][0], c[j][1], z, level);
-        svgEl("line", { class: "brace", x1: d1[0], y1: d1[1], x2: d2[0], y2: d2[1] }, g);
-        const d3 = P(p2[0], p2[1], z2, level), d4 = P(c[i][0], c[i][1], z, level);
-        svgEl("line", { class: "brace", x1: d3[0], y1: d3[1], x2: d4[0], y2: d4[1] }, g);
-      });
-    }
-    // platforma + koła linowe
-    drawBox(g, (a, b, c) => P(a, b, c + h, level), x + ins - 1, y + ins - 1, w - 2 * ins + 2, d - 2 * ins + 2, 3, "tower");
-    const [wx, wy] = P(x + w / 2, y + d / 2, h + 3, level);
-    svgEl("circle", { class: "wheel", cx: wx - 4, cy: wy - 8, r: 6 }, g);
-    svgEl("circle", { class: "wheel", cx: wx + 4, cy: wy - 8, r: 6 }, g);
-    svgEl("line", { class: "wheel-axle", x1: wx - 4, y1: wy - 8, x2: wx + 4, y2: wy - 8 }, g);
-    return g;
-  }
-
-  /** Obudowa łukowa: poprzeczne „żebra” wzdłuż chodnika. */
-  function arches(parent, level, x1, y1, x2, y2, width, step = 10) {
-    const g = svgEl("g", { class: "arches" }, parent);
-    const horiz = y1 === y2;
-    if (horiz) for (let x = x1 + step / 2; x < x2; x += step) { const a = P(x, y1, 5, level), b = P(x, y1 + width, 5, level); svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); }
-    else for (let y = y1 + step / 2; y < y2; y += step) { const a = P(x1, y, 5, level), b = P(x1 + width, y, 5, level); svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); }
-    return g;
-  }
-  /** Tory w chodniku. */
-  function rails(parent, level, x1, y1, x2, y2, off = 2.2, z = 5) {
-    const g = svgEl("g", { class: "rails" }, parent);
-    const horiz = y1 === y2;
-    [-off, off].forEach((o) => {
-      const a = horiz ? P(x1, y1 + o, z, level) : P(x1 + o, y1, z, level);
-      const b = horiz ? P(x2, y2 + o, z, level) : P(x2 + o, y2, z, level);
-      svgEl("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-    });
-    return g;
-  }
-  /** Linia (taśmociąg / rurociąg / przepływ powietrza) między punktami świata. */
-  function wline(parent, level, cls, points, z = 6) {
-    const p = points.map(([x, y]) => P(x, y, z, level));
-    return svgEl("polyline", { class: cls, points: pts(p) }, parent);
-  }
-  /** Rząd sekcji obudowy zmechanizowanej wzdłuż frontu ściany (front równoległy do osi y). */
-  function supports(parent, level, x, y1, y2, step = 5) {
-    const g = svgEl("g", { class: "supports" }, parent);
-    for (let y = y1; y < y2; y += step) drawBox(g, (a, b, c) => P(a, b, c, level), x, y, 4, step - 1, 3, "support");
-    return g;
-  }
-  /** Obiekt ruchomy wzdłuż ścieżki (punkty świata + poziomy). */
-  function mover(parent, cls, pathPts, dur, draw, begin = "0s") {
-    const g = svgEl("g", { class: `mover ${cls}` }, parent);
-    draw(g);
-    const p = pathPts.map(([x, y, l, z]) => P(x, y, z || 0, l));
-    const d = "M " + p.map((q) => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(" L ");
-    svgEl("animateMotion", { dur, repeatCount: "indefinite", path: d, begin }, g);
-    return g;
-  }
-  const people = (parent, level, x1, x2, y, n, dur) => {
-    for (let i = 0; i < n; i++) mover(parent, "person", [[x1, y, level, 6], [x2, y, level, 6], [x1, y, level, 6]], dur, (g) => svgEl("circle", { r: 1.7 }, g), `-${(dur.replace("s", "") * i / n).toFixed(1)}s`);
-  };
-
-  /** Płyta poziomu: górna powierzchnia z siatką + cienka krawędź. */
-  function slab(parent, level, name, sub) {
-    const g = svgEl("g", { class: `lvl-slab` }, parent);
-    const th = 5;
-    svgEl("polygon", { class: `slab-side${level === 0 ? " surface" : ""}`, points: pts([P(0, DEPTH, 0, level), P(W, DEPTH, 0, level), P(W, DEPTH, -th, level), P(0, DEPTH, -th, level)]) }, g);
-    svgEl("polygon", { class: `slab-side${level === 0 ? " surface" : ""}`, points: pts([P(W, 0, 0, level), P(W, DEPTH, 0, level), P(W, DEPTH, -th, level), P(W, 0, -th, level)]) }, g);
-    svgEl("polygon", { class: `slab${level === 0 ? " surface" : ""}`, points: pts([P(0, 0, 0, level), P(W, 0, 0, level), P(W, DEPTH, 0, level), P(0, DEPTH, 0, level)]) }, g);
-    for (let gx = 40; gx < W; gx += 40) svgEl("line", { class: "gridl", x1: P(gx, 0, 0, level)[0], y1: P(gx, 0, 0, level)[1], x2: P(gx, DEPTH, 0, level)[0], y2: P(gx, DEPTH, 0, level)[1] }, g);
-    for (let gy = 40; gy < DEPTH; gy += 40) svgEl("line", { class: "gridl", x1: P(0, gy, 0, level)[0], y1: P(0, gy, 0, level)[1], x2: P(W, gy, 0, level)[0], y2: P(W, gy, 0, level)[1] }, g);
-    const [lx, ly] = P(0, DEPTH, 0, level);
-    text(g, lx - 7, ly - 7, name, "lbl lvl", "end");
-    if (sub) text(g, lx - 7, ly + 3, sub, "lbl lvl-sub", "end");
-    return g;
-  }
-
-  /** Klin pola widzenia kamery, liczony w płaszczyźnie świata i rzutowany. */
-  function fovPoints(x, y, level, dirDeg, r = 30, half = 24) {
-    const out = [P(x, y, 0, level)];
-    for (let a = dirDeg - half; a <= dirDeg + half; a += 8) {
+  function fovPoints(x, y, dirDeg, r = 26, half = 24) {
+    const out = [[x, y]];
+    for (let a = dirDeg - half; a <= dirDeg + half; a += 6) {
       const rad = a * Math.PI / 180;
-      out.push(P(x + r * Math.cos(rad), y + r * Math.sin(rad), 0, level));
+      out.push([x + r * Math.cos(rad), y + r * Math.sin(rad)]);
     }
     return out;
   }
+
+  /** Chodnik / przekop: podświetlona linia z poświatą. */
+  function gallery(g, x1, y1, x2, y2, w = 5, cls = "") {
+    svgEl("line", { class: `gal-glow ${cls}`, x1, y1, x2, y2, "stroke-width": w + 5 }, g);
+    svgEl("line", { class: `gal ${cls}`, x1, y1, x2, y2, "stroke-width": w }, g);
+  }
+  /** Komora / obiekt na poziomie. */
+  function room(g, x, y, w, h, cls = "", label, pos = "below") {
+    svgEl("rect", { class: `room ${cls}`, x, y, width: w, height: h, rx: 1 }, g);
+    if (label) {
+      if (pos === "below") text(g, x + w / 2, y + h + 5.5, label, "lbl u");
+      else if (pos === "above") text(g, x + w / 2, y - 2, label, "lbl u");
+      else if (pos === "right") text(g, x + w + 2, y + h / 2 + 2, label, "lbl u", "start");
+      else if (pos === "left") text(g, x - 2, y + h / 2 + 2, label, "lbl u", "end");
+      else text(g, x + w / 2, y + h / 2 + 2, label, "lbl u");
+    }
+  }
+  /** Ściana wydobywcza: pole z kreskowaniem zrobów, front, sekcje. */
+  function longwall(g, x, y, w, h, faceX, label) {
+    svgEl("rect", { class: "lw-goaf", x, y, width: w, height: h }, g);
+    svgEl("rect", { class: "lw", x, y, width: w, height: h }, g);
+    svgEl("line", { class: "lw-face", x1: faceX, y1: y, x2: faceX, y2: y + h }, g);
+    for (let yy = y + 2; yy < y + h; yy += 4) svgEl("rect", { class: "lw-sup", x: faceX - 1.5, y: yy, width: 3, height: 2.6 }, g);
+    text(g, x + w / 2, y + h / 2 + 2.5, label, "lbl u big");
+  }
+  function ventDoor(g, x, y) { svgEl("line", { class: "vdoor", x1: x, y1: y - 5, x2: x, y2: y + 5 }, g); }
+  function mover(parent, cls, path, dur, draw, begin = "0s") {
+    const g = svgEl("g", { class: `mover ${cls}` }, parent);
+    draw(g);
+    svgEl("animateMotion", { dur, repeatCount: "indefinite", path, begin }, g);
+    return g;
+  }
+  const people = (parent, x1, x2, y, n, dur) => {
+    for (let i = 0; i < n; i++) mover(parent, "person", `M ${x1} ${y} L ${x2} ${y} L ${x1} ${y}`, dur, (g) => svgEl("circle", { r: 1.3 }, g), `-${(parseFloat(dur) * i / n).toFixed(1)}s`);
+  };
 
   function renderScene() {
     els.scene.innerHTML = "";
     const S = els.scene;
     const camGroups = {};
 
-    /* linie „stosu” łączące narożniki płyt */
+    // ortofotomapa
+    svgEl("image", { href: PHOTO, x: MAP.x, y: MAP.y, width: MAP.w, height: MAP.h, preserveAspectRatio: "none" }, S);
+    svgEl("rect", { class: "dim", x: MAP.x, y: MAP.y, width: MAP.w, height: MAP.h }, S);
+
+    /* ---------------- POWIERZCHNIA: etykiety obiektów ---------------- */
     {
-      const g = svgEl("g", { class: "stack" }, S);
-      [[0, 0], [W, 0], [W, DEPTH], [0, DEPTH]].forEach(([x, y]) => {
-        const a = P(x, y, 0, 0), b = P(x, y, 0, 2);
-        svgEl("line", { class: "stack-line", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-      });
+      const g = svgEl("g", { class: "lvl-group lvl-0" }, S);
+      const surf = svgEl("g", { class: "surf" }, g);
+      svgEl("rect", { class: "site", x: SITE.x, y: SITE.y, width: SITE.w, height: SITE.h }, surf);
+      [
+        [65, 30, "ADMINISTRACJA"], [145, 30, "WARSZTAT"], [204, 27, "KOTŁOWNIA"], [180, 72, "ROZDZIELNIA 110/6 kV"],
+        [385, 60, "ZAKŁAD PRZERÓBCZY"], [262, 77, "SZYB I „PIAST”"], [302, 34, "MASZYNA WYCIĄGOWA"], [487, 80, "SZYB II"],
+        [367, 132, "OSADNIKI"], [214, 108, "ZBIORNIKI WODY"], [445, 130, "STACJA TRAFO"], [125, 130, "LAMPOWNIA · ŁAŹNIA · CECHOWNIA"],
+        [465, 186, "STACJA WENTYLATORÓW"], [410, 200, "SKŁADOWISKO · ZAŁADUNEK KOLEJOWY"], [23, 194, "BRAMA GŁÓWNA"], [90, 196, "PARKING"],
+      ].forEach(([x, y, t]) => text(surf, x, y, t, "lbl s"));
+      text(surf, SITE.x, SITE.y - 8, "POWIERZCHNIA · +262 m n.p.m.", "lbl lvl l0", "start");
+      camGroups[0] = svgEl("g", { class: "cam-layer surf" }, g);
     }
 
-    /* ==================== POZIOM −500 ==================== */
+    /* ---------------- POZIOM −300 ---------------- */
     {
-      const L = 2, g = svgEl("g", { class: "lvl-group lvl-2" }, S);
-      slab(g, L, "POZIOM −500 m", "POKŁAD 510");
-      // przekop główny + obudowa + tory + powietrze
-      box(g, L, 90, 86, 430, 12, 5, "corr", "PRZEKOP GŁÓWNY G-7", { pos: "aboveLeft" });
-      arches(g, L, 90, 86, 520, 86, 12);
-      rails(g, L, 90, 92, 520, 92);
-      wline(g, L, "air", [[95, 89], [515, 89]], 7);
-      box(g, L, 262, 66, 12, 20, 5, "corr"); arches(g, L, 262, 66, 262, 86, 12, 8);
-      // rząpie + pompownia przy szybie
-      box(g, L, 214, 100, 20, 12, 1, "water", "RZĄPIE", { pos: "left" });
-      box(g, L, 238, 100, 20, 12, 8, "", "POMPOWNIA GŁ.", { pos: "below" });
-      // dojścia
-      box(g, L, 140, 98, 12, 30, 5, "corr"); arches(g, L, 140, 98, 140, 128, 12, 8);
-      box(g, L, 250, 98, 12, 30, 5, "corr"); arches(g, L, 250, 98, 250, 128, 12, 8);
-      box(g, L, 408, 98, 12, 30, 5, "corr"); arches(g, L, 408, 98, 408, 128, 12, 8);
-      // komory
-      box(g, L, 118, 128, 56, 22, 12, "mag", "KOMORA MW", { pos: "below" });
-      box(g, L, 174, 130, 14, 14, 8, "mag");
-      box(g, L, 236, 128, 60, 22, 12, "", "STACJA ODMETANOWANIA", { pos: "below" });
-      cyl(g, L, 252, 139, 5, 12, "tank"); cyl(g, L, 266, 139, 5, 12, "tank"); cyl(g, L, 280, 139, 5, 12, "tank");
-      wline(g, L, "pipe", [[296, 139], [316, 139], [316, 102], [516, 102]], 9);
-      text(g, P(462, 104, 0, L)[0], P(462, 104, 0, L)[1] + 10, "RUROCIĄG CH₄", "lbl sm", "start");
-      box(g, L, 300, 100, 28, 14, 8, "", "LOKOMOTYWOWNIA", { pos: "below" });
-      box(g, L, 396, 128, 44, 22, 12, "ref", "KOMORA RATUNKOWA KR-2", { pos: "below" });
-      // przodek chodnika z kombajnem chodnikowym
-      box(g, L, 340, 40, 12, 46, 5, "corr"); arches(g, L, 340, 40, 340, 86, 12, 8);
-      drawBox(g, (a, b, c) => P(a, b, c, L), 342, 42, 8, 12, 5, "machine");
-      text(g, P(338, 44, 5, L)[0] - 4, P(338, 44, 5, L)[1] + 3, "PRZODEK B-3", "lbl sm", "end");
-      // ściana W-7: zroby, front z sekcjami, kombajn, chodniki przyścianowe
-      box(g, L, 405, 30, 100, 56, 6, "lw");
-      box(g, L, 405, 30, 100, 56, 6, "lw goaf", null, { hatch: true });
-      text(g, P(455, 58, 6, L)[0], P(455, 58, 6, L)[1] + 3, "ŚCIANA W-7 · 210 m", "lbl");
-      supports(g, L, 401, 31, 86);
-      const sh2 = drawBox(g, (a, b, c) => P(a, b, c, L), 392, 36, 8, 12, 5, "machine shearer");
-      sh2.setAttribute("class", "bx machine shearer");
-      box(g, L, 395, 22, 110, 8, 5, "corr", "CHODNIK NADŚCIANOWY W-7", { pos: "aboveRight" });
-      box(g, L, 383, 22, 10, 64, 5, "corr"); arches(g, L, 383, 22, 383, 86, 10, 8);
-      wline(g, L, "belt", [[388, 84], [388, 92], [332, 92]], 7);
-      // tamy wentylacyjne
-      [[470, 86], [200, 86]].forEach(([x, y]) => { const a = P(x, y, 0, L), b = P(x, y + 12, 8, L); svgEl("line", { class: "vdoor", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); });
-      people(g, L, 100, 500, 90, 4, "38s");
-      camGroups[2] = svgEl("g", { class: "cam-layer" }, g);
-    }
-
-    /* ==================== POCHYLNIA TAŚMOWA ==================== */
-    {
-      const g = svgEl("g", { class: "lvl-group lvl-1 lvl-2 drift-group" }, S);
-      svgEl("polygon", { class: "drift", points: pts([P(330, 86, 0, 1), P(330, 98, 0, 1), P(292, 98, 0, 2), P(292, 86, 0, 2)]) }, g);
-      for (let t = 0.1; t < 1; t += 0.12) {
-        const x = 330 - 38 * t, l = 1 + t;
-        const a = P(x, 86, 5, l), b = P(x, 98, 5, l);
-        svgEl("line", { class: "arch", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-      }
-      const a = P(330, 92, 6, 1), b = P(292, 92, 6, 2);
-      svgEl("line", { class: "belt", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-      const m = P(311, 92, 10, 1.5);
-      text(g, m[0] + 30, m[1] + 3, "POCHYLNIA TAŚMOWA P-2 · 18°", "lbl sm", "start");
-    }
-
-    /* ==================== POZIOM −300 ==================== */
-    {
-      const L = 1, g = svgEl("g", { class: "lvl-group lvl-1" }, S);
-      slab(g, L, "POZIOM −300 m", "POKŁAD 405/1");
-      box(g, L, 60, 86, 420, 12, 5, "corr");
-      text(g, P(200, 98, 0, L)[0], P(200, 98, 0, L)[1] + 9, "PRZEKOP GŁÓWNY G-3", "lbl sm", "start");
-      arches(g, L, 60, 86, 480, 86, 12);
-      rails(g, L, 60, 92, 480, 92);
-      wline(g, L, "air", [[65, 89], [475, 89]], 7);
-      box(g, L, 262, 66, 12, 20, 5, "corr"); arches(g, L, 262, 66, 262, 86, 12, 8);
-      box(g, L, 238, 100, 20, 12, 8, "", "POMPOWNIA", { pos: "left" });
-      // ściana L-12: zroby na zachód, front przy x=160
-      box(g, L, 60, 30, 100, 56, 6, "lw");
-      box(g, L, 60, 30, 100, 56, 6, "lw goaf", null, { hatch: true });
-      text(g, P(110, 58, 6, L)[0], P(110, 58, 6, L)[1] + 3, "ŚCIANA L-12 · 180 m", "lbl");
-      supports(g, L, 160, 31, 86);
-      const sh1 = drawBox(g, (a, b, c) => P(a, b, c, L), 165, 36, 8, 12, 5, "machine shearer");
-      sh1.setAttribute("class", "bx machine shearer");
-      box(g, L, 60, 22, 118, 8, 5, "corr", "CHODNIK NADŚCIANOWY L-12", { pos: "aboveLeft" });
-      box(g, L, 176, 22, 10, 64, 5, "corr"); arches(g, L, 176, 22, 176, 86, 10, 8);
-      wline(g, L, "belt", [[181, 84], [181, 92], [300, 92]], 7);
-      // rozdzielnia 6 kV + dojście
-      box(g, L, 350, 58, 34, 16, 9, "", "ROZDZIELNIA 6 kV", { pos: "above" });
-      box(g, L, 362, 74, 10, 12, 5, "corr");
-      // stacje
-      box(g, L, 300, 98, 40, 14, 8, "", "STACJA ZAŁADOWCZA", { pos: "below" });
-      box(g, L, 424, 98, 36, 14, 8, "", "ŁADOWNIA AKUMULATORÓW", { pos: "below" });
-      box(g, L, 482, 60, 12, 26, 5, "corr"); arches(g, L, 482, 60, 482, 86, 12, 8);
-      [[470, 86], [120, 86]].forEach(([x, y]) => { const a = P(x, y, 0, L), b = P(x, y + 12, 8, L); svgEl("line", { class: "vdoor", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g); });
-      // lokomotywa akumulatorowa z wozami
-      mover(g, "train", [[440, 92, L, 5], [200, 92, L, 5], [440, 92, L, 5]], "26s", (m) => {
-        drawBox(m, Pl, -6, -3, 12, 6, 5, "loco");
-        drawBox(m, Pl, -22, -3, 12, 6, 4, "wagon");
-        drawBox(m, Pl, -38, -3, 12, 6, 4, "wagon");
-      });
-      people(g, L, 70, 470, 90, 4, "34s");
+      const g = svgEl("g", { class: "lvl-group lvl-1" }, S);
+      text(g, SITE.x, SITE.y - 8, "POZIOM −300 m · POKŁAD 405/1 · WYROBISKA", "lbl lvl l1", "start");
+      gallery(g, 60, 92, 480, 92, 6);                       // przekop główny G-3
+      gallery(g, 268, 53, 268, 92, 4);                      // podszybie → przekop
+      gallery(g, 60, 26, 181, 26, 4);                       // chodnik nadścianowy
+      gallery(g, 181, 26, 181, 92, 4);                      // przecinka
+      gallery(g, 367, 74, 367, 92, 3); gallery(g, 488, 67, 488, 92, 4);
+      longwall(g, 60, 30, 100, 56, 160, "ŚCIANA L-12 · 180 m");
+      room(g, 350, 58, 34, 16, "", "ROZDZIELNIA 6 kV", "above");
+      room(g, 300, 98, 40, 14, "", "STACJA ZAŁADOWCZA");
+      room(g, 424, 98, 36, 14, "", "ŁADOWNIA AKUMULATORÓW");
+      room(g, 238, 100, 20, 12, "", "POMPOWNIA");
+      svgEl("circle", { class: "shaft", cx: 268, cy: 53, r: 13 }, g); text(g, 268, 55.5, "SZYB I", "lbl u");
+      svgEl("circle", { class: "shaft", cx: 487, cy: 67, r: 7 }, g); text(g, 487, 60, "SZYB II", "lbl u");
+      svgEl("line", { class: "belt", x1: 183, y1: 92, x2: 300, y2: 92 }, g);
+      svgEl("line", { class: "incline", x1: 330, y1: 92, x2: 292, y2: 92 }, g); text(g, 311, 101, "POCHYLNIA P-2 ↓ −500", "lbl u");
+      text(g, 200, 88, "PRZEKOP GŁÓWNY G-3", "lbl u", "start");
+      ventDoor(g, 120, 92); ventDoor(g, 470, 92);
+      people(g, 70, 470, 92, 3, "40s");
+      D.sensors.filter((s) => s.level === 1).forEach((s) => { text(g, s.x, s.y, "CH₄ —", "sensor", "start").dataset.sensor = s.id; });
       camGroups[1] = svgEl("g", { class: "cam-layer" }, g);
     }
 
-    /* ==================== POWIERZCHNIA ==================== */
+    /* ---------------- POZIOM −500 ---------------- */
     {
-      const L = 0, g = svgEl("g", { class: "lvl-group lvl-0" }, S);
-      slab(g, L, "POWIERZCHNIA", "+262 m n.p.m.");
-      svgEl("polygon", { class: "fence", points: pts([P(6, 6, 2), P(W - 6, 6, 2), P(W - 6, DEPTH - 6, 2), P(6, DEPTH - 6, 2)]) }, g);
-      // maszty oświetleniowe
-      [[6, 6], [W - 6, 6], [W - 6, DEPTH - 6], [6, DEPTH - 6], [150, 150], [300, 150], [420, 6]].forEach(([x, y]) => {
-        const a = P(x, y, 0), b = P(x, y, 22);
-        svgEl("line", { class: "mast-l", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-        svgEl("circle", { class: "lamp", cx: b[0], cy: b[1], r: 1.6 }, g);
-      });
-      // drogi
-      svgEl("polygon", { class: "road", points: pts([P(0, 150), P(300, 150), P(300, 162), P(0, 162)]) }, g);
-      svgEl("polygon", { class: "road", points: pts([P(290, 40), P(302, 40), P(302, 162), P(290, 162)]) }, g);
-      svgEl("polygon", { class: "road", points: pts([P(302, 96), P(330, 96), P(330, 104), P(302, 104)]) }, g);
-      svgEl("polygon", { class: "road", points: pts([P(40, 96), P(290, 96), P(290, 104), P(40, 104)]) }, g);
-      wline(g, L, "lane", [[4, 156], [296, 156], [296, 44]], 0.5);
-      // parking
-      svgEl("polygon", { class: "lot", points: pts([P(50, 166), P(130, 166), P(130, 190), P(50, 190)]) }, g);
-      [56, 68, 80, 92, 110, 122].forEach((x, i) => drawBox(g, (a, b, c) => P(a, b, c), x, 172, 8, 5, 3, `car c${i % 3}`));
-      text(g, P(90, 192)[0], P(90, 192)[1] + 8, "PARKING", "lbl sm");
-      // tory + wagony
-      const r1 = P(330, 190), r2 = P(516, 190);
-      svgEl("line", { class: "rail", x1: r1[0], y1: r1[1], x2: r2[0], y2: r2[1] }, g);
-      [338, 354, 370, 386].forEach((x) => drawBox(g, (a, b, c) => P(a, b, c), x, 187, 13, 6, 5, "wagon"));
-      // budynki – tył → przód
-      box(g, L, 30, 16, 70, 28, 18, "", "ADMINISTRACJA", { pos: "top" });
-      box(g, L, 115, 16, 60, 28, 12, "", "WARSZTAT MECH.", { pos: "top" });
-      box(g, L, 190, 16, 28, 22, 12, "", "KOTŁOWNIA", { pos: "below" });
-      cyl(g, L, 224, 22, 4, 46, "chimney");
-      box(g, L, 160, 60, 40, 24, 8, "", "ROZDZ. 110/6 kV", { pos: "top", cls: "lbl sm" });
-      [166, 178, 190].forEach((x) => drawBox(g, (a, b, c) => P(a, b, c), x, 66, 8, 8, 6, "trafo"));
-      box(g, L, 330, 30, 110, 60, 36, "plant", "ZAKŁAD PRZERÓBCZY", { pos: "top" });
-      cyl(g, L, 345, 44, 8, 50, "silo", "SILOSY", "above"); cyl(g, L, 365, 44, 8, 50, "silo");
-      headframe(g, L, 255, 40, 26, 26, 64);
-      text(g, P(268, 53, 64)[0], P(268, 53, 64)[1] - 26, "SZYB I „PIAST” · 612 m", "lbl");
-      box(g, L, 285, 40, 34, 18, 14, "", "MASZYNA WYCIĄGOWA", { pos: "below" });
-      // most przenośnikowy nadszybie → zakład przeróbczy
-      svgEl("polygon", { class: "bridge", points: pts([P(281, 50, 30), P(330, 58, 24), P(330, 58, 18), P(281, 50, 24)]) }, g);
-      // szyb II
-      box(g, L, 480, 60, 14, 14, 8, "", "SZYB II (WENT.)", { pos: "below" });
-      const [w2x, w2y] = P(487, 67, 8); svgEl("circle", { class: "wheel", cx: w2x, cy: w2y - 4, r: 3.5 }, g);
-      // osadniki i zbiorniki
-      cyl(g, L, 350, 112, 13, 5, "thick", "OSADNIKI"); cyl(g, L, 385, 112, 13, 5, "thick");
-      cyl(g, L, 206, 118, 6, 14, "tank"); cyl(g, L, 222, 118, 6, 14, "tank");
-      text(g, P(200, 118, 14)[0] - 4, P(200, 118, 14)[1] + 3, "ZBIORNIKI WODY", "lbl sm", "end");
-      box(g, L, 430, 106, 30, 18, 8, "", "STACJA TRAFO", { pos: "right" });
-      box(g, L, 70, 112, 110, 36, 16, "", "LAMPOWNIA · ŁAŹNIA · CECHOWNIA", { pos: "top" });
-      box(g, L, 8, 168, 30, 20, 10, "", "BRAMA GŁÓWNA", { pos: "below" });
-      // szlaban
-      const s1 = P(38, 150, 6), s2 = P(38, 162, 6); svgEl("line", { class: "barrier", x1: s1[0], y1: s1[1], x2: s2[0], y2: s2[1] }, g);
-      // hałdy
-      [[350, 172, 34, 16], [392, 174, 40, 18], [444, 172, 30, 15]].forEach(([px, py, pw, ph]) => {
-        svgEl("polygon", { class: "pile", points: pts([P(px, py + 12), P(px + pw, py + 12), P(px + pw / 2, py + 4, ph)]) }, g);
-      });
-      text(g, P(392, 200)[0], P(392, 200)[1] + 8, "SKŁADOWISKO · ZAŁADUNEK KOLEJOWY", "lbl sm");
-      box(g, L, 448, 148, 34, 30, 14, "", "STACJA WENTYLATORÓW", { pos: "right" });
-      cyl(g, L, 468, 142, 7, 20, "diffuser");
-      const [fx, fy] = P(465, 163, 14);
-      const fan = svgEl("g", { class: "fan" }, g);
-      svgEl("circle", { cx: fx, cy: fy, r: 7 }, fan);
-      svgEl("line", { x1: fx - 7, y1: fy, x2: fx + 7, y2: fy }, fan);
-      svgEl("line", { x1: fx, y1: fy - 7, x2: fx, y2: fy + 7 }, fan);
-      // róża wiatrów + skala
-      const [nx, ny] = P(W - 30, 30, 0);
-      const rose = svgEl("g", { class: "compass" }, g);
-      svgEl("line", { x1: nx, y1: ny + 8, x2: nx, y2: ny - 8 }, rose);
-      svgEl("polygon", { points: `${nx - 3},${ny - 4} ${nx},${ny - 10} ${nx + 3},${ny - 4}` }, rose);
-      text(rose, nx, ny - 13, "N", "lbl sm");
-      const sa = P(430, 8, 0), sb = P(480, 8, 0);
-      svgEl("line", { class: "scale", x1: sa[0], y1: sa[1], x2: sb[0], y2: sb[1] }, g);
-      text(g, (sa[0] + sb[0]) / 2, sa[1] - 3, "50 m", "lbl sm");
-      camGroups[0] = svgEl("g", { class: "cam-layer" }, g);
+      const g = svgEl("g", { class: "lvl-group lvl-2" }, S);
+      text(g, SITE.x, SITE.y - 8, "POZIOM −500 m · POKŁAD 510 · WYROBISKA", "lbl lvl l2", "start");
+      gallery(g, 90, 92, 520, 92, 6);                       // przekop główny G-7
+      gallery(g, 268, 53, 268, 92, 4);
+      gallery(g, 146, 92, 146, 128, 3); gallery(g, 256, 92, 256, 128, 3); gallery(g, 414, 92, 414, 128, 3);
+      gallery(g, 346, 40, 346, 92, 4);                      // przodek B-3
+      gallery(g, 395, 26, 505, 26, 4); gallery(g, 388, 26, 388, 92, 4);
+      longwall(g, 405, 30, 100, 56, 405, "ŚCIANA W-7 · 210 m");
+      room(g, 118, 128, 56, 22, "mag", "KOMORA MW"); room(g, 174, 130, 14, 14, "mag");
+      room(g, 236, 128, 60, 22, "", "STACJA ODMETANOWANIA");
+      room(g, 396, 128, 44, 22, "ref", "KOMORA RATUNKOWA KR-2");
+      room(g, 214, 100, 20, 12, "water", "RZĄPIE", "left"); room(g, 238, 100, 20, 12, "", "POMPOWNIA GŁ.");
+      room(g, 300, 100, 28, 14, "", "LOKOMOTYWOWNIA", "right");
+      svgEl("rect", { class: "machine", x: 342, y: 40, width: 8, height: 10 }, g); text(g, 340, 45, "PRZODEK B-3", "lbl u", "end");
+      svgEl("circle", { class: "shaft", cx: 268, cy: 53, r: 13 }, g); text(g, 268, 55.5, "SZYB I", "lbl u");
+      svgEl("polyline", { class: "pipe", points: "296,139 316,139 316,96 516,96" }, g); text(g, 470, 104, "RUROCIĄG CH₄", "lbl u", "start");
+      svgEl("line", { class: "belt", x1: 388, y1: 92, x2: 330, y2: 92 }, g);
+      svgEl("line", { class: "incline", x1: 292, y1: 92, x2: 330, y2: 92 }, g); text(g, 311, 84, "POCHYLNIA P-2 ↑ −300", "lbl u");
+      text(g, 100, 88, "PRZEKOP GŁÓWNY G-7", "lbl u", "start");
+      ventDoor(g, 200, 92); ventDoor(g, 470, 92);
+      people(g, 100, 500, 92, 3, "44s");
+      D.sensors.filter((s) => s.level === 2).forEach((s) => { text(g, s.x, s.y, "CH₄ —", "sensor", "start").dataset.sensor = s.id; });
+      camGroups[2] = svgEl("g", { class: "cam-layer" }, g);
     }
 
-    /* ==================== SZYBY ==================== */
+    /* ---------------- róża wiatrów, skala, stopka ---------------- */
     {
-      const g = svgEl("g", { class: "shafts" }, S);
-      const shaft = (x, y, w, d, toLevel) => {
-        svgEl("polygon", { class: "shaft", points: pts([P(x, y + d, 0, 0), P(x + w, y + d, 0, 0), P(x + w, y + d, 0, toLevel), P(x, y + d, 0, toLevel)]) }, g);
-        svgEl("polygon", { class: "shaft", points: pts([P(x + w, y, 0, 0), P(x + w, y + d, 0, 0), P(x + w, y + d, 0, toLevel), P(x + w, y, 0, toLevel)]) }, g);
-        const a = P(x + w / 2, y + d / 2, 0, 0), b = P(x + w / 2, y + d / 2, 0, toLevel);
-        svgEl("line", { class: "shaft-line", x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, g);
-      };
-      shaft(255, 40, 26, 26, 2);
-      shaft(480, 60, 14, 14, 1);
-      // klatka jadąca w szybie I
-      mover(g, "cage", [[262, 47, 0, 0], [262, 47, 2, 0], [262, 47, 0, 0]], "18s", (m) => drawBox(m, Pl, 0, 0, 12, 12, 8, "cage"));
+      const g = svgEl("g", { class: "mapdeco" }, S);
+      const nx = MAP.x + MAP.w - 22, ny = MAP.y + 22;
+      svgEl("circle", { class: "rose", cx: nx, cy: ny, r: 9 }, g);
+      svgEl("polygon", { class: "rose-n", points: `${nx - 3},${ny + 2} ${nx},${ny - 8} ${nx + 3},${ny + 2}` }, g);
+      text(g, nx, ny + 7.5, "N", "lbl s");
+      const sx = MAP.x + 12, sy = MAP.y + MAP.h - 12;
+      svgEl("rect", { class: "scale", x: sx, y: sy, width: 50, height: 1.6 }, g);
+      svgEl("rect", { class: "scale alt", x: sx, y: sy, width: 25, height: 1.6 }, g);
+      text(g, sx + 25, sy - 2.5, "50 m", "lbl s");
+      text(g, MAP.x + MAP.w - 6, MAP.y + MAP.h - 6, "ORTOFOTOMAPA Z DRONA · 10 cm/px · nalot 2026-09-12", "lbl s", "end");
     }
 
-    /* ==================== czujniki metanu ==================== */
-    const sg = svgEl("g", { id: "ch4-sensors" }, S);
-    D.sensors.forEach((s) => {
-      const [x, y] = P(s.x, s.y, 0, s.level);
-      text(sg, x, y, "CH₄ —", "sensor", "start").dataset.sensor = s.id;
-    });
-
-    /* ==================== kamery ==================== */
+    /* ---------------- kamery ---------------- */
     D.cameras.forEach((c) => {
       const layer = camGroups[Math.floor(c.level)] || camGroups[1];
       const g = svgEl("g", { class: `cam${c.offline ? " off" : ""}`, "data-id": c.id, tabindex: 0, role: "button" }, layer);
-      const [bx, by] = P(c.x, c.y, 0, c.level);
-      const [tx, ty] = P(c.x, c.y, 10, c.level);
-      svgEl("polygon", { class: "fov", points: pts(fovPoints(c.x, c.y, c.level, c.dir)) }, g);
-      svgEl("line", { class: "mast", x1: bx, y1: by, x2: tx, y2: ty }, g);
-      svgEl("circle", { class: "hit", cx: tx, cy: ty, r: 13 }, g);
-      svgEl("circle", { class: "pulse", cx: tx, cy: ty, r: 6 }, g);
-      svgEl("circle", { class: "ring", cx: tx, cy: ty, r: 6.5 }, g);
-      svgEl("circle", { class: "core", cx: tx, cy: ty, r: 3.5 }, g);
-      text(g, tx + 9, ty + 3, c.id.replace("KAM-", "K"), "id", "start");
+      svgEl("polygon", { class: "fov", points: pts(fovPoints(c.x, c.y, c.dir)) }, g);
+      svgEl("circle", { class: "hit", cx: c.x, cy: c.y, r: 8 }, g);
+      svgEl("circle", { class: "pulse", cx: c.x, cy: c.y, r: 4 }, g);
+      svgEl("circle", { class: "ring", cx: c.x, cy: c.y, r: 4.2 }, g);
+      svgEl("circle", { class: "core", cx: c.x, cy: c.y, r: 2.3 }, g);
+      text(g, c.x + 6, c.y + 2.2, c.id.replace("KAM-", "K"), "id", "start");
       g.addEventListener("click", () => selectCamera(c.id));
       g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectCamera(c.id); } });
       g.addEventListener("mouseenter", (e) => showTooltip(c, e));
@@ -602,7 +361,17 @@
       const el = $(`#lvl-sub-${l}`);
       if (el) el.textContent = `${cams.length} kamer${off ? ` · ${off} offline` : ""}`;
     });
+    setView(state.focusLevel);
   }
+
+  /** Widok: "all" | "0" | "1" | "2" – które warstwy są widoczne. */
+  function setView(key) {
+    state.focusLevel = key;
+    els.svg.classList.remove("view-all", "view-0", "view-1", "view-2");
+    els.svg.classList.add(`view-${key}`);
+    els.twinSide.querySelectorAll(".lvl-btn").forEach((x) => x.classList.toggle("active", x.dataset.level === key));
+  }
+
   const camNode = (id) => els.svg.querySelector(`.cam[data-id="${id}"]`);
   function setCamState(id, cls) {
     const n = camNode(id); if (!n) return;
@@ -619,7 +388,7 @@
     });
   }
   /* ---------- zoom / pan ---------- */
-  const SCENE = { x: 0, y: 0, w: 680, h: 480 };
+  const SCENE = { ...MAP };
   const VIEW0 = { ...SCENE };
   const view = { ...VIEW0 };
   /** Dopasuj proporcje widoku do rzeczywistych proporcji panelu (bez pasów po bokach). */
@@ -658,15 +427,15 @@
 
   els.twinSide.addEventListener("click", (e) => {
     const b = e.target.closest(".lvl-btn"); if (!b) return;
-    state.focusLevel = b.dataset.level;
-    els.twinSide.querySelectorAll(".lvl-btn").forEach((x) => x.classList.toggle("active", x === b));
-    els.svg.classList.remove("focus-0", "focus-1", "focus-2");
-    if (state.focusLevel !== "all") {
-      els.svg.classList.add(`focus-${state.focusLevel}`);
-      const grp = els.svg.querySelector(`.lvl-group.lvl-${state.focusLevel}:not(.drift-group)`);
-      if (grp) fitBox(grp.getBBox(), state.focusLevel === "0" ? 6 : 10);
-    } else { Object.assign(view, VIEW0); applyView(); }
+    focusLevel(b.dataset.level);
   });
+  function focusLevel(key) {
+    setView(key);
+    if (key === "all") { Object.assign(view, VIEW0); applyView(); return; }
+    if (key === "0") { fitBox({ x: SITE.x, y: SITE.y - 14, width: SITE.w, height: SITE.h + 20 }, 6); return; }
+    const grp = els.svg.querySelector(`.lvl-group.lvl-${key}`);
+    if (grp) fitBox(grp.getBBox(), 8);
+  }
 
   function camStatusText(c) {
     if (c.offline) return '<span style="color:#7f93a4">OFFLINE</span>';
@@ -869,6 +638,7 @@
     if (inc.sensors) { Object.assign(state.sensorOverride, inc.sensors); state.sensorOverride._rising = true; state.sensorOverride._falling = false; }
 
     setCamState(inc.cam, "alert");
+    focusLevel(String(Math.floor(cam.level)));
     document.body.classList.remove("flash"); void document.body.offsetWidth; document.body.classList.add("flash");
     beep(inc.severity);
     selectCamera(inc.cam);
