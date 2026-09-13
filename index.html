@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SENTINEL-CI · Coal Mine Video Intelligence</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===================== TOP BAR ===================== -->
+    <header id="topbar">
+      <div class="brand">
+        <span class="brand-mark">◈</span>
+        <span class="brand-name">SENTINEL<span class="dim">-CI</span></span>
+        <span class="brand-sub">Critical Infrastructure · Video Intelligence</span>
+      </div>
+      <div class="site">
+        <span class="label">SITE</span>
+        <span class="value">KWK "WSCHÓD-1" · Hard Coal Mine · Shift B</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span class="label">CAMERAS</span><span class="value" id="kpi-cams">0/0</span></div>
+        <div class="kpi"><span class="label">UNDERGROUND</span><span class="value" id="kpi-crew">312</span></div>
+        <div class="kpi"><span class="label">CH₄ MAX</span><span class="value" id="kpi-ch4">0.42%</span></div>
+        <div class="kpi alert"><span class="label">ACTIVE ALERTS</span><span class="value" id="kpi-alerts">0</span></div>
+      </div>
+      <div class="clock">
+        <span id="clock-date">—</span>
+        <span id="clock-time">—</span>
+      </div>
+    </header>
+
+    <!-- ===================== LEFT: TERMINAL ===================== -->
+    <section id="terminal" class="panel">
+      <div class="panel-head">
+        <span class="panel-title">OPERATIONS TERMINAL</span>
+        <span class="panel-meta">
+          <span class="pill" id="term-mode">MANUAL</span>
+          <button class="btn tiny" id="btn-auto" title="Toggle automatic scenario playback">AUTO ▸</button>
+          <button class="btn tiny" id="btn-next" title="Fire next scripted event">NEXT EVENT</button>
+        </span>
+      </div>
+      <div id="term-log" class="term-log" aria-live="polite"></div>
+      <form id="term-form" class="term-input" autocomplete="off">
+        <span class="prompt">operator@sentinel:~$</span>
+        <input id="term-in" type="text" placeholder="type a command or pick an option above · 'help'" spellcheck="false" />
+      </form>
+    </section>
+
+    <!-- ===================== RIGHT TOP: DIGITAL TWIN ===================== -->
+    <section id="twin" class="panel">
+      <div class="panel-head">
+        <span class="panel-title">DIGITAL TWIN · MINE CROSS-SECTION</span>
+        <span class="panel-meta">
+          <span class="legend"><i class="dot ok"></i>nominal</span>
+          <span class="legend"><i class="dot attn"></i>in procedure</span>
+          <span class="legend"><i class="dot alert"></i>anomaly</span>
+          <span class="legend"><i class="dot off"></i>offline</span>
+        </span>
+      </div>
+      <div class="twin-wrap">
+        <svg id="mine-svg" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Coal mine digital twin">
+          <defs>
+            <pattern id="rock" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
+            </pattern>
+            <pattern id="coal" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(-25)">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(0,0,0,0.55)" stroke-width="2"/>
+            </pattern>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(120,180,220,0.07)" stroke-width="1"/>
+            </pattern>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0b1420"/>
+              <stop offset="1" stop-color="#0e1a28"/>
+            </linearGradient>
+            <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#151b22"/>
+              <stop offset="1" stop-color="#0d1115"/>
+            </linearGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+
+          <!-- sky + ground -->
+          <rect x="0" y="0" width="1000" height="112" fill="url(#sky)"/>
+          <rect x="0" y="112" width="1000" height="448" fill="url(#ground)"/>
+          <rect x="0" y="112" width="1000" height="448" fill="url(#rock)"/>
+          <rect x="0" y="0" width="1000" height="560" fill="url(#grid)"/>
+          <line x1="0" y1="112" x2="1000" y2="112" stroke="#3f5a4a" stroke-width="2"/>
+
+          <!-- coal seams -->
+          <rect x="0" y="262" width="1000" height="38" fill="#0a0c0e"/>
+          <rect x="0" y="262" width="1000" height="38" fill="url(#coal)"/>
+          <rect x="0" y="442" width="1000" height="44" fill="#0a0c0e"/>
+          <rect x="0" y="442" width="1000" height="44" fill="url(#coal)"/>
+          <text x="12" y="256" class="seam-label">SEAM 405/1 · LEVEL −300 m</text>
+          <text x="12" y="436" class="seam-label">SEAM 510 · LEVEL −500 m</text>
+
+          <!-- ================= SURFACE ================= -->
+          <!-- perimeter fence + gate -->
+          <g class="struct">
+            <line x1="20" y1="112" x2="20" y2="70" stroke="#4d6b7a" stroke-width="2"/>
+            <line x1="20" y1="74" x2="130" y2="74" stroke="#4d6b7a" stroke-width="1" stroke-dasharray="4 3"/>
+            <rect x="50" y="78" width="44" height="34" fill="#1c2833" stroke="#5c7d8f"/>
+            <rect x="60" y="92" width="24" height="20" fill="#0b1420" stroke="#5c7d8f"/>
+            <text x="72" y="66" class="lbl" text-anchor="middle">MAIN GATE</text>
+          </g>
+          <!-- admin / lamp room / baths -->
+          <g class="struct">
+            <rect x="150" y="60" width="120" height="52" fill="#1c2833" stroke="#5c7d8f"/>
+            <rect x="160" y="70" width="14" height="10" fill="#243645"/><rect x="182" y="70" width="14" height="10" fill="#243645"/>
+            <rect x="204" y="70" width="14" height="10" fill="#243645"/><rect x="226" y="70" width="14" height="10" fill="#243645"/>
+            <rect x="248" y="70" width="14" height="10" fill="#243645"/>
+            <text x="210" y="52" class="lbl" text-anchor="middle">LAMP ROOM · PIT-HEAD BATHS</text>
+          </g>
+          <!-- headframe -->
+          <g class="struct">
+            <polygon points="392,112 448,112 432,18 408,18" fill="#1a2632" stroke="#7aa0b4" stroke-width="1.5"/>
+            <line x1="400" y1="90" x2="440" y2="90" stroke="#7aa0b4"/>
+            <line x1="404" y1="66" x2="436" y2="66" stroke="#7aa0b4"/>
+            <line x1="408" y1="42" x2="432" y2="42" stroke="#7aa0b4"/>
+            <circle cx="420" cy="22" r="9" fill="none" stroke="#9cc4d8" stroke-width="2"/>
+            <circle cx="420" cy="22" r="2" fill="#9cc4d8"/>
+            <rect x="452" y="84" width="60" height="28" fill="#1c2833" stroke="#5c7d8f"/>
+            <text x="420" y="12" class="lbl" text-anchor="middle">SHAFT I "PIAST" · HEADFRAME</text>
+            <text x="482" y="79" class="lbl sm" text-anchor="middle">WINDER HOUSE</text>
+          </g>
+          <!-- coal prep plant -->
+          <g class="struct">
+            <rect x="590" y="40" width="130" height="72" fill="#1c2833" stroke="#5c7d8f"/>
+            <polygon points="590,40 655,22 720,40" fill="#223140" stroke="#5c7d8f"/>
+            <line x1="512" y1="100" x2="590" y2="60" stroke="#8a9da8" stroke-width="3"/>
+            <text x="655" y="16" class="lbl" text-anchor="middle">COAL PREPARATION PLANT</text>
+          </g>
+          <!-- ventilation fan house -->
+          <g class="struct">
+            <rect x="742" y="74" width="46" height="38" fill="#1c2833" stroke="#5c7d8f"/>
+            <circle cx="765" cy="93" r="10" fill="none" stroke="#8fc1d6" stroke-width="2" class="fan"/>
+            <line x1="765" y1="83" x2="765" y2="103" stroke="#8fc1d6" class="fan"/>
+            <line x1="755" y1="93" x2="775" y2="93" stroke="#8fc1d6" class="fan"/>
+            <text x="765" y="66" class="lbl" text-anchor="middle">MAIN FAN</text>
+          </g>
+          <!-- stockyard + rail -->
+          <g class="struct">
+            <polygon points="820,112 860,84 905,112" fill="#111" stroke="#333"/>
+            <polygon points="880,112 915,90 950,112" fill="#111" stroke="#333"/>
+            <line x1="810" y1="112" x2="990" y2="112" stroke="#6b7c86" stroke-width="3"/>
+            <text x="900" y="80" class="lbl" text-anchor="middle">STOCKYARD · RAIL LOADING</text>
+          </g>
+
+          <!-- ================= SHAFTS ================= -->
+          <g class="struct">
+            <rect x="410" y="112" width="20" height="388" fill="#101820" stroke="#7aa0b4"/>
+            <line x1="420" y1="112" x2="420" y2="500" stroke="#3d5a6b" stroke-dasharray="6 5"/>
+            <rect x="756" y="112" width="18" height="290" fill="#101820" stroke="#5c7d8f"/>
+            <text x="765" y="410" class="lbl sm" text-anchor="middle">SHAFT II (VENT)</text>
+          </g>
+
+          <!-- ================= LEVEL -300 ================= -->
+          <g class="struct">
+            <!-- main gallery right -->
+            <rect x="430" y="270" width="480" height="22" rx="4" fill="#141d26" stroke="#4f6f80"/>
+            <!-- main gallery left -->
+            <rect x="120" y="270" width="290" height="22" rx="4" fill="#141d26" stroke="#4f6f80"/>
+            <!-- longwall L-12 -->
+            <rect x="130" y="238" width="120" height="32" fill="#1e2a35" stroke="#6b93a8" stroke-dasharray="3 2"/>
+            <text x="190" y="232" class="lbl sm" text-anchor="middle">LONGWALL L-12 (ACTIVE)</text>
+            <!-- loading station -->
+            <rect x="470" y="292" width="70" height="14" fill="#1c2833" stroke="#5c7d8f"/>
+            <text x="505" y="318" class="lbl sm" text-anchor="middle">LOADING ST.</text>
+            <!-- battery charging bay -->
+            <rect x="640" y="292" width="50" height="14" fill="#1c2833" stroke="#5c7d8f"/>
+            <text x="665" y="318" class="lbl sm" text-anchor="middle">CHARGING BAY</text>
+            <text x="900" y="264" class="lbl sm" text-anchor="end">GALLERY G-3 EAST</text>
+          </g>
+
+          <!-- conveyor drift between levels -->
+          <g class="struct">
+            <polygon points="700,292 720,292 520,470 500,470" fill="#141d26" stroke="#4f6f80"/>
+            <line x1="708" y1="298" x2="512" y2="466" stroke="#8a9da8" stroke-width="2" stroke-dasharray="8 6" class="belt"/>
+            <text x="600" y="380" class="lbl sm" transform="rotate(-42 600 380)" text-anchor="middle">CONVEYOR DRIFT D-2</text>
+          </g>
+
+          <!-- ================= LEVEL -500 ================= -->
+          <g class="struct">
+            <rect x="430" y="450" width="520" height="24" rx="4" fill="#141d26" stroke="#4f6f80"/>
+            <rect x="150" y="450" width="260" height="24" rx="4" fill="#141d26" stroke="#4f6f80"/>
+            <!-- explosives magazine -->
+            <rect x="200" y="486" width="70" height="26" fill="#221c1c" stroke="#a86b5c"/>
+            <text x="235" y="526" class="lbl sm" text-anchor="middle">EXPLOSIVES MAGAZINE</text>
+            <!-- methane drainage -->
+            <rect x="600" y="486" width="80" height="26" fill="#1c2833" stroke="#5c7d8f"/>
+            <text x="640" y="526" class="lbl sm" text-anchor="middle">CH₄ DRAINAGE STATION</text>
+            <!-- refuge chamber -->
+            <rect x="720" y="486" width="60" height="26" fill="#1a2a20" stroke="#5fa77a"/>
+            <text x="750" y="526" class="lbl sm" text-anchor="middle">REFUGE CHAMBER</text>
+            <!-- longwall W-7 -->
+            <rect x="820" y="414" width="120" height="36" fill="#1e2a35" stroke="#6b93a8" stroke-dasharray="3 2"/>
+            <text x="880" y="408" class="lbl sm" text-anchor="middle">LONGWALL W-7 (ACTIVE)</text>
+            <text x="950" y="446" class="lbl sm" text-anchor="end">GALLERY G-7</text>
+          </g>
+
+          <!-- methane sensors (animated values) -->
+          <g id="ch4-sensors" class="sensors">
+            <text x="134" y="262" class="sensor" data-sensor="L12">CH₄ 0.38%</text>
+            <text x="812" y="440" class="sensor" data-sensor="W7">CH₄ 0.42%</text>
+            <text x="690" y="512" class="sensor" data-sensor="DR">CH₄ 0.21%</text>
+          </g>
+
+          <!-- camera dots injected by JS -->
+          <g id="cam-layer"></g>
+        </svg>
+        <div id="twin-tooltip" class="tooltip" hidden></div>
+      </div>
+    </section>
+
+    <!-- ===================== RIGHT BOTTOM: LIVE FEED ===================== -->
+    <section id="feed" class="panel">
+      <div class="panel-head">
+        <span class="panel-title">LIVE FEED · <span id="feed-cam-id">—</span></span>
+        <span class="panel-meta">
+          <span class="rec"><i></i>REC</span>
+          <span class="pill" id="feed-status">IDLE</span>
+          <button class="btn tiny" id="btn-fullscreen">⛶</button>
+        </span>
+      </div>
+      <div class="feed-body">
+        <div class="feed-main">
+          <video id="feed-video" muted autoplay loop playsinline></video>
+          <canvas id="feed-noise"></canvas>
+          <div id="feed-overlay" class="overlay"></div>
+          <div class="feed-osd top-left"><span id="osd-cam">NO CAMERA SELECTED</span></div>
+          <div class="feed-osd top-right"><span id="osd-time">--:--:--</span></div>
+          <div class="feed-osd bottom-left"><span id="osd-zone">click a camera dot on the digital twin</span></div>
+          <div class="feed-osd bottom-right"><span id="osd-model">ai: sentinel-vision v4.2 · 25 fps</span></div>
+          <div id="feed-placeholder" class="feed-placeholder">
+            <div class="nosig">NO SIGNAL</div>
+            <div class="nosig-sub" id="nosig-sub">select a camera</div>
+          </div>
+        </div>
+        <aside class="feed-side">
+          <div class="side-block">
+            <div class="side-title">DETECTIONS</div>
+            <ul id="feed-detections" class="det-list"><li class="muted">—</li></ul>
+          </div>
+          <div class="side-block">
+            <div class="side-title">CAMERA</div>
+            <dl class="side-kv" id="feed-meta">
+              <dt>zone</dt><dd>—</dd>
+              <dt>type</dt><dd>—</dd>
+              <dt>ai model</dt><dd>—</dd>
+              <dt>uptime</dt><dd>—</dd>
+            </dl>
+          </div>
+          <div class="side-block grow">
+            <div class="side-title">RECENT EVENTS</div>
+            <ul id="feed-events" class="ev-list"></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
