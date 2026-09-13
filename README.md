@@ -8,13 +8,18 @@ Bez kroku budowania, bez zależności – czysty HTML / CSS / JS.
 
 ## Uruchomienie
 
+Najprościej: **dwuklik na `start.bat`** (Windows) albo `./start.sh` (macOS / Linux).
+Skrypt uruchamia lokalny serwer i otwiera przeglądarkę na `http://localhost:8080`.
+
+Ręcznie:
+
 ```bash
 # dowolny serwer statyczny; z katalogu repozytorium:
 python3 -m http.server 8080
 # otwórz http://localhost:8080
 ```
 
-Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge/Firefox.
+Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 
 ## Układ
 
@@ -52,9 +57,15 @@ Zaplanowane zdarzenia, w kolejności:
 | ZD-06 | KAM-05 Wentylator główny | WYSOKI | Porzucony przedmiot przy czerpni |
 | ZD-07 | KAM-06 Podszybie −300 | ŚREDNI | Osoba pod zawieszonym ładunkiem |
 
-## Dodawanie własnych nagrań
+## Nagrania
 
-Wrzuć pliki do `videos/` – nic więcej nie trzeba zmieniać:
+W `videos/` są już **zastępcze klipy demo** (wygenerowane, z napisem „NAGRANIE
+ZASTĘPCZE – DEMO”), więc podgląd odtwarza wideo od razu. Każdy klip jest w dwóch
+wersjach: `.mp4` (H.264) i `.webm` (VP9) – odtwarzacz próbuje najpierw MP4, potem
+WebM, więc działa też w przeglądarkach bez kodeka H.264.
+
+Aby podmienić na prawdziwe nagrania, wystarczy nadpisać plik `.mp4` o tej samej
+nazwie (wersję `.webm` można usunąć):
 
 | Plik | Użycie |
 |---|---|
@@ -66,6 +77,9 @@ Wrzuć pliki do `videos/` – nic więcej nie trzeba zmieniać:
 | `videos/inc-05-perimeter.mp4` | ZD-05 na KAM-01 |
 | `videos/inc-06-object.mp4` | ZD-06 na KAM-05 |
 | `videos/inc-07-loading-zone.mp4` | ZD-07 na KAM-06 |
+
+Zastępcze klipy można wygenerować ponownie: `python3 tools/make_placeholder_videos.py`
+(wymaga `pillow`, `numpy` i ffmpeg – systemowego lub `pip install imageio-ffmpeg`).
 
 MP4 (H.264) lub WebM. Wideo odtwarza się automatycznie, wyciszone, w pętli.
 Gdy brakuje klipu zdarzenia, używana jest pętla kamery; gdy brakuje i jej,

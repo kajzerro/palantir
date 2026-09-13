@@ -730,14 +730,22 @@
     else if (noiseRAF) { clearTimeout(noiseRAF); noiseRAF = null; }
   }
 
+  /** Ładuje wideo: najpierw podana ścieżka (np. .mp4), potem ten sam plik jako .webm. */
   function loadVideo(src) {
     const v = els.video;
     v.onerror = null; v.onloadeddata = null;
-    if (!src) { v.removeAttribute("src"); v.load(); setNoSignal(true, "brak skonfigurowanego wideo dla tej kamery"); return; }
+    v.pause(); v.removeAttribute("src"); v.innerHTML = "";
+    if (!src) { v.load(); setNoSignal(true, "brak skonfigurowanego wideo dla tej kamery"); return; }
+    const base = src.replace(/\.(mp4|webm|mov|m4v|ogv)$/i, "");
+    const candidates = [src]; if (!/\.webm$/i.test(src)) candidates.push(base + ".webm");
     setNoSignal(true, `oczekiwanie na strumień… <code>${esc(src)}</code>`);
     v.onloadeddata = () => { setNoSignal(false); v.play().catch(() => {}); };
-    v.onerror = () => setNoSignal(true, `strumień niedostępny — umieść swój klip w <code>${esc(src)}</code> i odśwież stronę`);
-    v.src = src; v.load();
+    candidates.forEach((c, i) => {
+      const s = document.createElement("source"); s.src = c;
+      if (i === candidates.length - 1) s.addEventListener("error", () => setNoSignal(true, `strumień niedostępny — umieść swój klip w <code>${esc(src)}</code> i odśwież stronę`));
+      v.appendChild(s);
+    });
+    v.load();
   }
 
   function renderBoxes(boxes) {
