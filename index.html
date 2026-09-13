@@ -32,21 +32,24 @@
       </div>
     </header>
 
-    <!-- ===================== LEWY PANEL: TERMINAL ===================== -->
+    <!-- ===================== LEWY PANEL: ASYSTENT ===================== -->
     <section id="terminal" class="panel">
       <div class="panel-head">
-        <span class="panel-title">TERMINAL OPERACYJNY</span>
+        <span class="panel-title">ASYSTENT OCHRONY</span>
         <span class="panel-meta">
-          <span class="pill" id="term-mode">RĘCZNY</span>
-          <button class="btn tiny" id="btn-auto" title="Włącz/wyłącz automatyczne odtwarzanie scenariusza">AUTO ▸</button>
+          <span class="k">DEMO:</span>
+          <span class="pill" id="term-mode">RĘCZNIE</span>
+          <button class="btn tiny" id="btn-auto" title="Scenariusz odtwarza się sam">AUTO ▸</button>
           <button class="btn tiny" id="btn-next" title="Wywołaj następne zaplanowane zdarzenie">NASTĘPNE ZDARZENIE</button>
         </span>
       </div>
       <div id="term-log" class="term-log" aria-live="polite"></div>
-      <form id="term-form" class="term-input" autocomplete="off">
-        <span class="prompt">operator@sentinel:~$</span>
-        <input id="term-in" type="text" placeholder="wpisz polecenie lub wybierz opcję powyżej · „pomoc”" spellcheck="false" />
-      </form>
+      <div class="quick-bar" id="quick-bar">
+        <button type="button" class="qbtn" data-q="status">Co się dzieje?</button>
+        <button type="button" class="qbtn" data-q="cams">Pokaż kamery</button>
+        <button type="button" class="qbtn" data-q="proc">Co mam teraz robić?</button>
+        <button type="button" class="qbtn" data-q="log">Historia zdarzeń</button>
+      </div>
     </section>
 
     <!-- ===================== PRAWY GÓRNY: CYFROWY BLIŹNIAK ===================== -->

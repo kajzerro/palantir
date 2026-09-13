@@ -20,20 +20,20 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge/Firefox.
 
 | Panel | Co robi |
 |---|---|
-| **Lewy – terminal operacyjny** | Terminal w formie czatu. Każda wiadomość SENTINELA wymagająca decyzji ma numerowane, klikalne opcje. Można też wpisywać polecenia (`pomoc`, `status`, `kamery`, `kamera 8`, `dalej`, `auto`, `procedura`, `dziennik`, `wyczyść`) albo odpowiadać numerem opcji. |
+| **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski w zwykłym języku („Tak, to prawdziwe zagrożenie”, „Powiedz mi więcej”, „To fałszywy alarm”, „Zrobione ✓”). Na dole stałe przyciski: *Co się dzieje?*, *Pokaż kamery*, *Co mam teraz robić?*, *Historia zdarzeń*. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
 | **Prawy górny – cyfrowy bliźniak** | Model 3D kopalni w rzucie z lotu ptaka: powierzchnia (kratownicowa wieża szybowa, zakład przeróbczy z silosami, osadniki, kotłownia, rozdzielnia, lampownia, parking, tory z wagonami, stacja wentylatorów), poziom −300 m i poziom −500 m ułożone jeden pod drugim (widok rozstrzelony) z przekopami w obudowie łukowej, torami, ścianami z sekcjami obudowy i kombajnem, chodnikami przyścianowymi, przodkiem, pompownią, komorą MW, stacją odmetanowania, komorą ratunkową, tamami wentylacyjnymi, przepływem powietrza, jeżdżącą klatką w szybie, lokomotywą i przemieszczającą się załogą. Kółko myszy przybliża, przeciąganie przesuwa, kliknięcie poziomu w panelu bocznym przybliża ten poziom. Każdy punkt to kamera CCTV. Kliknięcie otwiera ją na podglądzie. Punkty **pulsują na czerwono** przy anomalii, są **pomarańczowe** w trakcie procedury, **szare** gdy offline. Panel boczny pozwala wyróżnić jeden poziom. |
 | **Prawy dolny – podgląd na żywo** | Odtwarza wideo wybranej kamery z ramkami detekcji AI, listą detekcji, metadanymi kamery i listą ostatnich zdarzeń. Do czasu dodania pliku wideo pokazuje animowaną planszę BRAK SYGNAŁU. |
 
 ## Przebieg demo
 
-1. Naciśnij **NASTĘPNE ZDARZENIE** (lub wpisz `dalej`) – wywołuje kolejną
+1. Naciśnij **NASTĘPNE ZDARZENIE** – wywołuje kolejną
    zaplanowaną anomalię: punkt kamery miga na czerwono, podgląd przełącza się
-   na tę kamerę z ramkami, terminal wypisuje ALARM i pyta *co chcesz zrobić dalej?*
-2. Opcje: potwierdź anomalię, poproś o szczegółową analizę AI, obserwuj dalej
-   (ponowny alarm po 20 s) lub oznacz jako fałszywy alarm.
-3. Po potwierdzeniu SENTINEL otwiera właściwą procedurę (np.
-   `PROC-POZ-02 Pożar przenośnika taśmowego`), pokazuje całą listę kontrolną
-   i pyta o każdy krok po kolei (**Wykonano** / **Niemożliwe – zgłoś odstępstwo** / **Pokaż całą procedurę**).
+   na tę kamerę z ramkami, asystent wypisuje UWAGA i pyta *co robimy?*
+2. Przyciski: „Tak, to prawdziwe zagrożenie – pokaż, co robić”, „Powiedz mi więcej”,
+   „Poczekaj chwilę i sprawdź jeszcze raz” (ponowny alarm po 20 s), „To fałszywy alarm”.
+3. Po potwierdzeniu asystent otwiera właściwą procedurę (np.
+   „Pożar przenośnika taśmowego”), pokazuje całą listę kroków
+   i pyta o każdy krok po kolei (**Zrobione ✓** / **Nie mogę tego zrobić** / **Pokaż wszystkie kroki**).
    Między krokami pojawiają się zaplanowane aktualizacje (odczyty CO, potwierdzenia załogi, czas dojazdu ratowników).
 4. Po potwierdzeniu ostatniego kroku zdarzenie jest zamykane, nadawany jest
    numer raportu, a kamera wraca do stanu nominalnego.
@@ -72,6 +72,6 @@ Gdy brakuje klipu zdarzenia, używana jest pętla kamery; gdy brakuje i jej,
 plansza BRAK SYGNAŁU podaje oczekiwaną ścieżkę.
 
 Wszystkie ścieżki, kamery, zdarzenia, ramki detekcji (`boxes`, w % kadru),
-procedury i gotowe odpowiedzi czatu są w `js/data.js`. Pozycje kamer na modelu
+i procedury są w `js/data.js`. Pozycje kamer na modelu
 (`level`, `x`, `y`, `dir`) są we współrzędnych planu obiektu (0–520 × 0–200);
 projekcja 3D jest liczona w `js/app.js` (funkcja `P`).

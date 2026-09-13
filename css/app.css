@@ -114,7 +114,8 @@ button { font-family: inherit; }
 /* ---------- terminal ---------- */
 #terminal { grid-area: term; }
 .term-log {
-  flex: 1; overflow-y: auto; padding: 10px 12px;
+  flex: 1; overflow-y: auto; padding: 12px 14px;
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.5;
   scroll-behavior: smooth;
   background:
     repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px),
@@ -124,7 +125,7 @@ button { font-family: inherit; }
 .term-log::-webkit-scrollbar-thumb, .feed-side::-webkit-scrollbar-thumb { background: #22323f; border-radius: 3px; }
 
 .msg { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid transparent; animation: fadein .18s ease-out; white-space: pre-wrap; word-break: break-word; }
-.msg .hdr { display: flex; gap: 8px; font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 1px; }
+.msg .hdr { display: flex; gap: 8px; font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 2px; font-family: var(--mono); }
 .msg .hdr .from { font-weight: 700; }
 .msg .body { color: var(--text); }
 .msg.sys { border-left-color: #2a3a48; }           .msg.sys .from { color: var(--text-dim); }
@@ -161,28 +162,31 @@ button { font-family: inherit; }
 
 .opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
 .opt {
-  background: #0f1c27; color: var(--accent); border: 1px solid #244457; border-radius: 3px;
-  padding: 4px 9px; cursor: pointer; font-size: 11px; text-align: left; line-height: 1.3;
+  background: #0f1c27; color: var(--accent); border: 1px solid #244457; border-radius: 4px;
+  padding: 7px 12px; cursor: pointer; font-size: 13px; text-align: left; line-height: 1.3; font-family: var(--sans);
   transition: background .12s, border-color .12s;
 }
-.opt .n { color: var(--text-faint); margin-right: 5px; }
+.opt .n { display: none; }
 .opt:hover { background: #13293a; border-color: var(--accent); }
 .opt.danger { color: var(--alert-2); border-color: #5a2a30; } .opt.danger:hover { border-color: var(--alert); background: #2a1216; }
 .opt.good { color: var(--ok); border-color: #22503f; } .opt.good:hover { border-color: var(--ok); background: #0f2a20; }
 .opts.used .opt { opacity: .35; pointer-events: none; }
 .opts.used .opt.chosen { opacity: 1; background: #12303f; border-color: var(--accent-2); color: var(--accent-2); }
 
-.term-input {
-  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-  border-top: 1px solid var(--border); background: var(--bg-panel-2);
-}
-.term-input .prompt { color: var(--accent-2); white-space: nowrap; font-size: 11.5px; }
-.term-input input {
-  flex: 1; background: transparent; border: none; outline: none; color: var(--text);
-  font-family: inherit; font-size: 12.5px; caret-color: var(--accent-2);
-}
-.term-input input::placeholder { color: var(--text-faint); }
-.typing { color: var(--text-faint); font-size: 11px; padding-left: 12px; }
+.quick-bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--bg-panel-2); }
+.qbtn { flex: 1 1 auto; background: #13202c; color: var(--text); border: 1px solid var(--border-strong); border-radius: 4px; padding: 7px 10px; cursor: pointer; font-size: 12.5px; font-family: var(--sans); }
+.qbtn:hover { border-color: var(--accent); color: var(--accent); }
+.camchips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.camchip { background: #0f1c27; color: var(--text); border: 1px solid var(--border-strong); border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 12px; font-family: var(--sans); }
+.camchip:hover { border-color: var(--accent); color: var(--accent); }
+.camchip.off { opacity: .45; }
+.msg .plain { list-style: none; padding: 0; margin: 4px 0 0; }
+.msg .plain li { padding: 1px 0 1px 14px; position: relative; }
+.msg .plain li::before { content: "•"; position: absolute; left: 2px; color: var(--accent); }
+.msg .steps li { font-size: 13px; }
+.msg table.kv { font-family: var(--sans); font-size: 13px; }
+.msg .tag { font-family: var(--mono); }
+.typing { color: var(--text-faint); font-size: 12px; padding-left: 12px; }
 .typing::after { content: "▍"; animation: blink .9s steps(2) infinite; }
 
 /* ---------- digital twin (3D bird's-eye) ---------- */

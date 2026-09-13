@@ -258,17 +258,5 @@ window.MINE_DATA = (function () {
     },
   ];
 
-  /* ------------------------------------------------------------------
-     Gotowe odpowiedzi na dowolny tekst wpisany w terminalu.
-     ------------------------------------------------------------------ */
-  const chatter = [
-    { keys: ["cześć", "czesc", "dzień dobry", "dzien dobry", "hej", "witaj"], reply: "Dzień dobry. Sentinel monitoruje 12 kamer online. Wpisz „status”, aby zobaczyć podsumowanie obiektu, albo poczekaj na alarm." },
-    { keys: ["metan", "ch4", "gaz"], reply: "Odczyty metanu: ściana L-12 0,38 %, ściana W-7 0,42 %, stacja odmetanowania 0,21 %. Wszystkie poniżej progu ostrzegawczego 1,0 %." },
-    { keys: ["załoga", "zaloga", "ludzie", "na dole", "personel"], reply: "312 osób na dole (zmiana B). Ściana L-12: 16, ściana W-7: 14, przodki: 41, transport/utrzymanie ruchu: 58, pozostali: 183." },
-    { keys: ["pogoda"], reply: "Powierzchnia: 4 °C, wiatr 12 km/h NW. Bez wpływu na wentylację." },
-    { keys: ["dzięki", "dzieki", "dziękuję", "dziekuje"], reply: "Przyjąłem. Czuwaj dalej." },
-    { keys: ["kim jesteś", "kim jestes", "czym jesteś", "co to"], reply: "SENTINEL-CI: warstwa analizy wizyjnej AI nad systemem CCTV kopalni, gazometrią i kontrolą dostępu. Wykrywam niebezpieczne wzorce, zgłaszam alarmy i prowadzę Cię przez obowiązkowe procedury." },
-  ];
-
-  return { cameras, sensors, procedures, incidents, chatter };
+  return { cameras, sensors, procedures, incidents };
 })();

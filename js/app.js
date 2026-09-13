@@ -32,7 +32,7 @@
   };
 
   const els = {
-    log: $("#term-log"), form: $("#term-form"), input: $("#term-in"),
+    log: $("#term-log"), quickBar: $("#quick-bar"),
     btnAuto: $("#btn-auto"), btnNext: $("#btn-next"), termMode: $("#term-mode"),
     scene: $("#scene"), svg: $("#mine-svg"), tooltip: $("#twin-tooltip"), twinSide: $("#twin-side"),
     video: $("#feed-video"), noise: $("#feed-noise"), overlay: $("#feed-overlay"),
@@ -86,11 +86,11 @@
       drain();
     });
   }
-  const sys = (html, o) => say("sys", "SYSTEM", html, o);
-  const ai = (html, o) => say("ai", "SENTINEL", html, o);
-  const ok = (html, o) => say("ok", "SENTINEL", html, o);
-  const warn = (html, o) => say("warn", "SENTINEL", html, o);
-  function op(text) { renderMessage({ kind: "op", from: "OPERATOR", html: esc(text) }); }
+  const sys = (html, o) => say("sys", "ASYSTENT", html, o);
+  const ai = (html, o) => say("ai", "ASYSTENT", html, o);
+  const ok = (html, o) => say("ok", "ASYSTENT", html, o);
+  const warn = (html, o) => say("warn", "ASYSTENT", html, o);
+  function op(text) { renderMessage({ kind: "op", from: "TY", html: esc(text) }); }
 
   function drain() {
     if (draining) return;
@@ -121,98 +121,63 @@
     o.action && o.action();
   }
 
-  /* ---------- polecenia ---------- */
-  const HELP = `
-<span class="b">Polecenia</span>
-  <span class="h">pomoc</span>              ta lista
-  <span class="h">status</span>             podsumowanie obiektu (kamery, gaz, załoga, alarmy)
-  <span class="h">kamery</span>             lista kamer
-  <span class="h">kamera &lt;n|id&gt;</span>      otwórz kamerę na podglądzie, np. <span class="h">kamera 8</span>
-  <span class="h">dalej</span>              wywołaj następne zaplanowane zdarzenie (sterowanie demo)
-  <span class="h">auto</span>               włącz/wyłącz automatyczne odtwarzanie scenariusza
-  <span class="h">procedura</span>          pokaż procedurę aktywnego zdarzenia
-  <span class="h">dziennik</span>           dziennik zdarzeń
-  <span class="h">wyczyść</span>            wyczyść terminal
-  <span class="k">Podczas alarmu możesz też wpisać numer opcji (1, 2, 3…).</span>`.trim();
+  /* ---------- szybkie przyciski (zamiast poleceń) ---------- */
+  const QUICK = {
+    status: { label: "Co się dzieje?", run: quickStatus },
+    cams: { label: "Pokaż kamery", run: quickCams },
+    proc: { label: "Co mam teraz robić?", run: quickProc },
+    log: { label: "Historia zdarzeń", run: quickLog },
+  };
+  els.quickBar.addEventListener("click", (e) => {
+    const b = e.target.closest(".qbtn"); if (!b) return;
+    const q = QUICK[b.dataset.q]; if (!q) return;
+    op(q.label); q.run();
+  });
 
-  function handleInput(raw) {
-    const text = raw.trim();
-    if (!text) return;
-    op(text);
-    const low = text.toLowerCase();
-    const [cmd, ...rest] = low.split(/\s+/);
-    const arg = rest.join(" ");
-
-    if (/^\d+$/.test(low) && state.pendingOptions) {
-      const i = parseInt(low, 10) - 1;
-      const po = state.pendingOptions;
-      if (po.options[i]) { po.el.classList.add("used"); po.el.children[i].classList.add("chosen"); state.pendingOptions = null; po.options[i].action && po.options[i].action(); }
-      else warn(`Nie ma opcji ${i + 1}. Wybierz 1–${po.options.length}.`);
-      return;
-    }
-    if (state.pendingOptions) {
-      const po = state.pendingOptions;
-      const i = po.options.findIndex((o) => o.label.toLowerCase().startsWith(low) || (o.keys || []).some((k) => low.includes(k)));
-      if (i >= 0) { po.el.classList.add("used"); po.el.children[i].classList.add("chosen"); state.pendingOptions = null; po.options[i].action && po.options[i].action(); return; }
-    }
-
-    switch (cmd) {
-      case "pomoc": case "help": case "?": sys(HELP); return;
-      case "status": cmdStatus(); return;
-      case "kamery": case "cams": case "cameras": cmdCams(); return;
-      case "kamera": case "kam": case "cam": case "otwórz": case "otworz": case "open": {
-        const id = /^\d+$/.test(arg) ? camIndex(parseInt(arg, 10))?.id : arg.toUpperCase().replace(/^(KAM|CAM)-?/, "KAM-").replace(/^KAM-(\d)$/, "KAM-0$1");
-        const c = id && camById(id);
-        if (!c) { warn(`Nieznana kamera „${esc(arg)}”. Wpisz <span class="h">kamery</span>.`); return; }
-        selectCamera(c.id, { announce: true });
-        return;
-      }
-      case "dalej": case "next": case "zdarzenie": fireNextIncident(); return;
-      case "auto": toggleAuto(); return;
-      case "procedura": case "proc": cmdProc(); return;
-      case "dziennik": case "log": case "zdarzenia": cmdLog(); return;
-      case "wyczyść": case "wyczysc": case "clear": els.log.innerHTML = ""; return;
-      case "potwierdź": case "potwierdz": case "ack": if (state.active && state.active.status === "new") { confirmIncident(); return; } break;
-    }
-    const hit = D.chatter.find((c) => c.keys.some((k) => low.includes(k)));
-    if (hit) { ai(esc(typeof hit.reply === "function" ? hit.reply() : hit.reply)); return; }
-    ai(`Nie rozumiem <span class="k">„${esc(text)}”</span>. Wpisz <span class="h">pomoc</span>, aby zobaczyć polecenia${state.pendingOptions ? ", albo odpowiedz numerem opcji" : ""}.`);
-  }
-
-  function cmdStatus() {
+  function quickStatus() {
     const online = D.cameras.filter((c) => !c.offline).length;
-    const ch4 = Object.entries(currentSensors()).map(([k, v]) => `${k} ${pct(v)}`).join(" · ");
-    sys(`<table class="kv">
-<tr><td>kamery</td><td>${online}/${D.cameras.length} online ${D.cameras.filter((c) => c.offline).map((c) => `<span class="k">(${c.id} offline)</span>`).join("")}</td></tr>
-<tr><td>metan</td><td>${ch4}</td></tr>
-<tr><td>załoga na dole</td><td>312 (zmiana B)</td></tr>
-<tr><td>wentylacja</td><td><span class="g">wentylator główny nominalnie · 312 m³/s</span></td></tr>
-<tr><td>aktywne alarmy</td><td>${state.active ? `<span class="r">1 · ${state.active.inc.id} · ${statusLabel(state.active.status)}</span>` : `<span class="g">brak</span>`}</td></tr>
-<tr><td>zamknięte dziś</td><td>${state.closed.length}</td></tr>
-<tr><td>model AI</td><td>sentinel-vision v4.2 · 25 kl/s · 13 strumieni</td></tr></table>`);
-  }
-  function statusLabel(s) { return { new: "NOWE", confirmed: "W PROCEDURZE", closed: "ZAMKNIĘTE", false: "FAŁSZYWY ALARM" }[s] || s.toUpperCase(); }
-
-  function cmdCams() {
-    const rows = D.cameras.map((c, i) => `<tr><td>${i + 1}</td><td><span class="h">${c.id}</span></td><td>${esc(c.name)}</td><td class="k">${esc(c.zone)}</td><td>${c.offline ? '<span class="k">OFFLINE</span>' : '<span class="g">ONLINE</span>'}</td></tr>`).join("");
-    sys(`<table class="kv">${rows}</table><span class="k">Otwórz przez </span><span class="h">kamera &lt;n&gt;</span><span class="k"> lub kliknij punkt na modelu 3D.</span>`);
+    const s = currentSensors(), max = Math.max(...Object.values(s));
+    const gas = max >= 1.5 ? '<span class="r">za wysoki – trwa procedura</span>' : max >= 1.0 ? '<span class="y">podwyższony, obserwuję</span>' : '<span class="g">w normie</span>';
+    const items = [
+      `Działa ${online} z ${D.cameras.length} kamer${online < D.cameras.length ? " (KAM-13 jest wyłączona – serwis)" : ""}.`,
+      `Metan: ${gas}.`,
+      `Pod ziemią jest 312 osób (zmiana B).`,
+      `Wentylacja pracuje normalnie.`,
+      `Dziś zamknięto ${state.closed.length} ${state.closed.length === 1 ? "zdarzenie" : state.closed.length >= 2 && state.closed.length <= 4 ? "zdarzenia" : "zdarzeń"}.`,
+    ];
+    ai(`${state.active ? `<span class="r">Trwa zdarzenie ${state.active.inc.id}: ${esc(state.active.inc.title)}.</span>` : `<span class="g">Wszystko w porządku.</span>`}<ul class="plain">${items.map((t) => `<li>${t}</li>`).join("")}</ul>`);
   }
 
-  function cmdProc() {
-    if (!state.active || state.active.status === "new") { warn("Brak potwierdzonego zdarzenia. Procedury są pokazywane po potwierdzeniu anomalii."); return; }
+  function quickCams() {
+    ai(`Kliknij kamerę, którą chcesz zobaczyć (możesz też klikać punkty na modelu kopalni):`).then((el) => {
+      const wrap = document.createElement("div"); wrap.className = "camchips";
+      D.cameras.forEach((c) => {
+        const b = document.createElement("button"); b.type = "button";
+        b.className = `camchip${c.offline ? " off" : ""}`;
+        b.textContent = `${c.id.replace("KAM-", "")} · ${c.name}${c.offline ? " (wyłączona)" : ""}`;
+        b.addEventListener("click", () => selectCamera(c.id));
+        wrap.appendChild(b);
+      });
+      el.appendChild(wrap); scrollLog();
+    });
+  }
+
+  function quickProc() {
+    if (!state.active) { ai("Teraz nie ma żadnego zdarzenia. Obserwuj podgląd i czekaj – jeśli coś zauważę, od razu Ci powiem."); return; }
+    if (state.active.status === "new") { ai(`Mamy nowe zdarzenie na ${state.active.cam.id}. Najpierw zdecyduj, czy to prawdziwe zagrożenie – użyj przycisków powyżej.`); return; }
     sys(procedureHtml(state.active));
+    ai(`Jesteś przy kroku ${state.active.step + 1}. Wykonaj go i kliknij „Zrobione”.`);
   }
 
-  function cmdLog() {
-    if (!state.closed.length && !state.active) { sys("Dziennik zdarzeń jest pusty."); return; }
+  function quickLog() {
+    if (!state.closed.length && !state.active) { ai("Dziś nie było jeszcze żadnych zdarzeń."); return; }
     const rows = [...state.closed, ...(state.active ? [state.active] : [])].map((r) =>
-      `<tr><td><span class="h">${r.inc.id}</span></td><td>${severityTag(r.inc.severity)}</td><td>${esc(r.inc.title)}</td><td>${r.inc.cam}</td><td>${r.status === "closed" ? '<span class="g">ZAMKNIĘTE</span>' : r.status === "false" ? '<span class="k">FAŁSZYWY ALARM</span>' : `<span class="y">${statusLabel(r.status)}</span>`}</td></tr>`).join("");
+      `<tr><td>${r.openedAt}</td><td>${severityTag(r.inc.severity)}</td><td>${esc(r.inc.title)}</td><td>${r.inc.cam}</td><td>${r.status === "closed" ? '<span class="g">zakończone</span>' : r.status === "false" ? '<span class="k">fałszywy alarm</span>' : `<span class="y">w toku</span>`}</td></tr>`).join("");
     sys(`<table class="kv log">${rows}</table>`);
   }
 
-  els.form.addEventListener("submit", (e) => { e.preventDefault(); const v = els.input.value; els.input.value = ""; handleInput(v); });
-  els.btnNext.addEventListener("click", () => { op("dalej"); fireNextIncident(); });
-  els.btnAuto.addEventListener("click", () => { op("auto"); toggleAuto(); });
+  els.btnNext.addEventListener("click", () => fireNextIncident());
+  els.btnAuto.addEventListener("click", () => toggleAuto());
 
   /* ==================================================================
      CYFROWY BLIŹNIAK – model 3D w rzucie ukośnym z lotu ptaka
@@ -624,8 +589,8 @@
       svgEl("circle", { class: "ring", cx: tx, cy: ty, r: 6.5 }, g);
       svgEl("circle", { class: "core", cx: tx, cy: ty, r: 3.5 }, g);
       text(g, tx + 9, ty + 3, c.id.replace("KAM-", "K"), "id", "start");
-      g.addEventListener("click", () => selectCamera(c.id, { announce: true }));
-      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectCamera(c.id, { announce: true }); } });
+      g.addEventListener("click", () => selectCamera(c.id));
+      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectCamera(c.id); } });
       g.addEventListener("mouseenter", (e) => showTooltip(c, e));
       g.addEventListener("mousemove", (e) => moveTooltip(e));
       g.addEventListener("mouseleave", hideTooltip);
@@ -800,7 +765,7 @@
 
   function setFeedStatus(text, cls) { els.feedStatus.textContent = text; els.feedStatus.className = `pill ${cls || ""}`; }
 
-  function selectCamera(id, { announce = false } = {}) {
+  function selectCamera(id) {
     const c = camById(id); if (!c) return;
     state.selectedCam = id;
     els.svg.querySelectorAll(".cam.selected").forEach((n) => n.classList.remove("selected"));
@@ -823,14 +788,13 @@
       loadVideo(c.video); renderBoxes([]); renderDetections([]); setFeedStatus("NA ŻYWO", "live");
       els.feedMain.classList.remove("alert");
     }
-    if (announce) sys(`Podgląd → <span class="h">${c.id}</span> ${esc(c.name)} <span class="k">(${esc(c.zone)})</span>${c.offline ? ' · <span class="r">kamera offline</span>' : ""}`, { delay: 80 });
   }
 
   function pushEvent(text, cls, camId) {
     const li = document.createElement("li");
     li.className = cls || "";
     li.innerHTML = `<span class="t">${now()}</span><span class="s">${text}</span>`;
-    if (camId) li.addEventListener("click", () => selectCamera(camId, { announce: true }));
+    if (camId) li.addEventListener("click", () => selectCamera(camId));
     els.events.prepend(li);
     while (els.events.children.length > 14) els.events.lastChild.remove();
   }
@@ -858,7 +822,7 @@
     const n = state.active && state.active.status !== "closed" ? 1 : 0;
     els.kpiAlerts.textContent = n;
     els.kpiAlerts.parentElement.classList.toggle("hot", n > 0);
-    els.termMode.textContent = state.auto ? "AUTO" : "RĘCZNY";
+    els.termMode.textContent = state.auto ? "AUTO" : "RĘCZNIE";
     els.termMode.className = `pill ${state.auto ? "ok" : ""}`;
     els.btnAuto.classList.toggle("active", state.auto);
     refreshLevelButtons();
@@ -867,8 +831,8 @@
   function toggleAuto() {
     state.auto = !state.auto;
     updateKpis();
-    if (state.auto) { sys(`Automatyczne odtwarzanie scenariusza <span class="g">WŁĄCZONE</span>. Następne zdarzenie za 8 s, o ile nie ma otwartego zdarzenia.`); scheduleAuto(8000); }
-    else { sys(`Automatyczne odtwarzanie scenariusza <span class="y">WYŁĄCZONE</span>. Użyj <span class="h">dalej</span> lub NASTĘPNE ZDARZENIE.`); clearTimeout(state.autoTimer); }
+    if (state.auto) { sys(`Tryb demo: zdarzenia będą pojawiać się <span class="g">automatycznie</span>.`); scheduleAuto(8000); }
+    else { sys(`Tryb demo: zdarzenia wywołujesz <span class="y">ręcznie</span> przyciskiem NASTĘPNE ZDARZENIE.`); clearTimeout(state.autoTimer); }
   }
   function scheduleAuto(ms) {
     clearTimeout(state.autoTimer);
@@ -877,15 +841,16 @@
   }
 
   const SEV_CLS = { NISKI: "LOW", ŚREDNI: "MEDIUM", WYSOKI: "HIGH", KRYTYCZNY: "CRITICAL" };
-  function severityTag(s) { return `<span class="tag ${SEV_CLS[s] || ""}">${s}</span>`; }
+  const SEV_TXT = { NISKI: "MAŁE ZAGROŻENIE", ŚREDNI: "ŚREDNIE ZAGROŻENIE", WYSOKI: "DUŻE ZAGROŻENIE", KRYTYCZNY: "KRYTYCZNE ZAGROŻENIE" };
+  function severityTag(s) { return `<span class="tag ${SEV_CLS[s] || ""}">${SEV_TXT[s] || s}</span>`; }
 
   function fireNextIncident() {
     if (state.active && state.active.status !== "closed") {
-      warn(`Zdarzenie <span class="h">${state.active.inc.id}</span> jest nadal otwarte. Zamknij je (dokończ procedurę lub oznacz jako fałszywy alarm) przed kolejnym zdarzeniem.`);
+      warn(`Najpierw zakończ obecne zdarzenie – dokończ kroki albo oznacz je jako fałszywy alarm.`);
       return;
     }
     if (state.incidentCursor >= D.incidents.length) {
-      ok(`Odtworzono wszystkie ${D.incidents.length} zaplanowane zdarzenia. Odśwież stronę, aby rozpocząć scenariusz od nowa, albo wpisz <span class="h">dziennik</span>, aby zobaczyć podsumowanie.`);
+      ok(`To były wszystkie zaplanowane zdarzenia w tym demo. Odśwież stronę, aby zacząć od nowa, albo kliknij „Historia zdarzeń”.`);
       state.auto = false; updateKpis();
       return;
     }
@@ -902,54 +867,52 @@
     pushEvent(`${inc.id} ${esc(inc.title)}`, "alert", inc.cam);
     updateKpis();
 
-    const conf = Math.round(inc.detections.reduce((a, d) => a + d[1], 0) / inc.detections.length * 100);
     const kind = inc.severity === "KRYTYCZNY" ? "alert crit" : "alert";
-    say(kind, `⚠ ALARM · ${inc.id}`, `${severityTag(inc.severity)} <span class="b">${esc(inc.title)}</span>
+    say(kind, `⚠ UWAGA · ${inc.id}`, `${severityTag(inc.severity)}
+<span class="b">${esc(inc.title)}</span>
 <table class="kv">
-<tr><td>kamera</td><td><span class="h">${cam.id}</span> ${esc(cam.name)} · ${esc(cam.zone)}</td></tr>
-<tr><td>wzorzec</td><td>${inc.detections.map((d) => esc(d[0])).join(" · ")}</td></tr>
-<tr><td>pewność</td><td>${conf} %</td></tr>
-<tr><td>czas</td><td>${rec.openedAt}</td></tr>
+<tr><td>gdzie</td><td>${esc(cam.name)} <span class="k">(${esc(cam.zone)})</span></td></tr>
+<tr><td>kamera</td><td>${cam.id}</td></tr>
+<tr><td>kiedy</td><td>${rec.openedAt}</td></tr>
 </table>${esc(inc.summary)}`, { delay: 120 });
 
-    ai(`Podgląd na żywo przełączony na <span class="h">${cam.id}</span> (${esc(LEVEL_NAMES[Math.floor(cam.level)])}). Punkt kamery na modelu 3D miga na czerwono. <span class="b">Co chcesz zrobić dalej?</span>`, {
+    ai(`Przełączyłem podgląd na kamerę ${cam.id} – zobacz obraz po prawej. Ta kamera miga też na czerwono na modelu kopalni. <span class="b">Co robimy?</span>`, {
       options: assessmentOptions(rec, true),
     });
   }
 
   function assessmentOptions(rec, withAnalysis) {
     const o = [
-      { label: "Potwierdź anomalię i otwórz procedurę", cls: "danger", keys: ["potwierd", "tak", "confirm"], action: confirmIncident },
+      { label: "Tak, to prawdziwe zagrożenie – pokaż, co robić", cls: "danger", action: confirmIncident },
     ];
-    if (withAnalysis) o.push({ label: "Poproś o szczegółową analizę AI", keys: ["analiz", "szczegó", "więcej", "wiecej"], action: () => analysis(rec) });
-    o.push({ label: "Obserwuj dalej – ponowny alarm za 20 s, jeśli wzorzec się utrzyma", keys: ["obserw", "czekaj", "poczekaj"], action: () => holdIncident(rec) });
-    o.push({ label: "Oznacz jako fałszywy alarm", cls: "good", keys: ["fałszyw", "falszyw"], action: () => falseAlarm(rec) });
+    if (withAnalysis) o.push({ label: "Powiedz mi więcej", action: () => analysis(rec) });
+    o.push({ label: "Poczekaj chwilę i sprawdź jeszcze raz", action: () => holdIncident(rec) });
+    o.push({ label: "To fałszywy alarm", cls: "good", action: () => falseAlarm(rec) });
     return o;
   }
 
   function analysis(rec) {
-    const inc = rec.inc;
-    const rows = inc.detections.map((d) => `<tr><td>${esc(d[0])}</td><td>${(d[1] * 100).toFixed(0)} %</td></tr>`).join("");
-    ai(`<span class="b">Analiza rozszerzona · ${inc.id}</span>
-<table class="kv">${rows}</table>${esc(inc.aiNotes)}
+    const inc = rec.inc, proc = D.procedures[inc.procedure];
+    const seen = inc.detections.map((d) => `<li>${esc(d[0])}</li>`).join("");
+    ai(`<span class="b">Co widzę na kamerze:</span><ul class="plain">${seen}</ul>${esc(inc.aiNotes)}
 
-<span class="b">Zalecana procedura:</span> <span class="h">${inc.procedure}</span> „${esc(D.procedures[inc.procedure].title)}” <span class="k">(${esc(D.procedures[inc.procedure].ref)})</span>
-Twoja decyzja?`, { options: assessmentOptions(rec, false) });
+Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${esc(proc.title)}”</span> <span class="k">(${esc(proc.ref)})</span>.
+<span class="b">Co robimy?</span>`, { options: assessmentOptions(rec, false) });
   }
 
   function holdIncident(rec) {
-    ai(`Obserwuję. Śledzę dalej na <span class="h">${rec.inc.cam}</span> i ponowię alarm za 20 s, jeśli wzorzec się utrzyma.`);
+    ai(`Dobrze, obserwuję dalej. Jeśli za 20 sekund nadal będzie to widoczne, odezwę się ponownie.`);
     setTimeout(() => {
       if (state.active !== rec || rec.status !== "new") return;
       beep(rec.inc.severity);
-      say("alert", `⚠ PONOWNY ALARM · ${rec.inc.id}`, `${severityTag(rec.inc.severity)} Wzorzec <span class="b">utrzymuje się</span> na ${rec.inc.cam} po 20 s. Nadal wykryto: ${esc(rec.inc.detections[0][0])}. Procedura wymaga teraz decyzji.`, { options: assessmentOptions(rec, false), delay: 100 });
+      say("alert", `⚠ NADAL WIDOCZNE · ${rec.inc.id}`, `${severityTag(rec.inc.severity)} Minęło 20 sekund i na kamerze ${rec.inc.cam} nadal widzę: <span class="b">${esc(rec.inc.detections[0][0])}</span>. Musisz teraz zdecydować.`, { options: assessmentOptions(rec, false), delay: 100 });
     }, 20000);
   }
 
   function falseAlarm(rec) {
     rec.status = "false"; rec.closedAt = now();
     closeIncidentVisuals(rec);
-    ok(`<span class="b">${rec.inc.id} oznaczone jako FAŁSZYWY ALARM</span> o ${rec.closedAt}. Nagranie zachowano do douczenia modelu, a czułość dla tego wzorca na ${rec.inc.cam} obniżono na 24 h. Kamera wraca do stanu nominalnego.`);
+    ok(`W porządku, zapisałem to jako <span class="b">fałszywy alarm</span> (${rec.closedAt}). Kamera ${rec.inc.cam} wraca do normalnej pracy. Dziękuję!`);
     pushEvent(`${rec.inc.id} fałszywy alarm`, "ok", rec.inc.cam);
     scheduleAuto(10000);
   }
@@ -964,9 +927,7 @@ Twoja decyzja?`, { options: assessmentOptions(rec, false) });
     updateKpis();
     pushEvent(`${inc.id} potwierdzone → ${inc.procedure}`, "attn", inc.cam);
 
-    ai(`Zdarzenie <span class="h">${inc.id}</span> <span class="b">potwierdzone</span>. Powiadamiam dyspozytora ruchu i otwieram obowiązkową procedurę:
-<span class="b">${inc.procedure} · ${esc(proc.title)}</span> <span class="k">(${esc(proc.ref)})</span>
-Kroków: ${proc.steps.length}. Wykonaj każdy krok i potwierdź go tutaj – każde potwierdzenie jest zapisywane w karcie zdarzenia z sygnaturą czasu.`);
+    ai(`Dobrze. <span class="b">Powiadomiłem dyspozytora.</span> Teraz wykonaj po kolei ${proc.steps.length} kroków procedury <span class="b">„${esc(proc.title)}”</span>. Po każdym kliknij „Zrobione”. Wszystko zapisuję automatycznie.`);
     rec.checklistEl = null;
     sys(procedureHtml(rec)).then((el) => { rec.checklistEl = el; });
     askStep(rec);
@@ -978,7 +939,7 @@ Kroków: ${proc.steps.length}. Wykonaj każdy krok i potwierdź go tutaj – ka�
       const st = rec.steps[i] === "done" ? "done" : rec.steps[i] === "skip" ? "skip" : i === rec.step && rec.status === "confirmed" ? "cur" : "";
       return `<li class="${st}">${i + 1}. ${esc(s)}</li>`;
     }).join("");
-    return `<span class="b">${rec.inc.procedure} · ${esc(proc.title)}</span><ul class="steps">${items}</ul>`;
+    return `<span class="b">${esc(proc.title)}</span> <span class="k">(${esc(proc.ref)})</span><ul class="steps">${items}</ul>`;
   }
   function refreshChecklist(rec) {
     if (rec.checklistEl) rec.checklistEl.querySelector(".body").innerHTML = procedureHtml(rec);
@@ -989,11 +950,11 @@ Kroków: ${proc.steps.length}. Wykonaj każdy krok i potwierdź go tutaj – ka�
     const i = rec.step;
     if (i >= proc.steps.length) { completeIncident(rec); return; }
     refreshChecklist(rec);
-    ai(`<span class="y">Krok ${i + 1}/${proc.steps.length}</span> · ${esc(proc.steps[i])}`, {
+    ai(`<span class="y">Krok ${i + 1} z ${proc.steps.length}:</span> ${esc(proc.steps[i])}`, {
       options: [
-        { label: "Wykonano – potwierdź krok", cls: "good", keys: ["wykon", "zrobione", "ok", "gotowe", "done"], action: () => stepDone(rec) },
-        { label: "Niemożliwe – zgłoś odstępstwo i kontynuuj", cls: "danger", keys: ["niemoż", "niemoz", "pomiń", "pomin", "nie da"], action: () => stepSkip(rec) },
-        { label: "Pokaż całą procedurę", keys: ["pokaż", "pokaz", "procedur"], action: () => { sys(procedureHtml(rec)); askStep(rec); } },
+        { label: "Zrobione ✓", cls: "good", action: () => stepDone(rec) },
+        { label: "Nie mogę tego zrobić", cls: "danger", action: () => stepSkip(rec) },
+        { label: "Pokaż wszystkie kroki", action: () => { sys(procedureHtml(rec)); askStep(rec); } },
       ],
     });
   }
@@ -1005,7 +966,7 @@ Kroków: ${proc.steps.length}. Wykonaj każdy krok i potwierdź go tutaj – ka�
   }
   function stepSkip(rec) {
     rec.steps[rec.step] = "skip"; rec.step++;
-    warn(`Zarejestrowano odstępstwo w kroku ${rec.step}. Dyspozytor ruchu i sztygar zmianowy zostali powiadomieni o odstępstwie.`);
+    warn(`Rozumiem. Zapisałem, że krok ${rec.step} nie został wykonany, i powiadomiłem sztygara zmianowego. Przejdźmy dalej.`);
     askStep(rec);
   }
 
@@ -1032,8 +993,7 @@ Kroków: ${proc.steps.length}. Wykonaj każdy krok i potwierdź go tutaj – ka�
     const d = new Date();
     const reportId = `R-${d.getFullYear()}-${pad(d.getMonth() + 1)}${pad(d.getDate())}-${String(rec.n).padStart(3, "0")}`;
     beep("ok");
-    ok(`<span class="b">Procedura ${rec.inc.procedure} zakończona. Zdarzenie ${rec.inc.id} zamknięte</span> o ${rec.closedAt}.
-Raport <span class="h">${reportId}</span> zapisany w książce raportów zmiany${skipped ? ` z <span class="y">${skipped} zgłoszon${skipped === 1 ? "ym odstępstwem" : "ymi odstępstwami"}</span>` : ""}; nagranie, detekcje i Twoje decyzje z sygnaturą czasu zostały dołączone. ${rec.inc.cam} wraca do normalnego monitoringu.`);
+    ok(`<span class="b">Świetnie, wszystkie kroki wykonane.</span> Zdarzenie zakończone o ${rec.closedAt}. Raport <span class="h">${reportId}</span> zapisał się automatycznie${skipped ? ` (z informacją o ${skipped} ${skipped === 1 ? "niewykonanym kroku" : "niewykonanych krokach"})` : ""}. Kamera ${rec.inc.cam} wraca do normalnej pracy.`);
     pushEvent(`${rec.inc.id} zamknięte · ${reportId}`, "ok", rec.inc.cam);
     scheduleAuto(12000);
   }
@@ -1066,14 +1026,9 @@ Raport <span class="h">${reportId}</span> zapisany w książce raportów zmiany$
     setNoSignal(true, "wybierz kamerę na modelu 3D");
     ["click", "keydown"].forEach((ev) => window.addEventListener(ev, () => { if (!state.audioCtx) { try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} } }, { once: true }));
 
-    await sys(`SENTINEL-CI v4.2.1 · analiza wizyjna infrastruktury krytycznej`, { delay: 60 });
-    await sys(`łączenie z systemem VMS … <span class="g">ok</span> · 13 strumieni · 12 online · 1 offline (KAM-13)`, { delay: 300 });
-    await sys(`łączenie z metanometrią (gazometria) … <span class="g">ok</span>`, { delay: 220 });
-    await sys(`łączenie z kontrolą dostępu i rejestrem znaczków … <span class="g">ok</span>`, { delay: 220 });
-    await sys(`ładowanie modeli anomalii: osoba-leżąca · ŚOI · ogień/dym · strefa-zakazana · perymetr · porzucony-przedmiot … <span class="g">ok</span>`, { delay: 320 });
-    await ai(`Dzień dobry. Obserwuję <span class="b">12 kamer</span> w KWK „Wschód-1” – powierzchnię, poziom −300 i poziom −500. Kliknij dowolny punkt kamery na modelu 3D, aby otworzyć podgląd na żywo. Gdy wykryję niebezpieczny wzorzec, zgłoszę alarm tutaj, przełączę podgląd na tę kamerę i przeprowadzę Cię przez wymaganą procedurę.`);
-    await sys(`Sterowanie demo: naciśnij <span class="h">NASTĘPNE ZDARZENIE</span> (lub wpisz <span class="h">dalej</span>), aby wywołać kolejną zaplanowaną anomalię, albo <span class="h">AUTO</span>, aby scenariusz odtwarzał się sam. Wpisz <span class="h">pomoc</span>, aby zobaczyć wszystkie polecenia.`);
-    els.input.focus();
+    await ai(`Dzień dobry! Jestem Twoim asystentem ochrony. Pilnuję <span class="b">12 kamer</span> w kopalni – na powierzchni i pod ziemią.`);
+    await ai(`Jeśli zobaczę coś niebezpiecznego, <span class="b">od razu Ci powiem</span>, pokażę obraz z tej kamery i poprowadzę Cię krok po kroku. Nie musisz nic wpisywać – wystarczy klikać przyciski.`);
+    await sys(`<span class="k">Demo: kliknij <span class="h">NASTĘPNE ZDARZENIE</span> u góry, aby zobaczyć przykładowy alarm, albo <span class="h">AUTO</span>, żeby zdarzenia pojawiały się same.</span>`);
   }
 
   boot();
