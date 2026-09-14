@@ -159,6 +159,37 @@ window.MINE_DATA = (function () {
   const incidents = [
     {
       id: "ZD-01",
+      cam: "KAM-01",
+      severity: "WYSOKI",
+      title: "Nieuprawnione użycie karty",
+      summary: "Nie rozpoznano twarzy Mariana Kowalskiego, a użyto jego karty (nr 2231) na czytniku przy wejściu głównym.",
+      detections: [
+        ["osoba", 0.97], ["karta: M. Kowalski (2231)", 1.0], ["twarz: NIE ROZPOZNANA", 0.96], ["zgodność z właścicielem karty", 0.08],
+      ],
+      boxes: [
+        { x: 40, y: 14, w: 16, h: 64, label: "TWARZ NIE ROZPOZNANA", cls: "" },
+        { x: 64, y: 40, w: 9, h: 12, label: "CZYTNIK · karta 2231", cls: "attn" },
+      ],
+      video: "videos/inc-card-live.mp4",
+      person: { name: "Marian Kowalski", card: "2231", dept: "Dział mechaniczny" },
+      /* własne opcje zdarzenia – można klikać w dowolnej kolejności */
+      multi: true,
+      options: [
+        { label: "Wyślij patrol", action: "patrol", cls: "danger" },
+        { label: "Odbierz dostępy", action: "block" },
+        { label: "Pokaż historię zdarzeń", action: "history" },
+      ],
+      /* historia: klipy odtwarzane po kolei w panelu podglądu */
+      history: [
+        { time: "06:12", cam: "KAM-01", video: "videos/inc-card-exit.mp4", caption: "Marian Kowalski opuszcza teren zakładu – karta odbita na wyjściu",
+          boxes: [{ x: 30, y: 14, w: 16, h: 64, label: "M. KOWALSKI · zgodność 97 %", cls: "info" }] },
+        { time: "06:38", cam: "KAM-15", video: "videos/inc-card-entry.mp4", caption: "Inna osoba wchodzi na kartę Mariana Kowalskiego",
+          boxes: [{ x: 44, y: 12, w: 16, h: 66, label: "TWARZ NIE ROZPOZNANA", cls: "" }] },
+      ],
+      block: { title: "Dostęp zablokowany", text: "Karta nr 2231 (Marian Kowalski) została zablokowana we wszystkich czytnikach. Powiadomiono ochronę i dział kadr." },
+    },
+    {
+      id: "ZD-02",
       cam: "KAM-02",
       severity: "NISKI",
       title: "Pracownik bez aparatu ucieczkowego idzie na nadszybie",
@@ -173,7 +204,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Czytnik znaczków: pracownik K. Nowak (znaczek 2231) pobrał lampę 0413, ale w wydawalni aparatów nie zeskanowano żadnego aparatu ucieczkowego. Szacowane dojście do kołowrotu za 40 s.",
     },
     {
-      id: "ZD-02",
+      id: "ZD-03",
       cam: "KAM-10",
       severity: "WYSOKI",
       title: "Nieuprawniona obecność w komorze materiałów wybuchowych",
@@ -191,7 +222,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Ostatnie uprawnione wejście: strzałowy J. Kowal 05:52, wyjście 06:04. Blokada drzwi KMW-D1 zgłasza „ręczne obejście” od 06:31. Chód osoby zgadza się ze śladem #0912 widzianym na KAM-09 o 06:26.",
     },
     {
-      id: "ZD-03",
+      id: "ZD-04",
       cam: "KAM-08",
       severity: "KRYTYCZNY",
       title: "Dym i punkt gorący na przenośniku P-2 – taśma nadal pracuje",
@@ -210,7 +241,7 @@ window.MINE_DATA = (function () {
       sensors: { DR: 0.21 },
     },
     {
-      id: "ZD-04",
+      id: "ZD-05",
       cam: "KAM-12",
       severity: "KRYTYCZNY",
       title: "Nieruchomy pracownik na trasie kombajnu · rośnie CH₄",
@@ -229,7 +260,7 @@ window.MINE_DATA = (function () {
       sensors: { W7: 1.38 },
     },
     {
-      id: "ZD-05",
+      id: "ZD-06",
       cam: "KAM-01",
       severity: "WYSOKI",
       title: "Naruszenie perymetru – 2 osoby przez ogrodzenie, pojazd bez tablic",
@@ -248,7 +279,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Obie osoby mają plecaki. O tej porze w sektorze A nie ma zaplanowanych pracowników. Furgonetka wjechała na drogę dojazdową o 02:09 – LPR nie odczytał tablic (zasłonięte).",
     },
     {
-      id: "ZD-06",
+      id: "ZD-07",
       cam: "KAM-05",
       severity: "WYSOKI",
       title: "Porzucony przedmiot przy czerpni wentylatora głównego",
@@ -265,7 +296,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Osoba była śledzona od składowiska (skraj pola widzenia KAM-04) i znajduje się obecnie poza zasięgiem kamer. Czerpnia wentylatora jest pojedynczym punktem awarii wentylacji poziomu −500.",
     },
     {
-      id: "ZD-07",
+      id: "ZD-08",
       cam: "KAM-06",
       severity: "ŚREDNI",
       title: "Osoba w strefie załadunku klatki pod zawieszonym ładunkiem",
@@ -284,5 +315,16 @@ window.MINE_DATA = (function () {
     },
   ];
 
-  return { cameras, sensors, procedures, incidents };
+  /* ------------------------------------------------------------------
+     Patrole ochrony – pozycje na modelu (poziom, x, y) i nazwiska.
+     ------------------------------------------------------------------ */
+  const patrols = [
+    { id: "P-1", names: ["Adam Nowak", "Tomasz Kowalczyk"], level: 0, x: 150, y: 150 },
+    { id: "P-2", names: ["Piotr Zieliński"],               level: 0, x: 300, y: 120 },
+    { id: "P-3", names: ["Marek Wójcik", "Jan Lis"],       level: 0, x: 470, y: 172 },
+    { id: "P-4", names: ["Krzysztof Mazur"],               level: 1, x: 420, y: 92 },
+    { id: "P-5", names: ["Robert Kaczmarek"],              level: 2, x: 400, y: 100 },
+  ];
+
+  return { cameras, sensors, procedures, incidents, patrols };
 })();

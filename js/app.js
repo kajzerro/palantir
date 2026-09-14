@@ -29,6 +29,7 @@
     audioCtx: null,
     seq: 0,
     focusLevel: "all",
+    history: null,
   };
 
   const els = {
@@ -55,13 +56,13 @@
 
   function scrollLog() { els.log.scrollTop = els.log.scrollHeight; }
 
-  function renderMessage({ kind, from, html, options }) {
+  function renderMessage({ kind, from, html, options, multi }) {
     const el = document.createElement("div");
     el.className = `msg ${kind}`;
     el.innerHTML = `<div class="hdr"><span class="from">${esc(from)}</span><span class="t">${now()}</span></div><div class="body">${html}</div>`;
     if (options && options.length) {
       const wrap = document.createElement("div");
-      wrap.className = "opts";
+      wrap.className = "opts" + (multi ? " multi" : "");
       options.forEach((o, i) => {
         const b = document.createElement("button");
         b.type = "button";
@@ -82,7 +83,7 @@
 
   function say(kind, from, html, opts = {}) {
     return new Promise((resolve) => {
-      queue.push({ kind, from, html, options: opts.options, delay: opts.delay ?? (kind === "ai" ? 550 : 220), resolve });
+      queue.push({ kind, from, html, options: opts.options, multi: opts.multi, delay: opts.delay ?? (kind === "ai" ? 550 : 220), resolve });
       drain();
     });
   }
@@ -114,9 +115,14 @@
   function chooseOption(wrap, i) {
     if (wrap.classList.contains("used")) return;
     const o = wrap._options[i];
-    wrap.classList.add("used");
-    wrap.children[i].classList.add("chosen");
-    if (state.pendingOptions && state.pendingOptions.el === wrap) state.pendingOptions = null;
+    if (wrap.classList.contains("multi")) {
+      if (wrap.children[i].classList.contains("chosen")) return;
+      wrap.children[i].classList.add("chosen");
+    } else {
+      wrap.classList.add("used");
+      wrap.children[i].classList.add("chosen");
+      if (state.pendingOptions && state.pendingOptions.el === wrap) state.pendingOptions = null;
+    }
     op(o.label);
     o.action && o.action();
   }
@@ -522,6 +528,7 @@
 
   function selectCamera(id) {
     const c = camById(id); if (!c) return;
+    if (state.history) exitHistory();
     state.selectedCam = id;
     els.svg.querySelectorAll(".cam.selected").forEach((n) => n.classList.remove("selected"));
     camNode(id)?.classList.add("selected");
@@ -622,7 +629,7 @@
     updateKpis();
 
     const kind = inc.severity === "KRYTYCZNY" ? "alert crit" : "alert";
-    say(kind, `⚠ UWAGA · ${inc.id}`, `${severityTag(inc.severity)}
+    say(kind, `⚠ NOWE ZDARZENIE · ${inc.id}`, `${severityTag(inc.severity)}
 <span class="b">${esc(inc.title)}</span>
 <table class="kv">
 <tr><td>gdzie</td><td>${esc(cam.name)} <span class="k">(${esc(cam.zone)})</span></td></tr>
@@ -630,9 +637,161 @@
 <tr><td>kiedy</td><td>${rec.openedAt}</td></tr>
 </table>${esc(inc.summary)}`, { delay: 120 });
 
-    ai(`Przełączyłem podgląd na kamerę ${cam.id} – zobacz obraz po prawej. Ta kamera miga też na czerwono na modelu kopalni. <span class="b">Co robimy?</span>`, {
-      options: assessmentOptions(rec, true),
+    if (inc.options) {
+      ai(`Podgląd z kamery ${cam.id} jest po prawej, kamera miga na czerwono na modelu. <span class="b">Co robimy?</span>`, {
+        options: inc.options.map((o) => ({ label: o.label, cls: o.cls, action: () => runAction(o.action, rec, o) })),
+        multi: !!inc.multi,
+      });
+    } else {
+      ai(`Przełączyłem podgląd na kamerę ${cam.id} – zobacz obraz po prawej. Ta kamera miga też na czerwono na modelu kopalni. <span class="b">Co robimy?</span>`, {
+        options: assessmentOptions(rec, true),
+      });
+    }
+  }
+
+  /* ---------- akcje własnych opcji zdarzenia ---------- */
+  function runAction(action, rec, o) {
+    switch (action) {
+      case "patrol": showPatrols(rec); break;
+      case "block": blockAccess(rec); break;
+      case "history": showHistory(rec); break;
+      case "confirm": confirmIncident(); break;
+      case "analysis": analysis(rec); break;
+      case "hold": holdIncident(rec); break;
+      case "false": falseAlarm(rec); break;
+      case "close": closeSimple(rec); break;
+    }
+  }
+
+  /* ---------- patrole ---------- */
+  function patrolLayer(level) {
+    const grp = els.svg.querySelector(`.lvl-group.lvl-${level}:not(.drift-group)`);
+    if (!grp) return null;
+    let l = grp.querySelector(".patrol-layer");
+    if (!l) { l = svgEl("g", { class: "patrol-layer" }); grp.insertBefore(l, grp.querySelector(".cam-layer")); }
+    return l;
+  }
+  function drawPatrol(pt, cls = "") {
+    const layer = patrolLayer(pt.level); if (!layer) return null;
+    let g = layer.querySelector(`[data-id="${pt.id}"]`);
+    if (!g) { g = svgEl("g", { class: `patrol ${cls}`, "data-id": pt.id }, layer); }
+    else g.setAttribute("class", `patrol ${cls}`);
+    g.innerHTML = "";
+    const [x, y] = P(pt.x, pt.y, 0, pt.level);
+    svgEl("circle", { class: "ring", cx: x, cy: y, r: 4.6 }, g);
+    svgEl("circle", { class: "core", cx: x, cy: y, r: 2.2 }, g);
+    text(g, x + 6.5, y + 1.5, pt.id, "pl", "start");
+    text(g, x + 6.5, y + 6.5, pt.names.map((n) => n.split(" ").slice(-1)[0]).join(", "), "pn", "start");
+    return g;
+  }
+  function showPatrols(rec) {
+    const cam = rec.cam, lvl = Math.floor(cam.level);
+    const list = D.patrols.map((pt) => {
+      const same = pt.level === lvl;
+      const d = Math.hypot(pt.x - cam.x, pt.y - cam.y) + (same ? 0 : 400 + 300 * Math.abs(pt.level - lvl));
+      return { pt, d, eta: Math.max(1, Math.round(d / 1.3 / 60)) };
+    }).sort((a, b) => a.d - b.d);
+    D.patrols.forEach((pt) => drawPatrol(pt, ""));
+    const near = list.slice(0, 3);
+    near.forEach(({ pt }) => drawPatrol(pt, "near"));
+    focusLevel(String(lvl));
+    const rows = near.map(({ pt, d, eta }) => `<li><span class="b">${pt.id}</span> · ${esc(pt.names.join(", "))} · ${Math.round(d)} m · ok. ${eta} min</li>`).join("");
+    ai(`Najbliższe patrole zaznaczyłem na modelu:<ul class="plain">${rows}</ul>Który patrol wysłać?`, {
+      options: near.map(({ pt, eta }) => ({ label: `Wyślij ${pt.id} · ${pt.names.map((n) => n.split(" ").slice(-1)[0]).join(", ")} · ${eta} min`, cls: "danger", action: () => dispatchPatrol(rec, pt, eta) })),
     });
+  }
+  function dispatchPatrol(rec, pt, eta) {
+    const cam = rec.cam;
+    const g = drawPatrol(pt, "sent");
+    const a = P(pt.x, pt.y, 0, pt.level), b = P(cam.x, cam.y, 0, Math.floor(cam.level));
+    if (g) {
+      const layer = g.parentNode;
+      const route = svgEl("line", { class: "route", x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
+      layer.insertBefore(route, g);
+      const T = 9000, t0 = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - t0) / T);
+        g.setAttribute("transform", `translate(${(b[0] - a[0]) * t} ${(b[1] - a[1]) * t})`);
+        if (t < 1) requestAnimationFrame(step); else { route.remove(); patrolArrived(rec, pt); }
+      };
+      requestAnimationFrame(step);
+    }
+    pushEvent(`${rec.inc.id} wysłano patrol ${pt.id}`, "attn", cam.id);
+    ok(`Patrol <span class="b">${pt.id}</span> (${esc(pt.names.join(", "))}) wysłany do: ${esc(cam.name)}. Dojście ok. ${eta} min. Śledzisz go na modelu.`);
+  }
+  function patrolArrived(rec, pt) {
+    if (state.active !== rec) return;
+    beep("ok");
+    ok(`Patrol <span class="b">${pt.id}</span> jest na miejscu. Osoba zatrzymana do wyjaśnienia, karta zabezpieczona.`, {
+      options: [
+        { label: "Zamknij zdarzenie", cls: "good", action: () => closeSimple(rec) },
+        { label: "Jeszcze nie – czekam na raport patrolu", action: () => ai("Dobrze, czekam. Zamknij zdarzenie, gdy patrol potwierdzi zakończenie interwencji.", { options: [{ label: "Zamknij zdarzenie", cls: "good", action: () => closeSimple(rec) }] }) },
+      ],
+    });
+  }
+
+  /* ---------- blokada dostępów ---------- */
+  function showModal(title, text_) {
+    $("#modal-title").textContent = title; $("#modal-text").textContent = text_;
+    const m = $("#modal"); m.hidden = false; $("#modal-ok").focus();
+  }
+  $("#modal-ok").addEventListener("click", () => { $("#modal").hidden = true; });
+  $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#modal").hidden = true; });
+  function blockAccess(rec) {
+    const b = rec.inc.block || { title: "Dostęp zablokowany", text: "Dostępy zostały zablokowane." };
+    showModal(b.title, b.text);
+    rec.blocked = true;
+    pushEvent(`${rec.inc.id} zablokowano dostępy`, "attn", rec.inc.cam);
+    ok(`<span class="b">${esc(b.title)}.</span> ${esc(b.text)}`);
+  }
+
+  /* ---------- historia zdarzeń (klipy w podglądzie) ---------- */
+  function showHistory(rec) {
+    const clips = rec.inc.history || [];
+    if (!clips.length) return;
+    const list = clips.map((c) => `<li><span class="b">${c.time}</span> · ${c.cam} · ${esc(c.caption)}</li>`).join("");
+    ai(`Oto co zarejestrowały kamery. Odtwarzam po kolei w panelu podglądu:<ul class="plain">${list}</ul>`);
+    playHistory(clips, 0);
+  }
+  function playHistory(clips, i) {
+    state.history = { clips, i };
+    const c = clips[i]; const cam = camById(c.cam);
+    els.feedCamId.textContent = `HISTORIA · ${c.cam} · ${c.time}`;
+    els.osdCam.textContent = `${c.cam} ${cam ? cam.name : ""} · nagranie ${c.time}`;
+    els.osdZone.textContent = cam ? cam.zone : "";
+    setFeedStatus("NAGRANIE", "attn"); els.feedMain.classList.remove("alert");
+    renderBoxes(c.boxes || []); renderDetections([]);
+    if (cam) renderMeta(cam);
+    els.video.loop = false;
+    loadVideo(c.video);
+    els.video.onended = () => { if (state.history && state.history.clips === clips && i + 1 < clips.length) playHistory(clips, i + 1); else if (state.history) markHistoryDone(); };
+    const h = $("#feed-history"); h.hidden = false;
+    $("#hist-caption").innerHTML = `<span class="t">${c.time} · ${c.cam}</span>${esc(c.caption)}`;
+    const strip = $("#hist-strip"); strip.innerHTML = "";
+    clips.forEach((cc, k) => {
+      const b = document.createElement("button"); b.type = "button";
+      b.className = `hist-chip${k === i ? " cur" : k < i ? " done" : ""}`;
+      b.textContent = `${k + 1}/${clips.length} · ${cc.time} · ${cc.cam}`;
+      b.addEventListener("click", () => playHistory(clips, k));
+      strip.appendChild(b);
+    });
+  }
+  function markHistoryDone() { $("#hist-strip").querySelectorAll(".hist-chip").forEach((b) => b.classList.add("done")); }
+  function exitHistory() {
+    state.history = null; $("#feed-history").hidden = true; els.video.loop = true; els.video.onended = null;
+  }
+
+  function closeSimple(rec) {
+    if (rec.status === "closed") return;
+    rec.status = "closed"; rec.closedAt = now();
+    closeIncidentVisuals(rec);
+    els.svg.querySelectorAll(".patrol").forEach((g) => g.remove());
+    const d = new Date();
+    const reportId = `R-${d.getFullYear()}-${pad(d.getMonth() + 1)}${pad(d.getDate())}-${String(rec.n).padStart(3, "0")}`;
+    beep("ok");
+    ok(`<span class="b">Zdarzenie zamknięte</span> o ${rec.closedAt}. Raport <span class="h">${reportId}</span> zapisał się automatycznie${rec.blocked ? " (dostępy pozostają zablokowane do wyjaśnienia)" : ""}.`);
+    pushEvent(`${rec.inc.id} zamknięte · ${reportId}`, "ok", rec.inc.cam);
+    scheduleAuto(12000);
   }
 
   /** Opcje decyzji – predefiniowane osobno dla każdego zdarzenia (pole `choices` w js/data.js). */
@@ -716,7 +875,7 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
   }
   function stepDone(rec) {
     rec.steps[rec.step] = "done"; rec.step++;
-    if (rec.inc.id === "ZD-04" && rec.step === 3) { state.sensorOverride._rising = false; state.sensorOverride._falling = true; }
+    if (rec.inc.id === "ZD-05" && rec.step === 3) { state.sensorOverride._rising = false; state.sensorOverride._falling = true; }
     interjection(rec);
     askStep(rec);
   }
@@ -728,13 +887,13 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
 
   /** Zaplanowane aktualizacje „na żywo” w trakcie procedur, wg zdarzenia i liczby wykonanych kroków. */
   const interjections = {
-    "ZD-03": { 1: `<span class="g">Przenośnik P-2 zatrzymany</span> – potwierdzono na kamerze (prędkość 0,0 m/s).`, 2: `Aktualizacja: CO na czujniku P2-3 wynosi teraz <span class="r">84 ppm ↑</span>, P2-4 <span class="y">41 ppm</span>. Dym przemieszcza się w stronę chodnika G-7 z prędkością 1,1 m/s.`, 4: `Załoga ściany W-7 (14 osób) potwierdza wycofanie w stronę podszybia −500. KAM-12 pokazuje pusty front ściany.`, 5: `Zastęp ratowniczy ZR-1 przy zestawie krążników B-14. Gaszenie w toku – temperatura punktu gorącego spada (214 → 96 °C).` },
-    "ZD-04": { 1: `<span class="g">Kombajn i przenośnik ścianowy zatrzymane.</span> Blokada SC-W7 załączona.`, 2: `Kolega z sekcji 44 dotarł do pracownika – jest <span class="y">nieprzytomny, ale oddycha</span>.`, 3: `CH₄ na W7 stabilizuje się i spada. Zasilanie w rejonie pozostaje włączone dla oświetlenia; nadzór metanometryczny trwa.`, 4: `Zespół medyczny w drodze z punktu medycznego −500, dojazd 7 min. Stacja Ratownictwa potwierdziła przyjęcie zgłoszenia.` },
-    "ZD-02": { 1: `<span class="g">KMW-D1 zablokowane.</span> Czujnik drzwi zgłasza ZAMKNIĘTE. Osoba pozostaje odcięta w przedsionku.`, 2: `Wydawca komory: <span class="r">brak uprawnionego wejścia</span> zaplanowanego do 10:00.`, 3: `Patrol P-2 potwierdza wyjście z podszybia −500. Dojście 5 min.` },
-    "ZD-05": { 1: `Syrena i oświetlenie aktywne. Obie osoby zatrzymały się i patrzą w stronę bramy.`, 2: `Auto-śledzenie PTZ zablokowane na obu celach. Patrol powierzchni wyrusza z budynku administracji.`, 3: `Policja potwierdziła – radiowóz dojedzie za 9 min. Intruzi wycofują się w stronę ogrodzenia.` },
-    "ZD-06": { 2: `Inżynier wentylacji: utrzymać pracę wentylatora; czerpnia nie jest zasłonięta.`, 3: `Pirotechnicy wysłani, dojazd 25 min. KRZG poinformowany.` },
-    "ZD-01": { 2: `Wydawca lampowni potwierdza: znaczkowi 2231 nie wydano dziś aparatu ucieczkowego.` },
-    "ZD-07": { 1: `Maszyna wyciągowa wstrzymana – sygnalista potwierdza.`, 2: `Pracownik opuścił strefę. Strefa pusta na KAM-06.` },
+    "ZD-04": { 1: `<span class="g">Przenośnik P-2 zatrzymany</span> – potwierdzono na kamerze (prędkość 0,0 m/s).`, 2: `Aktualizacja: CO na czujniku P2-3 wynosi teraz <span class="r">84 ppm ↑</span>, P2-4 <span class="y">41 ppm</span>. Dym przemieszcza się w stronę chodnika G-7 z prędkością 1,1 m/s.`, 4: `Załoga ściany W-7 (14 osób) potwierdza wycofanie w stronę podszybia −500. KAM-12 pokazuje pusty front ściany.`, 5: `Zastęp ratowniczy ZR-1 przy zestawie krążników B-14. Gaszenie w toku – temperatura punktu gorącego spada (214 → 96 °C).` },
+    "ZD-05": { 1: `<span class="g">Kombajn i przenośnik ścianowy zatrzymane.</span> Blokada SC-W7 załączona.`, 2: `Kolega z sekcji 44 dotarł do pracownika – jest <span class="y">nieprzytomny, ale oddycha</span>.`, 3: `CH₄ na W7 stabilizuje się i spada. Zasilanie w rejonie pozostaje włączone dla oświetlenia; nadzór metanometryczny trwa.`, 4: `Zespół medyczny w drodze z punktu medycznego −500, dojazd 7 min. Stacja Ratownictwa potwierdziła przyjęcie zgłoszenia.` },
+    "ZD-03": { 1: `<span class="g">KMW-D1 zablokowane.</span> Czujnik drzwi zgłasza ZAMKNIĘTE. Osoba pozostaje odcięta w przedsionku.`, 2: `Wydawca komory: <span class="r">brak uprawnionego wejścia</span> zaplanowanego do 10:00.`, 3: `Patrol P-2 potwierdza wyjście z podszybia −500. Dojście 5 min.` },
+    "ZD-06": { 1: `Syrena i oświetlenie aktywne. Obie osoby zatrzymały się i patrzą w stronę bramy.`, 2: `Auto-śledzenie PTZ zablokowane na obu celach. Patrol powierzchni wyrusza z budynku administracji.`, 3: `Policja potwierdziła – radiowóz dojedzie za 9 min. Intruzi wycofują się w stronę ogrodzenia.` },
+    "ZD-07": { 2: `Inżynier wentylacji: utrzymać pracę wentylatora; czerpnia nie jest zasłonięta.`, 3: `Pirotechnicy wysłani, dojazd 25 min. KRZG poinformowany.` },
+    "ZD-02": { 2: `Wydawca lampowni potwierdza: znaczkowi 2231 nie wydano dziś aparatu ucieczkowego.` },
+    "ZD-08": { 1: `Maszyna wyciągowa wstrzymana – sygnalista potwierdza.`, 2: `Pracownik opuścił strefę. Strefa pusta na KAM-06.` },
   };
   function interjection(rec) {
     const t = interjections[rec.inc.id]?.[rec.step];

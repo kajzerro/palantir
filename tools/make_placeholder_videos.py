@@ -81,6 +81,9 @@ INCS = {
     "inc-05-perimeter":     ("cam-01", NIGHT, "fence"),
     "inc-06-object":        ("cam-05", None,  "bag"),
     "inc-07-loading-zone":  ("cam-06", None,  "load"),
+    "inc-card-live":        ("cam-01", None,  "card_live"),
+    "inc-card-exit":        ("cam-01", None,  "card_exit"),
+    "inc-card-entry":       ("cam-15", None,  "card_entry"),
 }
 
 def base_scene(tone, kind):
@@ -184,6 +187,21 @@ def animate(d, img, anim, t, tone):
         d.line([(320, 0), (320, 60 + math.sin(t * 6) * 6)], fill=(120, 120, 120), width=3)
         d.rectangle([270, 60 + math.sin(t * 6) * 6, 370, 130 + math.sin(t * 6) * 6], fill=(90, 90, 85))
         person(d, 320 + math.sin(t * 4) * 10, 305, 150, col, t=t * SEC)
+    elif anim in ("card_live", "card_exit", "card_entry"):
+        # czytnik kart na słupku / ścianie
+        d.rectangle([404, 200, 424, 300], fill=(70, 74, 80)); d.rectangle([398, 196, 430, 224], fill=(40, 42, 46))
+        d.ellipse([410, 204, 418, 212], fill=(230, 60, 60) if (int(t * SEC * 4) % 2 == 0 and anim != "card_exit") else (60, 200, 90))
+        if anim == "card_live":
+            x = 300 + math.sin(t * 5) * 4; person(d, x, 305, 160, col, t=t * SEC * 0.6)
+            d.rounded_rectangle([x + 20, 214, x + 34, 224], radius=2, fill=(220, 220, 230))     # karta w ręce
+        elif anim == "card_exit":
+            x = 200 + t * 240; h = 170 - t * 60; person(d, x, 300 - t * 50, h, col, t=t * SEC)
+            if 0.35 < t < 0.55: d.rounded_rectangle([x + 18, 216, x + 30, 225], radius=2, fill=(220, 220, 230))
+        else:
+            x = 560 - t * 260; h = 110 + t * 60; dark = (95, 92, 98)
+            person(d, x, 260 + t * 45, h, dark, t=t * SEC)
+            d.ellipse([x - h * 0.16, 260 + t * 45 - h * 1.06, x + h * 0.16, 260 + t * 45 - h * 0.78], fill=dark)   # kaptur zamiast hełmu
+            if 0.45 < t < 0.65: d.rounded_rectangle([x + 16, 214, x + 28, 223], radius=2, fill=(220, 220, 230))
     elif anim == "smoke":
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0)); od = ImageDraw.Draw(ov)
         for i in range(18):

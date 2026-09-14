@@ -370,3 +370,31 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
   body { overflow: auto; }
   .kpis { display: none; }
 }
+
+/* ---------- okno informacyjne ---------- */
+.modal[hidden] { display: none; }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(3,7,12,.72); display: flex; align-items: center; justify-content: center; }
+.modal-box { background: #0f1922; border: 1px solid var(--ok); border-radius: 6px; padding: 22px 26px; max-width: 460px; width: calc(100% - 32px); box-shadow: 0 20px 60px rgba(0,0,0,.6); font-family: var(--sans); animation: fadein .18s ease-out; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--ok); margin-bottom: 8px; }
+.modal-text { font-size: 14px; line-height: 1.5; color: var(--text); margin-bottom: 16px; }
+.modal-ok { width: 100%; text-align: center; font-size: 14px; padding: 9px; }
+
+/* ---------- patrole na modelu ---------- */
+.patrol { transition: opacity .3s; }
+.patrol .ring { fill: rgba(0,0,0,.45); stroke: #ffd27a; stroke-width: 1; }
+.patrol .core { fill: #ffd27a; }
+.patrol .pl { font-family: var(--mono); font-size: 4.6px; fill: #fff; font-weight: 700; paint-order: stroke; stroke: rgba(0,0,0,.9); stroke-width: 1.5px; pointer-events: none; }
+.patrol .pn { font-family: var(--sans); font-size: 4px; fill: #ffe6b0; paint-order: stroke; stroke: rgba(0,0,0,.9); stroke-width: 1.4px; pointer-events: none; }
+.patrol.near .ring { stroke: #fff; stroke-width: 1.4; }
+.patrol.sent .core { fill: #43d9a0; } .patrol.sent .ring { stroke: #43d9a0; }
+.patrol .route { fill: none; stroke: #43d9a0; stroke-width: .8; stroke-dasharray: 2 1.5; animation: belt 1.2s linear infinite; }
+.opts.multi .opt.chosen { background: #12303f; border-color: var(--accent-2); color: var(--accent-2); }
+
+/* ---------- historia zdarzeń w podglądzie ---------- */
+.feed-history { position: absolute; left: 0; right: 0; bottom: 26px; z-index: 4; display: flex; flex-direction: column; gap: 6px; padding: 0 10px; pointer-events: none; }
+.hist-caption { align-self: flex-start; background: rgba(4,8,12,.82); border-left: 3px solid var(--accent); color: #eef5fa; font-family: var(--sans); font-size: 13px; padding: 6px 10px; border-radius: 0 3px 3px 0; max-width: 90%; }
+.hist-caption .t { color: var(--accent); font-family: var(--mono); font-weight: 700; margin-right: 8px; }
+.hist-strip { display: flex; gap: 6px; pointer-events: auto; }
+.hist-chip { background: rgba(4,8,12,.85); border: 1px solid var(--border-strong); color: var(--text-dim); border-radius: 3px; padding: 4px 9px; font-size: 11px; font-family: var(--mono); cursor: pointer; }
+.hist-chip.cur { border-color: var(--accent); color: var(--accent); }
+.hist-chip.done { color: var(--ok); }
