@@ -166,10 +166,7 @@ window.MINE_DATA = (function () {
       detections: [
         ["osoba", 0.97], ["karta: M. Kowalski (2231)", 1.0], ["twarz: NIE ROZPOZNANA", 0.96], ["zgodność z właścicielem karty", 0.08],
       ],
-      boxes: [
-        { x: 40, y: 14, w: 16, h: 64, label: "TWARZ NIE ROZPOZNANA", cls: "" },
-        { x: 64, y: 40, w: 9, h: 12, label: "CZYTNIK · karta 2231", cls: "attn" },
-      ],
+      boxes: [],   /* nagranie ma już wypalone oznaczenie „NIE ROZPOZNANO” */
       video: "videos/inc-card-live.mp4",
       person: { name: "Marian Kowalski", card: "2231", dept: "Dział mechaniczny" },
       /* własne opcje zdarzenia – można klikać w dowolnej kolejności */
@@ -181,10 +178,8 @@ window.MINE_DATA = (function () {
       ],
       /* historia: klipy odtwarzane po kolei w panelu podglądu */
       history: [
-        { time: "06:12", cam: "KAM-01", video: "videos/inc-card-exit.mp4", caption: "Marian Kowalski opuszcza teren zakładu – karta odbita na wyjściu",
-          boxes: [{ x: 30, y: 14, w: 16, h: 64, label: "M. KOWALSKI · zgodność 97 %", cls: "info" }] },
-        { time: "06:38", cam: "KAM-15", video: "videos/inc-card-entry.mp4", caption: "Inna osoba wchodzi na kartę Mariana Kowalskiego",
-          boxes: [{ x: 44, y: 12, w: 16, h: 66, label: "TWARZ NIE ROZPOZNANA", cls: "" }] },
+        { time: "04:52", cam: "KAM-01", video: "videos/inc-card-exit.mp4", caption: "Marian Kowalski przy bramie – twarz rozpoznana, karta odbita na wyjściu", boxes: [] },
+        { time: "04:58", cam: "KAM-01", video: "videos/inc-card-entry.mp4", caption: "Inna osoba wchodzi przez bramę na kartę Mariana Kowalskiego – twarz nierozpoznana", boxes: [] },
       ],
       block: { title: "Dostęp zablokowany", text: "Karta nr 2231 (Marian Kowalski) została zablokowana we wszystkich czytnikach. Powiadomiono ochronę i dział kadr." },
     },

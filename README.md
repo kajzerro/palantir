@@ -77,7 +77,7 @@ nazwie (wersję `.webm` można usunąć):
 | Plik | Użycie |
 |---|---|
 | `videos/cam-01.mp4` … `videos/cam-29.mp4` | Pętla bezczynności każdej kamery (otwieranej z modelu 3D) |
-| `videos/inc-card-live.mp4`, `inc-card-exit.mp4`, `inc-card-entry.mp4` | ZD-01 (obraz na żywo + dwa klipy historii) |
+| `videos/inc-card-live.mp4`, `inc-card-exit.mp4`, `inc-card-entry.mp4` | ZD-01 (obraz na żywo + dwa klipy historii) – prawdziwe nagrania z bramy (twarz rozpoznana / nierozpoznana), `cam-01.mp4` to pusta brama z tego samego nagrania |
 | `videos/inc-phone.mp4` (+ `cam-16.mp4` jako spokojny obchód) | ZD-02 na KAM-16 |
 | `videos/inc-01-ppe.mp4` | ZD-03 na KAM-02 |
 | `videos/inc-02-magazine.mp4` | ZD-04 na KAM-10 |
