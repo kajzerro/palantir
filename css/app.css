@@ -63,7 +63,7 @@ button { font-family: inherit; }
 .brand-sub { color: var(--text-faint); font-size: 10.5px; letter-spacing: 0.06em; }
 .site { display: flex; flex-direction: column; line-height: 1.15; }
 .site .label, .kpi .label { font-size: 9px; letter-spacing: 0.14em; color: var(--text-faint); }
-.site .value { font-size: 11.5px; }
+.site .value { font-size: 12.5px; font-weight: 600; letter-spacing: .04em; }
 .kpis { margin-left: auto; display: flex; gap: 20px; }
 .kpi { display: flex; flex-direction: column; line-height: 1.15; min-width: 70px; }
 .kpi .value { font-size: 14px; font-weight: 600; color: var(--accent-2); }
