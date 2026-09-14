@@ -73,7 +73,7 @@
       });
       wrap._options = options;
       el.appendChild(wrap);
-      if (state.pendingOptions && state.pendingOptions.el !== wrap) state.pendingOptions.el.classList.add("used");
+      if (state.pendingOptions && state.pendingOptions.el !== wrap && !state.pendingOptions.el.classList.contains("multi")) state.pendingOptions.el.classList.add("used");
       state.pendingOptions = { el: wrap, options };
     }
     els.log.appendChild(el);
@@ -638,7 +638,7 @@
 </table>${esc(inc.summary)}`, { delay: 120 });
 
     if (inc.options) {
-      ai(`Podgląd z kamery ${cam.id} jest po prawej, kamera miga na czerwono na modelu. <span class="b">Co robimy?</span>`, {
+      ai(`Podgląd z kamery ${cam.id} jest po prawej, kamera miga na czerwono na modelu.${inc.autoNote ? " " + esc(inc.autoNote) : ""} <span class="b">Co robimy?</span>`, {
         options: inc.options.map((o) => ({ label: o.label, cls: o.cls, action: () => runAction(o.action, rec, o) })),
         multi: !!inc.multi,
       });
@@ -652,9 +652,11 @@
   /* ---------- akcje własnych opcji zdarzenia ---------- */
   function runAction(action, rec, o) {
     switch (action) {
-      case "patrol": showPatrols(rec); break;
+      case "patrol": showPatrols(rec, o); break;
       case "block": blockAccess(rec); break;
       case "history": showHistory(rec); break;
+      case "announce": announce(rec, o); break;
+      case "notify": notify(rec, o); break;
       case "confirm": confirmIncident(); break;
       case "analysis": analysis(rec); break;
       case "hold": holdIncident(rec); break;
@@ -684,7 +686,8 @@
     text(g, x + 6.5, y + 6.5, pt.names.map((n) => n.split(" ").slice(-1)[0]).join(", "), "pn", "start");
     return g;
   }
-  function showPatrols(rec) {
+  function showPatrols(rec, o) {
+    rec.patrolArrival = o && o.arrival;
     const cam = rec.cam, lvl = Math.floor(cam.level);
     const list = D.patrols.map((pt) => {
       const same = pt.level === lvl;
@@ -722,12 +725,28 @@
   function patrolArrived(rec, pt) {
     if (state.active !== rec) return;
     beep("ok");
-    ok(`Patrol <span class="b">${pt.id}</span> jest na miejscu. Osoba zatrzymana do wyjaśnienia, karta zabezpieczona.`, {
+    const txt = rec.patrolArrival ? esc(rec.patrolArrival).replace("Patrol jest", `Patrol <span class="b">${pt.id}</span> jest`) : `Patrol <span class="b">${pt.id}</span> jest na miejscu. Osoba zatrzymana do wyjaśnienia, karta zabezpieczona.`;
+    ok(txt, {
       options: [
         { label: "Zamknij zdarzenie", cls: "good", action: () => closeSimple(rec) },
         { label: "Jeszcze nie – czekam na raport patrolu", action: () => ai("Dobrze, czekam. Zamknij zdarzenie, gdy patrol potwierdzi zakończenie interwencji.", { options: [{ label: "Zamknij zdarzenie", cls: "good", action: () => closeSimple(rec) }] }) },
       ],
     });
+  }
+
+  /* ---------- komunikat głosowy / powiadomienie ---------- */
+  function announce(rec, o) {
+    pushEvent(`${rec.inc.id} komunikat głosowy · ${rec.inc.cam}`, "attn", rec.inc.cam);
+    ok(`Nadano komunikat przez głośnik przy ${rec.inc.cam}: <span class="b">„${esc(o.text || "Uwaga, proszę opuścić strefę.")}”</span>`);
+    if (o.after) setTimeout(() => { if (state.active !== rec) return; ai(esc(o.after), { options: closeOptions(rec) }); }, o.afterDelay || 6000);
+  }
+  function notify(rec, o) {
+    pushEvent(`${rec.inc.id} powiadomiono opiekuna`, "attn", rec.inc.cam);
+    ok(esc(o.text || "Powiadomienie wysłane."));
+    if (o.reply) setTimeout(() => { if (state.active !== rec) return; sys(esc(o.reply)); }, o.replyDelay || 5000);
+  }
+  function closeOptions(rec) {
+    return [{ label: "Zamknij zdarzenie", cls: "good", action: () => closeSimple(rec) }, { label: "Jeszcze nie – obserwuję dalej", action: () => {} }];
   }
 
   /* ---------- blokada dostępów ---------- */
@@ -875,7 +894,7 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
   }
   function stepDone(rec) {
     rec.steps[rec.step] = "done"; rec.step++;
-    if (rec.inc.id === "ZD-05" && rec.step === 3) { state.sensorOverride._rising = false; state.sensorOverride._falling = true; }
+    if (rec.inc.id === "ZD-06" && rec.step === 3) { state.sensorOverride._rising = false; state.sensorOverride._falling = true; }
     interjection(rec);
     askStep(rec);
   }
@@ -887,13 +906,13 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
 
   /** Zaplanowane aktualizacje „na żywo” w trakcie procedur, wg zdarzenia i liczby wykonanych kroków. */
   const interjections = {
-    "ZD-04": { 1: `<span class="g">Przenośnik P-2 zatrzymany</span> – potwierdzono na kamerze (prędkość 0,0 m/s).`, 2: `Aktualizacja: CO na czujniku P2-3 wynosi teraz <span class="r">84 ppm ↑</span>, P2-4 <span class="y">41 ppm</span>. Dym przemieszcza się w stronę chodnika G-7 z prędkością 1,1 m/s.`, 4: `Załoga ściany W-7 (14 osób) potwierdza wycofanie w stronę podszybia −500. KAM-12 pokazuje pusty front ściany.`, 5: `Zastęp ratowniczy ZR-1 przy zestawie krążników B-14. Gaszenie w toku – temperatura punktu gorącego spada (214 → 96 °C).` },
-    "ZD-05": { 1: `<span class="g">Kombajn i przenośnik ścianowy zatrzymane.</span> Blokada SC-W7 załączona.`, 2: `Kolega z sekcji 44 dotarł do pracownika – jest <span class="y">nieprzytomny, ale oddycha</span>.`, 3: `CH₄ na W7 stabilizuje się i spada. Zasilanie w rejonie pozostaje włączone dla oświetlenia; nadzór metanometryczny trwa.`, 4: `Zespół medyczny w drodze z punktu medycznego −500, dojazd 7 min. Stacja Ratownictwa potwierdziła przyjęcie zgłoszenia.` },
-    "ZD-03": { 1: `<span class="g">KMW-D1 zablokowane.</span> Czujnik drzwi zgłasza ZAMKNIĘTE. Osoba pozostaje odcięta w przedsionku.`, 2: `Wydawca komory: <span class="r">brak uprawnionego wejścia</span> zaplanowanego do 10:00.`, 3: `Patrol P-2 potwierdza wyjście z podszybia −500. Dojście 5 min.` },
-    "ZD-06": { 1: `Syrena i oświetlenie aktywne. Obie osoby zatrzymały się i patrzą w stronę bramy.`, 2: `Auto-śledzenie PTZ zablokowane na obu celach. Patrol powierzchni wyrusza z budynku administracji.`, 3: `Policja potwierdziła – radiowóz dojedzie za 9 min. Intruzi wycofują się w stronę ogrodzenia.` },
-    "ZD-07": { 2: `Inżynier wentylacji: utrzymać pracę wentylatora; czerpnia nie jest zasłonięta.`, 3: `Pirotechnicy wysłani, dojazd 25 min. KRZG poinformowany.` },
-    "ZD-02": { 2: `Wydawca lampowni potwierdza: znaczkowi 2231 nie wydano dziś aparatu ucieczkowego.` },
-    "ZD-08": { 1: `Maszyna wyciągowa wstrzymana – sygnalista potwierdza.`, 2: `Pracownik opuścił strefę. Strefa pusta na KAM-06.` },
+    "ZD-05": { 1: `<span class="g">Przenośnik P-2 zatrzymany</span> – potwierdzono na kamerze (prędkość 0,0 m/s).`, 2: `Aktualizacja: CO na czujniku P2-3 wynosi teraz <span class="r">84 ppm ↑</span>, P2-4 <span class="y">41 ppm</span>. Dym przemieszcza się w stronę chodnika G-7 z prędkością 1,1 m/s.`, 4: `Załoga ściany W-7 (14 osób) potwierdza wycofanie w stronę podszybia −500. KAM-12 pokazuje pusty front ściany.`, 5: `Zastęp ratowniczy ZR-1 przy zestawie krążników B-14. Gaszenie w toku – temperatura punktu gorącego spada (214 → 96 °C).` },
+    "ZD-06": { 1: `<span class="g">Kombajn i przenośnik ścianowy zatrzymane.</span> Blokada SC-W7 załączona.`, 2: `Kolega z sekcji 44 dotarł do pracownika – jest <span class="y">nieprzytomny, ale oddycha</span>.`, 3: `CH₄ na W7 stabilizuje się i spada. Zasilanie w rejonie pozostaje włączone dla oświetlenia; nadzór metanometryczny trwa.`, 4: `Zespół medyczny w drodze z punktu medycznego −500, dojazd 7 min. Stacja Ratownictwa potwierdziła przyjęcie zgłoszenia.` },
+    "ZD-04": { 1: `<span class="g">KMW-D1 zablokowane.</span> Czujnik drzwi zgłasza ZAMKNIĘTE. Osoba pozostaje odcięta w przedsionku.`, 2: `Wydawca komory: <span class="r">brak uprawnionego wejścia</span> zaplanowanego do 10:00.`, 3: `Patrol P-2 potwierdza wyjście z podszybia −500. Dojście 5 min.` },
+    "ZD-07": { 1: `Syrena i oświetlenie aktywne. Obie osoby zatrzymały się i patrzą w stronę bramy.`, 2: `Auto-śledzenie PTZ zablokowane na obu celach. Patrol powierzchni wyrusza z budynku administracji.`, 3: `Policja potwierdziła – radiowóz dojedzie za 9 min. Intruzi wycofują się w stronę ogrodzenia.` },
+    "ZD-08": { 2: `Inżynier wentylacji: utrzymać pracę wentylatora; czerpnia nie jest zasłonięta.`, 3: `Pirotechnicy wysłani, dojazd 25 min. KRZG poinformowany.` },
+    "ZD-03": { 2: `Wydawca lampowni potwierdza: znaczkowi 2231 nie wydano dziś aparatu ucieczkowego.` },
+    "ZD-09": { 1: `Maszyna wyciągowa wstrzymana – sygnalista potwierdza.`, 2: `Pracownik opuścił strefę. Strefa pusta na KAM-06.` },
   };
   function interjection(rec) {
     const t = interjections[rec.inc.id]?.[rec.step];
@@ -914,6 +933,8 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
   }
 
   function closeIncidentVisuals(rec) {
+    els.log.querySelectorAll(".opts:not(.used)").forEach((w) => w.classList.add("used"));
+    state.pendingOptions = null;
     state.closed.push(rec);
     if (state.active === rec) state.active = null;
     setCamState(rec.inc.cam, null);

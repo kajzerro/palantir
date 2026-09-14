@@ -50,16 +50,17 @@ Zaplanowane zdarzenia, w kolejności:
 | # | Kamera | Zagrożenie | Wzorzec |
 |---|---|---|---|
 | ZD-01 | KAM-01 Brama główna | WYSOKI | **Nieuprawnione użycie karty** – nie rozpoznano twarzy Mariana Kowalskiego, a użyto jego karty. Trzy własne opcje: *Wyślij patrol* (najbliższe patrole z nazwiskami i czasem dojścia na modelu, wybrany patrol idzie do kamery), *Odbierz dostępy* (okno „Dostęp zablokowany”), *Pokaż historię zdarzeń* (dwa klipy: Kowalski opuszcza teren, inna osoba wchodzi na jego kartę). |
-| ZD-02 | KAM-02 Lampownia | NISKI | Pracownik bez aparatu ucieczkowego idzie na nadszybie |
-| ZD-03 | KAM-10 Komora MW | WYSOKI | Osoba bez uprawnień, drzwi otwarte poza oknem strzałowym |
-| ZD-04 | KAM-08 Pochylnia taśmowa | KRYTYCZNY | Dym + punkt gorący na taśmie, taśma nadal pracuje |
-| ZD-05 | KAM-12 Ściana W-7 | KRYTYCZNY | Nieruchomy pracownik na trasie kombajnu, rośnie CH₄ |
-| ZD-06 | KAM-01 Brama główna | WYSOKI | Naruszenie perymetru, pojazd bez tablic |
-| ZD-07 | KAM-05 Wentylator główny | WYSOKI | Porzucony przedmiot przy czerpni |
-| ZD-08 | KAM-06 Podszybie −300 | ŚREDNI | Osoba pod zawieszonym ładunkiem |
+| ZD-02 | KAM-16 Rozdzielnia 110/6 kV | WYSOKI | **Fotografowanie w strefie zastrzeżonej** – kliknięcie kamery pokazuje spokojny obchód pracownika, zdarzenie pokazuje na tej samej kamerze osobę wyjmującą telefon i robiącą zdjęcie (z błyskiem). Rozpoznany gość z przepustką G-118. Opcje: *Nadaj komunikat głosowy* (głośnik przy kamerze, po chwili osoba chowa telefon), *Wyślij patrol* (wylegitymowanie, usunięcie zdjęć), *Powiadom opiekuna gościa* (SMS, po chwili odpowiedź opiekuna), *Zablokuj przepustkę* (okno „Przepustka zablokowana”). Dowód (klip + stopklatka) zapisuje się automatycznie. |
+| ZD-03 | KAM-02 Lampownia | NISKI | Pracownik bez aparatu ucieczkowego idzie na nadszybie |
+| ZD-04 | KAM-10 Komora MW | WYSOKI | Osoba bez uprawnień, drzwi otwarte poza oknem strzałowym |
+| ZD-05 | KAM-08 Pochylnia taśmowa | KRYTYCZNY | Dym + punkt gorący na taśmie, taśma nadal pracuje |
+| ZD-06 | KAM-12 Ściana W-7 | KRYTYCZNY | Nieruchomy pracownik na trasie kombajnu, rośnie CH₄ |
+| ZD-07 | KAM-01 Brama główna | WYSOKI | Naruszenie perymetru, pojazd bez tablic |
+| ZD-08 | KAM-05 Wentylator główny | WYSOKI | Porzucony przedmiot przy czerpni |
+| ZD-09 | KAM-06 Podszybie −300 | ŚREDNI | Osoba pod zawieszonym ładunkiem |
 
 Zdarzenie może mieć własne opcje (`options` z akcjami `patrol`, `block`, `history`,
-`confirm`, `analysis`, `hold`, `false`, `close`; `multi: true` pozwala klikać je
+`announce`, `notify`, `confirm`, `analysis`, `hold`, `false`, `close`; `multi: true` pozwala klikać je
 w dowolnej kolejności), własną historię klipów (`history`) i treść okna blokady
 (`block`). Patrole ochrony (pozycje, nazwiska) są w `patrols` w `js/data.js`.
 
@@ -77,13 +78,14 @@ nazwie (wersję `.webm` można usunąć):
 |---|---|
 | `videos/cam-01.mp4` … `videos/cam-29.mp4` | Pętla bezczynności każdej kamery (otwieranej z modelu 3D) |
 | `videos/inc-card-live.mp4`, `inc-card-exit.mp4`, `inc-card-entry.mp4` | ZD-01 (obraz na żywo + dwa klipy historii) |
-| `videos/inc-01-ppe.mp4` | ZD-02 na KAM-02 |
-| `videos/inc-02-magazine.mp4` | ZD-03 na KAM-10 |
-| `videos/inc-03-conveyor-fire.mp4` | ZD-04 na KAM-08 |
-| `videos/inc-04-worker-down.mp4` | ZD-05 na KAM-12 |
-| `videos/inc-05-perimeter.mp4` | ZD-06 na KAM-01 |
-| `videos/inc-06-object.mp4` | ZD-07 na KAM-05 |
-| `videos/inc-07-loading-zone.mp4` | ZD-08 na KAM-06 |
+| `videos/inc-phone.mp4` (+ `cam-16.mp4` jako spokojny obchód) | ZD-02 na KAM-16 |
+| `videos/inc-01-ppe.mp4` | ZD-03 na KAM-02 |
+| `videos/inc-02-magazine.mp4` | ZD-04 na KAM-10 |
+| `videos/inc-03-conveyor-fire.mp4` | ZD-05 na KAM-08 |
+| `videos/inc-04-worker-down.mp4` | ZD-06 na KAM-12 |
+| `videos/inc-05-perimeter.mp4` | ZD-07 na KAM-01 |
+| `videos/inc-06-object.mp4` | ZD-08 na KAM-05 |
+| `videos/inc-07-loading-zone.mp4` | ZD-09 na KAM-06 |
 
 Zastępcze klipy można wygenerować ponownie: `python3 tools/make_placeholder_videos.py`
 (wymaga `pillow`, `numpy` i ffmpeg – systemowego lub `pip install imageio-ffmpeg`).

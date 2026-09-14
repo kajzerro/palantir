@@ -190,6 +190,36 @@ window.MINE_DATA = (function () {
     },
     {
       id: "ZD-02",
+      cam: "KAM-16",
+      severity: "WYSOKI",
+      title: "Fotografowanie w strefie zastrzeżonej",
+      summary: "Osoba wyjęła telefon i zrobiła zdjęcie rozdzielni 110/6 kV – strefa objęta zakazem fotografowania. Rozpoznano: Paweł Wiśniewski, pracownik firmy zewnętrznej Elektro-Serwis, przepustka gościnna G-118 (opiekun: inż. Jan Kowal).",
+      detections: [
+        ["osoba", 0.98], ["telefon w dłoni", 0.94], ["gest fotografowania", 0.91], ["strefa zakazu fotografowania", 1.0], ["twarz: P. Wiśniewski · gość G-118", 0.93],
+      ],
+      boxes: [
+        { x: 38, y: 12, w: 18, h: 70, label: "P. WIŚNIEWSKI · GOŚĆ G-118", cls: "" },
+        { x: 50, y: 30, w: 8, h: 10, label: "TELEFON · ZDJĘCIE", cls: "attn" },
+      ],
+      video: "videos/inc-phone.mp4",
+      person: { name: "Paweł Wiśniewski", pass: "G-118", company: "Elektro-Serwis", host: "inż. Jan Kowal" },
+      multi: true,
+      autoNote: "Zapisałem klip i stopklatkę ze zdjęciem jako dowód w karcie zdarzenia.",
+      options: [
+        { label: "Nadaj komunikat głosowy", action: "announce", cls: "danger",
+          text: "Uwaga! Strefa objęta zakazem fotografowania. Proszę natychmiast schować telefon i opuścić rejon rozdzielni.",
+          after: "Osoba schowała telefon i odchodzi w stronę warsztatu. Nadal ją śledzę.", afterDelay: 7000 },
+        { label: "Wyślij patrol", action: "patrol",
+          arrival: "Patrol jest na miejscu. Wylegitymowano Pawła Wiśniewskiego. Zdjęcia usunięte w obecności ochrony, telefon zwrócony, sporządzono notatkę." },
+        { label: "Powiadom opiekuna gościa", action: "notify",
+          text: "Wysłałem SMS i wiadomość do inż. Jana Kowala (opiekun przepustki G-118) z opisem zdarzenia i stopklatką.",
+          reply: "inż. Jan Kowal odpisał: „Idę na miejsce, będę za 5 minut.”", replyDelay: 6000 },
+        { label: "Zablokuj przepustkę", action: "block" },
+      ],
+      block: { title: "Przepustka zablokowana", text: "Przepustka gościnna G-118 (Paweł Wiśniewski, Elektro-Serwis) została zablokowana. Osoba nie opuści terenu bez asysty ochrony. Powiadomiono portiernię." },
+    },
+    {
+      id: "ZD-03",
       cam: "KAM-02",
       severity: "NISKI",
       title: "Pracownik bez aparatu ucieczkowego idzie na nadszybie",
@@ -204,7 +234,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Czytnik znaczków: pracownik K. Nowak (znaczek 2231) pobrał lampę 0413, ale w wydawalni aparatów nie zeskanowano żadnego aparatu ucieczkowego. Szacowane dojście do kołowrotu za 40 s.",
     },
     {
-      id: "ZD-03",
+      id: "ZD-04",
       cam: "KAM-10",
       severity: "WYSOKI",
       title: "Nieuprawniona obecność w komorze materiałów wybuchowych",
@@ -222,7 +252,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Ostatnie uprawnione wejście: strzałowy J. Kowal 05:52, wyjście 06:04. Blokada drzwi KMW-D1 zgłasza „ręczne obejście” od 06:31. Chód osoby zgadza się ze śladem #0912 widzianym na KAM-09 o 06:26.",
     },
     {
-      id: "ZD-04",
+      id: "ZD-05",
       cam: "KAM-08",
       severity: "KRYTYCZNY",
       title: "Dym i punkt gorący na przenośniku P-2 – taśma nadal pracuje",
@@ -241,7 +271,7 @@ window.MINE_DATA = (function () {
       sensors: { DR: 0.21 },
     },
     {
-      id: "ZD-05",
+      id: "ZD-06",
       cam: "KAM-12",
       severity: "KRYTYCZNY",
       title: "Nieruchomy pracownik na trasie kombajnu · rośnie CH₄",
@@ -260,7 +290,7 @@ window.MINE_DATA = (function () {
       sensors: { W7: 1.38 },
     },
     {
-      id: "ZD-06",
+      id: "ZD-07",
       cam: "KAM-01",
       severity: "WYSOKI",
       title: "Naruszenie perymetru – 2 osoby przez ogrodzenie, pojazd bez tablic",
@@ -279,7 +309,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Obie osoby mają plecaki. O tej porze w sektorze A nie ma zaplanowanych pracowników. Furgonetka wjechała na drogę dojazdową o 02:09 – LPR nie odczytał tablic (zasłonięte).",
     },
     {
-      id: "ZD-07",
+      id: "ZD-08",
       cam: "KAM-05",
       severity: "WYSOKI",
       title: "Porzucony przedmiot przy czerpni wentylatora głównego",
@@ -296,7 +326,7 @@ window.MINE_DATA = (function () {
       aiNotes: "Osoba była śledzona od składowiska (skraj pola widzenia KAM-04) i znajduje się obecnie poza zasięgiem kamer. Czerpnia wentylatora jest pojedynczym punktem awarii wentylacji poziomu −500.",
     },
     {
-      id: "ZD-08",
+      id: "ZD-09",
       cam: "KAM-06",
       severity: "ŚREDNI",
       title: "Osoba w strefie załadunku klatki pod zawieszonym ładunkiem",

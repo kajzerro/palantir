@@ -57,7 +57,7 @@ CAMS = {
     "cam-13": ("KAM-13 KOMORA RATUNKOWA",    UG,   "hall"),
     "cam-14": ("KAM-14 PARKING",             SURF, "gate"),
     "cam-15": ("KAM-15 ADMINISTRACJA",       SURF, "hall"),
-    "cam-16": ("KAM-16 ROZDZIELNIA 110/6 kV",SURF, "tanks"),
+    "cam-16": ("KAM-16 ROZDZIELNIA 110/6 kV",SURF, "tanks", "idle_worker"),
     "cam-17": ("KAM-17 KOTLOWNIA",           SURF, "plant"),
     "cam-18": ("KAM-18 SKLADOWISKO WEGLA",   SURF, "plant"),
     "cam-19": ("KAM-19 OSADNIKI",            SURF, "tanks"),
@@ -84,6 +84,7 @@ INCS = {
     "inc-card-live":        ("cam-01", None,  "card_live"),
     "inc-card-exit":        ("cam-01", None,  "card_exit"),
     "inc-card-entry":       ("cam-15", None,  "card_entry"),
+    "inc-phone":            ("cam-16", None,  "phone"),
 }
 
 def base_scene(tone, kind):
@@ -187,6 +188,23 @@ def animate(d, img, anim, t, tone):
         d.line([(320, 0), (320, 60 + math.sin(t * 6) * 6)], fill=(120, 120, 120), width=3)
         d.rectangle([270, 60 + math.sin(t * 6) * 6, 370, 130 + math.sin(t * 6) * 6], fill=(90, 90, 85))
         person(d, 320 + math.sin(t * 4) * 10, 305, 150, col, t=t * SEC)
+    elif anim == "idle_worker":
+        # pracownik idzie spokojnie, zatrzymuje się, sprawdza tablicę, idzie dalej
+        x = 160 + min(t, 0.4) * 300 + max(0, t - 0.7) * 400
+        person(d, x, 300, 150, col, t=(t * SEC) if (t < 0.4 or t > 0.7) else 0)
+    elif anim == "phone":
+        x = 300
+        if t < 0.25: x = 120 + t * 720; person(d, x, 300, 150, col, t=t * SEC)
+        else:
+            person(d, x, 300, 150, col, t=0)
+            raise_ = min(1, (t - 0.25) / 0.15)
+            py = 300 - 150 * (0.55 + 0.35 * raise_); pxx = x + 25 + 10 * raise_
+            d.line([(x + 20, 300 - 150 * 0.62), (pxx, py + 10)], fill=col, width=10)           # ręka
+            d.rounded_rectangle([pxx - 6, py - 12, pxx + 8, py + 12], radius=2, fill=(30, 30, 34))
+            d.rounded_rectangle([pxx - 4, py - 10, pxx + 6, py + 10], radius=1, fill=(90, 120, 160))
+            if 0.55 < t < 0.585:  # błysk
+                img.paste(Image.new("RGB", (W, H), (245, 245, 250)))
+                d = ImageDraw.Draw(img)
     elif anim in ("card_live", "card_exit", "card_entry"):
         # czytnik kart na słupku / ścianie
         d.rectangle([404, 200, 424, 300], fill=(70, 74, 80)); d.rectangle([398, 196, 430, 224], fill=(40, 42, 46))
@@ -255,10 +273,11 @@ def render(name, label, tone, kind, anim=None, out_dir=OUT):
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     only_missing = "--missing" in sys.argv
-    for name, (label, tone, kind) in CAMS.items():
+    for name, spec in CAMS.items():
+        label, tone, kind = spec[:3]; anim = spec[3] if len(spec) > 3 else None
         if only_missing and os.path.exists(os.path.join(OUT, name + ".mp4")): continue
-        render(name, label, tone, kind)
+        render(name, label, tone, kind, anim)
     for name, (cam, tone_override, anim) in INCS.items():
         if only_missing and os.path.exists(os.path.join(OUT, name + ".mp4")): continue
-        label, tone, kind = CAMS[cam]
+        label, tone, kind = CAMS[cam][:3]
         render(name, label, tone_override or tone, kind, anim)
