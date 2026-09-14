@@ -35,7 +35,7 @@
 
   const els = {
     log: $("#term-log"),
-    btnAuto: $("#btn-auto"), btnNext: $("#btn-next"),
+    btnAuto: $("#btn-auto"), eventCtl: $("#event-ctl"),
     scene: $("#scene"), svg: $("#mine-svg"), tooltip: $("#twin-tooltip"), twinSide: $("#lvl-ctl"),
     video: $("#feed-video"), noise: $("#feed-noise"), overlay: $("#feed-overlay"),
     feedMain: document.querySelector(".feed-main"), feedStatus: $("#feed-status"),
@@ -128,8 +128,28 @@
     o.action && o.action();
   }
 
-  els.btnNext.addEventListener("click", () => fireNextIncident());
   els.btnAuto.addEventListener("click", () => toggleAuto());
+
+  /* ---------- przyciski „Zdarzenie 1”, „Zdarzenie 2”, … ---------- */
+  function renderEventButtons() {
+    els.eventCtl.innerHTML = "";
+    D.incidents.forEach((inc, i) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "ev-btn"; b.dataset.i = i;
+      b.textContent = `Zdarzenie ${i + 1}`; b.title = inc.title;
+      b.addEventListener("click", () => fireIncident(i));
+      els.eventCtl.appendChild(b);
+    });
+    refreshEventButtons();
+  }
+  function refreshEventButtons() {
+    els.eventCtl.querySelectorAll(".ev-btn").forEach((b) => {
+      const inc = D.incidents[+b.dataset.i];
+      const active = state.active && state.active.inc === inc && state.active.status !== "closed";
+      b.classList.toggle("active", !!active);
+      b.classList.toggle("alarm", !!active && state.active.status === "new");
+      b.classList.toggle("done", !active && state.closed.some((r) => r.inc === inc));
+    });
+  }
 
   /* ==================================================================
      CYFROWY BLIŹNIAK – ukośny widok 3D z drona
@@ -619,13 +639,14 @@
     els.kpiAlerts.parentElement.classList.toggle("hot", n > 0);
     els.btnAuto.classList.toggle("active", state.auto);
     refreshLevelButtons();
+    refreshEventButtons();
   }
 
   function toggleAuto() {
     state.auto = !state.auto;
     updateKpis();
     if (state.auto) { sys(`Tryb demo: zdarzenia będą pojawiać się <span class="g">automatycznie</span>.`); scheduleAuto(8000); }
-    else { sys(`Tryb demo: zdarzenia wywołujesz <span class="y">ręcznie</span> przyciskiem NASTĘPNE ZDARZENIE.`); clearTimeout(state.autoTimer); }
+    else { sys(`Tryb demo: zdarzenia wybierasz <span class="y">ręcznie</span> przyciskami u góry.`); clearTimeout(state.autoTimer); }
   }
   function scheduleAuto(ms) {
     clearTimeout(state.autoTimer);
@@ -637,13 +658,28 @@
   const SEV_TXT = { NISKI: "MAŁE ZAGROŻENIE", ŚREDNI: "ŚREDNIE ZAGROŻENIE", WYSOKI: "DUŻE ZAGROŻENIE", KRYTYCZNY: "KRYTYCZNE ZAGROŻENIE" };
   function severityTag(s) { return `<span class="tag ${SEV_CLS[s] || ""}">${SEV_TXT[s] || s}</span>`; }
 
+  /** Przerywa bieżące zdarzenie (bez raportu) – używane przy przełączaniu przyciskami. */
+  function abortActive() {
+    const rec = state.active; if (!rec || rec.status === "closed") return;
+    rec.status = "closed"; rec.closedAt = now();
+    closeIncidentVisuals(rec);
+    els.svg.querySelectorAll(".patrol").forEach((g) => g.remove());
+    sys(`Zdarzenie ${rec.inc.id} przerwane – przełączono na inne zdarzenie.`, { delay: 60 });
+  }
+  function fireIncident(i) {
+    if (state.active && state.active.inc === D.incidents[i] && state.active.status !== "closed") return;
+    abortActive();
+    state.incidentCursor = i;
+    fireNextIncident();
+  }
+
   function fireNextIncident() {
     if (state.active && state.active.status !== "closed") {
       warn(`Najpierw zakończ obecne zdarzenie – dokończ kroki albo oznacz je jako fałszywy alarm.`);
       return;
     }
     if (state.incidentCursor >= D.incidents.length) {
-      ok(`To były wszystkie zaplanowane zdarzenia w tym demo. Odśwież stronę, aby zacząć od nowa, albo kliknij „Historia zdarzeń”.`);
+      ok(`To były wszystkie zaplanowane zdarzenia w tym demo. Wybierz zdarzenie przyciskiem u góry, aby odtworzyć je ponownie.`);
       state.auto = false; updateKpis();
       return;
     }
@@ -989,6 +1025,7 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
   }
 
   async function boot() {
+    renderEventButtons();
     renderScene();
     syncAspect();
     updateKpis();

@@ -216,6 +216,12 @@ window.MINE_DATA = (function () {
       ],
       block: { title: "Przepustka zablokowana", text: "Przepustka gościnna G-118 (Paweł Wiśniewski, Elektro-Serwis) została zablokowana. Osoba nie opuści terenu bez asysty ochrony. Powiadomiono portiernię." },
     },
+  ];
+
+  /* ------------------------------------------------------------------
+     Starsze zdarzenia demo (nieużywane w przyciskach; do wykorzystania).
+     ------------------------------------------------------------------ */
+  const legacyIncidents = [
     {
       id: "ZD-03",
       cam: "KAM-02",
@@ -354,5 +360,5 @@ window.MINE_DATA = (function () {
     { id: "P-5", names: ["Robert Kaczmarek"],              level: 2, x: 400, y: 100 },
   ];
 
-  return { cameras, sensors, procedures, incidents, patrols };
+  return { cameras, sensors, procedures, incidents, legacyIncidents, patrols };
 })();

@@ -408,3 +408,11 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
 .feed-main.idle { background: #06090d; }
 .feed-main.idle::before { display: none; }
 #feed.idle .rec, #feed.idle #feed-status, #feed.idle #btn-fullscreen, #feed.idle #feed-title-prefix { display: none; }
+
+/* ---------- przyciski zdarzeń ---------- */
+.ev-btn { background: #0f1922; color: var(--text-dim); border: none; border-right: 1px solid var(--border-strong); padding: 2px 9px; cursor: pointer; font-size: 10px; letter-spacing: .06em; font-family: var(--mono); }
+.ev-btn:last-child { border-right: none; }
+.ev-btn:hover { color: var(--accent); }
+.ev-btn.active { background: #163043; color: var(--accent); }
+.ev-btn.alarm { background: rgba(255,77,94,.16); color: var(--alert); }
+.ev-btn.done { color: var(--ok); }

@@ -25,14 +25,15 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 
 | Panel | Co robi |
 |---|---|
-| **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń i bez stałych przycisków. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski dopasowane do zdarzenia (pole `choices` w `js/data.js`, np. „Zatrzymaj taśmę i uruchom procedurę pożarową”, „Pokaż odczyty temperatury i CO”, „To para lub kurz, nie pożar”), a każdy krok procedury ma „Zrobione ✓” / „Nie mogę tego zrobić” / „Pokaż wszystkie kroki”. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
+| **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń i bez stałych przycisków. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski dopasowane do zdarzenia (pole `choices` w `js/data.js`, np. „Zatrzymaj taśmę i uruchom procedurę pożarową”, „Pokaż odczyty temperatury i CO”, „To para lub kurz, nie pożar”), a każdy krok procedury ma „Zrobione ✓” / „Nie mogę tego zrobić” / „Pokaż wszystkie kroki”. Sterowanie demem (przyciski Zdarzenie 1, Zdarzenie 2, … oraz AUTO) jest w nagłówku panelu. |
 | **Prawy górny – cyfrowy bliźniak** | Fotorealistyczny ukośny widok 3D jak z drona, renderowany z wygenerowanej ortofotomapy: budynki z fakturowanymi elewacjami (płyty z oknami, blacha trapezowa, cegła), cieniowane silosy, zbiorniki i komin, kratownicowa wieża szybowa z kołami linowymi, most przenośnikowy na podporach, hałdy, osadniki, tory z wagonami, parking, maszty i ogrodzenie, korony drzew, cienie od słońca, mgiełka atmosferyczna w głębi. Pod powierzchnią wiszą, jak szklane piętra, poziomy −300 m i −500 m z podświetlonymi wyrobiskami (przekopy, ściany, komory, pochylnia, rurociąg CH₄, tamy, klatka w szybie, lokomotywa, załoga), a szyby łączą je w pionie. Kamery z polami widzenia i etykiety są wektorowe na wierzchu. Przełącznik poziomów w nagłówku panelu przybliża i wyróżnia dany poziom; kółko myszy przybliża, przeciąganie przesuwa; alarm sam przełącza widok na poziom kamery. Obraz generują `tools/make_orthophoto.py` (warstwy płaskie) i `tools/make_scene3d.py` (render 3D → `assets/scene.jpg`, `assets/scene_mask.png`, `js/site.js`). |
 | **Prawy dolny – podgląd na żywo** | Odtwarza wideo wybranej kamery z ramkami detekcji AI, listą detekcji, metadanymi kamery i listą ostatnich zdarzeń. Do czasu dodania pliku wideo pokazuje animowaną planszę BRAK SYGNAŁU. |
 
 ## Przebieg demo
 
-1. Naciśnij **NASTĘPNE ZDARZENIE** – wywołuje kolejną
-   zaplanowaną anomalię: punkt kamery miga na czerwono, podgląd przełącza się
+1. Kliknij **Zdarzenie 1**, **Zdarzenie 2**, … w nagłówku panelu asystenta (można
+   przełączać w dowolnej kolejności; otwarte zdarzenie jest wtedy przerywane) – wywołuje
+   wybraną anomalię: punkt kamery miga na czerwono, podgląd przełącza się
    na tę kamerę z ramkami, asystent wypisuje UWAGA i pyta *co robimy?*
 2. Przyciski dopasowane do zdarzenia: potwierdź i otwórz procedurę, pokaż szczegóły,
    obserwuj jeszcze 20 s (ponowny alarm), fałszywy alarm.
@@ -51,13 +52,11 @@ Zaplanowane zdarzenia, w kolejności:
 |---|---|---|---|
 | ZD-01 | KAM-01 Brama główna | WYSOKI | **Nieuprawnione użycie karty** – nie rozpoznano twarzy Mariana Kowalskiego, a użyto jego karty. Trzy własne opcje: *Wyślij patrol* (najbliższe patrole z nazwiskami i czasem dojścia na modelu, wybrany patrol idzie do kamery), *Odbierz dostępy* (okno „Dostęp zablokowany”), *Pokaż historię zdarzeń* (dwa klipy: Kowalski opuszcza teren, inna osoba wchodzi na jego kartę). |
 | ZD-02 | KAM-03 Nadszybie szybu I | WYSOKI | **Fotografowanie w strefie zastrzeżonej** – kliknięcie kamery pokazuje prawdziwe nagranie spokojnego przejścia pracownika (`cam-03.mp4`), zdarzenie pokazuje na tej samej kamerze nagranie osoby wyjmującej telefon (`inc-phone.mp4`). Rozpoznany gość z przepustką G-118. Opcje: *Nadaj komunikat głosowy* (głośnik przy kamerze, po chwili osoba chowa telefon), *Wyślij patrol* (wylegitymowanie, usunięcie zdjęć), *Powiadom opiekuna gościa* (SMS, po chwili odpowiedź opiekuna), *Zablokuj przepustkę* (okno „Przepustka zablokowana”). Dowód (klip + stopklatka) zapisuje się automatycznie. |
-| ZD-03 | KAM-02 Lampownia | NISKI | Pracownik bez aparatu ucieczkowego idzie na nadszybie |
-| ZD-04 | KAM-10 Komora MW | WYSOKI | Osoba bez uprawnień, drzwi otwarte poza oknem strzałowym |
-| ZD-05 | KAM-08 Pochylnia taśmowa | KRYTYCZNY | Dym + punkt gorący na taśmie, taśma nadal pracuje |
-| ZD-06 | KAM-12 Ściana W-7 | KRYTYCZNY | Nieruchomy pracownik na trasie kombajnu, rośnie CH₄ |
-| ZD-07 | KAM-01 Brama główna | WYSOKI | Naruszenie perymetru, pojazd bez tablic |
-| ZD-08 | KAM-05 Wentylator główny | WYSOKI | Porzucony przedmiot przy czerpni |
-| ZD-09 | KAM-06 Podszybie −300 | ŚREDNI | Osoba pod zawieszonym ładunkiem |
+
+Starsze zdarzenia demo (ZD-03…ZD-09: brak aparatu ucieczkowego, komora MW, pożar taśmy,
+nieruchomy pracownik, perymetr, porzucony przedmiot, zawieszony ładunek) są zachowane
+w `legacyIncidents` w `js/data.js` i nie mają przycisków; wystarczy przenieść je do
+`incidents`, aby wróciły.
 
 Klip (zdarzenia lub historii) może mieć `zoom: { x, y, scale, tx, ty, from, hold }` –
 pod koniec odtwarzania obraz przybliża się płynnie `scale`-krotnie tak, by punkt (x, y)
