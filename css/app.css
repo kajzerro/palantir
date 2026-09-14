@@ -173,13 +173,6 @@ button { font-family: inherit; }
 .opts.used .opt { opacity: .35; pointer-events: none; }
 .opts.used .opt.chosen { opacity: 1; background: #12303f; border-color: var(--accent-2); color: var(--accent-2); }
 
-.quick-bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--bg-panel-2); }
-.qbtn { flex: 1 1 auto; background: #13202c; color: var(--text); border: 1px solid var(--border-strong); border-radius: 4px; padding: 7px 10px; cursor: pointer; font-size: 12.5px; font-family: var(--sans); }
-.qbtn:hover { border-color: var(--accent); color: var(--accent); }
-.camchips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-.camchip { background: #0f1c27; color: var(--text); border: 1px solid var(--border-strong); border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 12px; font-family: var(--sans); }
-.camchip:hover { border-color: var(--accent); color: var(--accent); }
-.camchip.off { opacity: .45; }
 .msg .plain { list-style: none; padding: 0; margin: 4px 0 0; }
 .msg .plain li { padding: 1px 0 1px 14px; position: relative; }
 .msg .plain li::before { content: "•"; position: absolute; left: 2px; color: var(--accent); }

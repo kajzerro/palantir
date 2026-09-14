@@ -32,7 +32,7 @@
   };
 
   const els = {
-    log: $("#term-log"), quickBar: $("#quick-bar"),
+    log: $("#term-log"),
     btnAuto: $("#btn-auto"), btnNext: $("#btn-next"),
     scene: $("#scene"), svg: $("#mine-svg"), tooltip: $("#twin-tooltip"), twinSide: $("#lvl-ctl"),
     video: $("#feed-video"), noise: $("#feed-noise"), overlay: $("#feed-overlay"),
@@ -119,61 +119,6 @@
     if (state.pendingOptions && state.pendingOptions.el === wrap) state.pendingOptions = null;
     op(o.label);
     o.action && o.action();
-  }
-
-  /* ---------- szybkie przyciski (zamiast poleceń) ---------- */
-  const QUICK = {
-    status: { label: "Co się dzieje?", run: quickStatus },
-    cams: { label: "Pokaż kamery", run: quickCams },
-    proc: { label: "Co mam teraz robić?", run: quickProc },
-    log: { label: "Historia zdarzeń", run: quickLog },
-  };
-  els.quickBar.addEventListener("click", (e) => {
-    const b = e.target.closest(".qbtn"); if (!b) return;
-    const q = QUICK[b.dataset.q]; if (!q) return;
-    op(q.label); q.run();
-  });
-
-  function quickStatus() {
-    const online = D.cameras.filter((c) => !c.offline).length;
-    const s = currentSensors(), max = Math.max(...Object.values(s));
-    const gas = max >= 1.5 ? '<span class="r">za wysoki – trwa procedura</span>' : max >= 1.0 ? '<span class="y">podwyższony, obserwuję</span>' : '<span class="g">w normie</span>';
-    const items = [
-      `Działa ${online} z ${D.cameras.length} kamer${online < D.cameras.length ? " (KAM-13 jest wyłączona – serwis)" : ""}.`,
-      `Metan: ${gas}.`,
-      `Pod ziemią jest 312 osób (zmiana B).`,
-      `Wentylacja pracuje normalnie.`,
-      `Dziś zamknięto ${state.closed.length} ${state.closed.length === 1 ? "zdarzenie" : state.closed.length >= 2 && state.closed.length <= 4 ? "zdarzenia" : "zdarzeń"}.`,
-    ];
-    ai(`${state.active ? `<span class="r">Trwa zdarzenie ${state.active.inc.id}: ${esc(state.active.inc.title)}.</span>` : `<span class="g">Wszystko w porządku.</span>`}<ul class="plain">${items.map((t) => `<li>${t}</li>`).join("")}</ul>`);
-  }
-
-  function quickCams() {
-    ai(`Kliknij kamerę, którą chcesz zobaczyć (możesz też klikać punkty na modelu kopalni):`).then((el) => {
-      const wrap = document.createElement("div"); wrap.className = "camchips";
-      D.cameras.forEach((c) => {
-        const b = document.createElement("button"); b.type = "button";
-        b.className = `camchip${c.offline ? " off" : ""}`;
-        b.textContent = `${c.id.replace("KAM-", "")} · ${c.name}${c.offline ? " (wyłączona)" : ""}`;
-        b.addEventListener("click", () => selectCamera(c.id));
-        wrap.appendChild(b);
-      });
-      el.appendChild(wrap); scrollLog();
-    });
-  }
-
-  function quickProc() {
-    if (!state.active) { ai("Teraz nie ma żadnego zdarzenia. Obserwuj podgląd i czekaj – jeśli coś zauważę, od razu Ci powiem."); return; }
-    if (state.active.status === "new") { ai(`Mamy nowe zdarzenie na ${state.active.cam.id}. Najpierw zdecyduj, czy to prawdziwe zagrożenie – użyj przycisków powyżej.`); return; }
-    sys(procedureHtml(state.active));
-    ai(`Jesteś przy kroku ${state.active.step + 1}. Wykonaj go i kliknij „Zrobione”.`);
-  }
-
-  function quickLog() {
-    if (!state.closed.length && !state.active) { ai("Dziś nie było jeszcze żadnych zdarzeń."); return; }
-    const rows = [...state.closed, ...(state.active ? [state.active] : [])].map((r) =>
-      `<tr><td>${r.openedAt}</td><td>${severityTag(r.inc.severity)}</td><td>${esc(r.inc.title)}</td><td>${r.inc.cam}</td><td>${r.status === "closed" ? '<span class="g">zakończone</span>' : r.status === "false" ? '<span class="k">fałszywy alarm</span>' : `<span class="y">w toku</span>`}</td></tr>`).join("");
-    sys(`<table class="kv log">${rows}</table>`);
   }
 
   els.btnNext.addEventListener("click", () => fireNextIncident());
@@ -690,13 +635,15 @@
     });
   }
 
+  /** Opcje decyzji – predefiniowane osobno dla każdego zdarzenia (pole `choices` w js/data.js). */
   function assessmentOptions(rec, withAnalysis) {
+    const ch = rec.inc.choices || {};
     const o = [
-      { label: "Tak, to prawdziwe zagrożenie – pokaż, co robić", cls: "danger", action: confirmIncident },
+      { label: ch.confirm || "Tak, to prawdziwe zagrożenie – pokaż, co robić", cls: "danger", action: confirmIncident },
     ];
-    if (withAnalysis) o.push({ label: "Powiedz mi więcej", action: () => analysis(rec) });
-    o.push({ label: "Poczekaj chwilę i sprawdź jeszcze raz", action: () => holdIncident(rec) });
-    o.push({ label: "To fałszywy alarm", cls: "good", action: () => falseAlarm(rec) });
+    if (withAnalysis) o.push({ label: ch.analysis || "Powiedz mi więcej", action: () => analysis(rec) });
+    o.push({ label: ch.hold || "Poczekaj chwilę i sprawdź jeszcze raz", action: () => holdIncident(rec) });
+    o.push({ label: ch.false || "To fałszywy alarm", cls: "good", action: () => falseAlarm(rec) });
     return o;
   }
 

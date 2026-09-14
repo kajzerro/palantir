@@ -25,7 +25,7 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 
 | Panel | Co robi |
 |---|---|
-| **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski w zwykłym języku („Tak, to prawdziwe zagrożenie”, „Powiedz mi więcej”, „To fałszywy alarm”, „Zrobione ✓”). Na dole stałe przyciski: *Co się dzieje?*, *Pokaż kamery*, *Co mam teraz robić?*, *Historia zdarzeń*. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
+| **Lewy – asystent ochrony** | Prosty czat dla ochroniarza, bez linii poleceń i bez stałych przycisków. Każda wiadomość asystenta wymagająca decyzji ma duże, klikalne przyciski dopasowane do zdarzenia (pole `choices` w `js/data.js`, np. „Zatrzymaj taśmę i uruchom procedurę pożarową”, „Pokaż odczyty temperatury i CO”, „To para lub kurz, nie pożar”), a każdy krok procedury ma „Zrobione ✓” / „Nie mogę tego zrobić” / „Pokaż wszystkie kroki”. Sterowanie demem (NASTĘPNE ZDARZENIE, AUTO) jest w nagłówku panelu. |
 | **Prawy górny – cyfrowy bliźniak** | Fotorealistyczny ukośny widok 3D jak z drona, renderowany z wygenerowanej ortofotomapy: budynki z fakturowanymi elewacjami (płyty z oknami, blacha trapezowa, cegła), cieniowane silosy, zbiorniki i komin, kratownicowa wieża szybowa z kołami linowymi, most przenośnikowy na podporach, hałdy, osadniki, tory z wagonami, parking, maszty i ogrodzenie, korony drzew, cienie od słońca, mgiełka atmosferyczna w głębi. Pod powierzchnią wiszą, jak szklane piętra, poziomy −300 m i −500 m z podświetlonymi wyrobiskami (przekopy, ściany, komory, pochylnia, rurociąg CH₄, tamy, klatka w szybie, lokomotywa, załoga), a szyby łączą je w pionie. Kamery z polami widzenia i etykiety są wektorowe na wierzchu. Przełącznik poziomów w nagłówku panelu przybliża i wyróżnia dany poziom; kółko myszy przybliża, przeciąganie przesuwa; alarm sam przełącza widok na poziom kamery. Obraz generują `tools/make_orthophoto.py` (warstwy płaskie) i `tools/make_scene3d.py` (render 3D → `assets/scene.jpg`, `assets/scene_mask.png`, `js/site.js`). |
 | **Prawy dolny – podgląd na żywo** | Odtwarza wideo wybranej kamery z ramkami detekcji AI, listą detekcji, metadanymi kamery i listą ostatnich zdarzeń. Do czasu dodania pliku wideo pokazuje animowaną planszę BRAK SYGNAŁU. |
 
@@ -34,8 +34,8 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 1. Naciśnij **NASTĘPNE ZDARZENIE** – wywołuje kolejną
    zaplanowaną anomalię: punkt kamery miga na czerwono, podgląd przełącza się
    na tę kamerę z ramkami, asystent wypisuje UWAGA i pyta *co robimy?*
-2. Przyciski: „Tak, to prawdziwe zagrożenie – pokaż, co robić”, „Powiedz mi więcej”,
-   „Poczekaj chwilę i sprawdź jeszcze raz” (ponowny alarm po 20 s), „To fałszywy alarm”.
+2. Przyciski dopasowane do zdarzenia: potwierdź i otwórz procedurę, pokaż szczegóły,
+   obserwuj jeszcze 20 s (ponowny alarm), fałszywy alarm.
 3. Po potwierdzeniu asystent otwiera właściwą procedurę (np.
    „Pożar przenośnika taśmowego”), pokazuje całą listę kroków
    i pyta o każdy krok po kolei (**Zrobione ✓** / **Nie mogę tego zrobić** / **Pokaż wszystkie kroki**).

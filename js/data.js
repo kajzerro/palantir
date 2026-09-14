@@ -152,6 +152,9 @@ window.MINE_DATA = (function () {
   /* ------------------------------------------------------------------
      Zdarzenia – wywoływane w tej kolejności przez NASTĘPNE ZDARZENIE / AUTO.
      `boxes` to współrzędne (w %) ramek rysowanych na wideo.
+     `choices` to teksty przycisków decyzji pokazywanych przy tym zdarzeniu
+     (confirm = potwierdź i otwórz procedurę, analysis = więcej szczegółów,
+     hold = obserwuj 20 s, false = fałszywy alarm).
      ------------------------------------------------------------------ */
   const incidents = [
     {
@@ -165,6 +168,7 @@ window.MINE_DATA = (function () {
       ],
       boxes: [{ x: 41, y: 22, w: 14, h: 58, label: "OSOBA · brak aparatu uciecz.", cls: "attn" }],
       procedure: "PROC-SOI-01",
+      choices: { confirm: "Zatrzymaj pracownika przy kołowrocie – pokaż, co robić", analysis: "Pokaż, kogo widzisz", hold: "Poczekaj – może wróci po aparat", false: "To pomyłka, ma aparat" },
       video: "videos/inc-01-ppe.mp4",
       aiNotes: "Czytnik znaczków: pracownik K. Nowak (znaczek 2231) pobrał lampę 0413, ale w wydawalni aparatów nie zeskanowano żadnego aparatu ucieczkowego. Szacowane dojście do kołowrotu za 40 s.",
     },
@@ -182,6 +186,7 @@ window.MINE_DATA = (function () {
         { x: 62, y: 8,  w: 20, h: 70, label: "DRZWI OTWARTE 46 s", cls: "attn" },
       ],
       procedure: "PROC-OCH-04",
+      choices: { confirm: "Zablokuj komorę i wezwij patrol", analysis: "Kto to jest? Pokaż szczegóły", hold: "Obserwuj jeszcze 20 sekund", false: "To uprawniony pracownik" },
       video: "videos/inc-02-magazine.mp4",
       aiNotes: "Ostatnie uprawnione wejście: strzałowy J. Kowal 05:52, wyjście 06:04. Blokada drzwi KMW-D1 zgłasza „ręczne obejście” od 06:31. Chód osoby zgadza się ze śladem #0912 widzianym na KAM-09 o 06:26.",
     },
@@ -199,6 +204,7 @@ window.MINE_DATA = (function () {
         { x: 36, y: 10, w: 34, h: 40, label: "DYM", cls: "attn" },
       ],
       procedure: "PROC-POZ-02",
+      choices: { confirm: "Zatrzymaj taśmę i uruchom procedurę pożarową", analysis: "Pokaż odczyty temperatury i CO", hold: "Obserwuj jeszcze 20 sekund", false: "To para lub kurz, nie pożar" },
       video: "videos/inc-03-conveyor-fire.mp4",
       aiNotes: "Trend temperatury: +31 °C/min. Prąd powietrza niesie dym w stronę chodnika G-7 (załoga ściany W-7: 14 osób). Najbliższy punkt ppoż.: PP-P2-3, 40 m powyżej. Automatyczne wyłączenie taśmy NIE zadziałało – czujnik TS-B14 ostatnio raportował o 09:41 (możliwa awaria).",
       sensors: { DR: 0.21 },
@@ -217,6 +223,7 @@ window.MINE_DATA = (function () {
         { x: 68, y: 20, w: 28, h: 50, label: "KOMBAJN · 12 m", cls: "attn" },
       ],
       procedure: "PROC-MED-01",
+      choices: { confirm: "Zatrzymaj kombajn i wezwij pomoc", analysis: "Pokaż, co widzisz", hold: "Poczekaj – może wstanie", false: "To fałszywy alarm" },
       video: "videos/inc-04-worker-down.mp4",
       aiNotes: "Pracownik zidentyfikowany po ID lampy nahełmnej: M. Wiśniewski (znaczek 1877). Brak łączności radiowej od 3 min. Dwóch kolegów przy sekcjach 44–45 odwróconych tyłem. Trend metanu wskazuje na wyrzut gazu po obwale stropu; próg automatycznego wyłączenia 1,5 % zostanie osiągnięty za ok. 2 min.",
       sensors: { W7: 1.38 },
@@ -236,6 +243,7 @@ window.MINE_DATA = (function () {
         { x: 66, y: 44, w: 28, h: 30, label: "POJAZD · BRAK TABLIC", cls: "attn" },
       ],
       procedure: "PROC-OCH-01",
+      choices: { confirm: "Włącz alarm i wyślij ochronę", analysis: "Pokaż intruzów z bliska", hold: "Obserwuj jeszcze 20 sekund", false: "To nasi pracownicy" },
       video: "videos/inc-05-perimeter.mp4",
       aiNotes: "Obie osoby mają plecaki. O tej porze w sektorze A nie ma zaplanowanych pracowników. Furgonetka wjechała na drogę dojazdową o 02:09 – LPR nie odczytał tablic (zasłonięte).",
     },
@@ -252,6 +260,7 @@ window.MINE_DATA = (function () {
         { x: 52, y: 62, w: 12, h: 16, label: "PRZEDMIOT · 3 min", cls: "" },
       ],
       procedure: "PROC-OCH-07",
+      choices: { confirm: "Wyznacz strefę i wezwij pirotechników", analysis: "Pokaż osobę, która to zostawiła", hold: "Poczekaj – może właściciel wróci", false: "To zwykła torba pracownika" },
       video: "videos/inc-06-object.mp4",
       aiNotes: "Osoba była śledzona od składowiska (skraj pola widzenia KAM-04) i znajduje się obecnie poza zasięgiem kamer. Czerpnia wentylatora jest pojedynczym punktem awarii wentylacji poziomu −500.",
     },
@@ -269,6 +278,7 @@ window.MINE_DATA = (function () {
         { x: 40, y: 6,  w: 30, h: 32, label: "ZAWIESZONY ŁADUNEK", cls: "attn" },
       ],
       procedure: "PROC-RUCH-03",
+      choices: { confirm: "Wstrzymaj wyciąg i usuń osobę ze strefy", analysis: "Pokaż, co widzisz", hold: "Obserwuj jeszcze 20 sekund", false: "To fałszywy alarm" },
       video: "videos/inc-07-loading-zone.mp4",
       aiNotes: "To trzecie takie zdarzenie w tej strefie w tym tygodniu. Oznakowanie strefy może być wytarte – zalecam zgłoszenie serwisowe.",
     },
