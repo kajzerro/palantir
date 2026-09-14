@@ -39,7 +39,7 @@
     <!-- ===================== PRAWY GÓRNY: CYFROWY BLIŹNIAK ===================== -->
     <section id="twin" class="panel">
       <div class="panel-head">
-        <span class="panel-title">CYFROWY BLIŹNIAK</span>
+        <span class="panel-title"></span>
         <span class="panel-meta">
           <span class="seg" id="lvl-ctl">
             <button type="button" class="lvl-btn active" data-level="all">Cały obiekt</button>
@@ -73,7 +73,7 @@
     <!-- ===================== PRAWY DOLNY: PODGLĄD NA ŻYWO ===================== -->
     <section id="feed" class="panel">
       <div class="panel-head">
-        <span class="panel-title">PODGLĄD NA ŻYWO · <span id="feed-cam-id">—</span></span>
+        <span class="panel-title"><span id="feed-title-prefix">PODGLĄD NA ŻYWO · </span><span id="feed-cam-id">—</span></span>
         <span class="panel-meta">
           <span class="rec"><i></i>REC</span>
           <span class="pill" id="feed-status">BEZCZYNNY</span>
@@ -81,7 +81,7 @@
         </span>
       </div>
       <div class="feed-body">
-        <div class="feed-main">
+        <div class="feed-main idle">
           <video id="feed-video" muted autoplay loop playsinline></video>
           <canvas id="feed-noise"></canvas>
           <div id="feed-overlay" class="overlay"></div>

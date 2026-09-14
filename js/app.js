@@ -559,6 +559,7 @@
 
   function selectCamera(id) {
     const c = camById(id); if (!c) return;
+    els.feedMain.classList.remove("idle"); document.querySelector("#feed").classList.remove("idle");
     if (state.history) exitHistory();
     state.selectedCam = id;
     els.svg.querySelectorAll(".cam.selected").forEach((n) => n.classList.remove("selected"));
@@ -805,6 +806,7 @@
     playHistory(clips, 0);
   }
   function playHistory(clips, i) {
+    els.feedMain.classList.remove("idle"); document.querySelector("#feed").classList.remove("idle");
     state.history = { clips, i };
     const c = clips[i]; const cam = camById(c.cam);
     els.feedCamId.textContent = `HISTORIA · ${c.cam} · ${c.time}`;
@@ -992,7 +994,7 @@ Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class="b">„${e
     updateKpis();
     tickClock(); setInterval(tickClock, 1000);
     tickSensors(); setInterval(tickSensors, 2000);
-    setNoSignal(true, "wybierz kamerę na modelu 3D");
+    document.querySelector("#feed").classList.add("idle");
     ["click", "keydown"].forEach((ev) => window.addEventListener(ev, () => { if (!state.audioCtx) { try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} } }, { once: true }));
 
   }
