@@ -59,9 +59,10 @@ Zaplanowane zdarzenia, w kolejności:
 | ZD-08 | KAM-05 Wentylator główny | WYSOKI | Porzucony przedmiot przy czerpni |
 | ZD-09 | KAM-06 Podszybie −300 | ŚREDNI | Osoba pod zawieszonym ładunkiem |
 
-Klip (zdarzenia lub historii) może mieć `zoom: { x, y, scale, from, hold }` – pod koniec
-odtwarzania obraz przybliża się płynnie na wskazany punkt kadru (np. twarz), a po
-zakończeniu trzyma stopklatkę przez `hold` ms.
+Klip (zdarzenia lub historii) może mieć `zoom: { x, y, scale, tx, ty, from, hold }` –
+pod koniec odtwarzania obraz przybliża się płynnie `scale`-krotnie tak, by punkt (x, y)
+kadru (np. twarz) trafił w punkt (tx, ty) okna, a po zakończeniu trzyma stopklatkę
+przez `hold` ms.
 
 Zdarzenie może mieć własne opcje (`options` z akcjami `patrol`, `block`, `history`,
 `announce`, `notify`, `confirm`, `analysis`, `hold`, `false`, `close`; `multi: true` pozwala klikać je

@@ -505,9 +505,19 @@
 
   /* ---------- zbliżenie na twarz (transformacja CSS na elemencie wideo) ---------- */
   function setZoom(z, on) {
-    const t = on && z ? `scale(${z.scale})` : "none";
-    const o = z ? `${z.x}% ${z.y}%` : "50% 50%";
-    [els.video, els.overlay].forEach((el) => { el.style.transformOrigin = o; el.style.transform = t; });
+    let t = "none";
+    if (on && z) {
+      // punkt (x, y) w % kadru wideo → współrzędne elementu (object-fit: cover przycina kadr)
+      const v = els.video, vw = v.videoWidth || 16, vh = v.videoHeight || 9, ew = v.clientWidth || 1, eh = v.clientHeight || 1;
+      const k = Math.max(ew / vw, eh / vh), dw = vw * k, dh = vh * k;
+      const ex = ((ew - dw) / 2 + (z.x / 100) * dw) / ew, ey = ((eh - dh) / 2 + (z.y / 100) * dh) / eh;
+      const s = z.scale, tX = (z.tx ?? 50) / 100, tY = (z.ty ?? 42) / 100;
+      const lim = (s - 1) / 2;
+      const tx = Math.max(-lim, Math.min(lim, tX - 0.5 - (ex - 0.5) * s));
+      const ty = Math.max(-lim, Math.min(lim, tY - 0.5 - (ey - 0.5) * s));
+      t = `translate(${(tx * 100).toFixed(2)}%, ${(ty * 100).toFixed(2)}%) scale(${s})`;
+    }
+    [els.video, els.overlay].forEach((el) => { el.style.transformOrigin = "50% 50%"; el.style.transform = t; });
     $("#osd-zoom").hidden = !(on && z);
   }
   /** Ustawia klip z ewentualnym zbliżeniem: odtwarzanie bez pętli, zbliżenie od `from`, stopklatka po końcu. */
