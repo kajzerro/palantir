@@ -185,16 +185,15 @@ window.MINE_DATA = (function () {
     },
     {
       id: "ZD-02",
-      cam: "KAM-16",
+      cam: "KAM-03",
       severity: "WYSOKI",
       title: "Fotografowanie w strefie zastrzeżonej",
-      summary: "Osoba wyjęła telefon i zrobiła zdjęcie rozdzielni 110/6 kV – strefa objęta zakazem fotografowania. Rozpoznano: Paweł Wiśniewski, pracownik firmy zewnętrznej Elektro-Serwis, przepustka gościnna G-118 (opiekun: inż. Jan Kowal).",
+      summary: "Osoba wyjęła telefon i zrobiła zdjęcie nadszybia i placu przy szybie I – strefa objęta zakazem fotografowania. Rozpoznano: Paweł Wiśniewski, pracownik firmy zewnętrznej Elektro-Serwis, przepustka gościnna G-118 (opiekun: inż. Jan Kowal).",
       detections: [
         ["osoba", 0.98], ["telefon w dłoni", 0.94], ["gest fotografowania", 0.91], ["strefa zakazu fotografowania", 1.0], ["twarz: P. Wiśniewski · gość G-118", 0.93],
       ],
       boxes: [
-        { x: 38, y: 12, w: 18, h: 70, label: "P. WIŚNIEWSKI · GOŚĆ G-118", cls: "" },
-        { x: 50, y: 30, w: 8, h: 10, label: "TELEFON · ZDJĘCIE", cls: "attn" },
+        { x: 0.5, y: 57, w: 9.5, h: 29, label: "P. WIŚNIEWSKI · GOŚĆ G-118 · TELEFON", cls: "" },
       ],
       video: "videos/inc-phone.mp4",
       person: { name: "Paweł Wiśniewski", pass: "G-118", company: "Elektro-Serwis", host: "inż. Jan Kowal" },
@@ -202,8 +201,8 @@ window.MINE_DATA = (function () {
       autoNote: "Zapisałem klip i stopklatkę ze zdjęciem jako dowód w karcie zdarzenia.",
       options: [
         { label: "Nadaj komunikat głosowy", action: "announce", cls: "danger",
-          text: "Uwaga! Strefa objęta zakazem fotografowania. Proszę natychmiast schować telefon i opuścić rejon rozdzielni.",
-          after: "Osoba schowała telefon i odchodzi w stronę warsztatu. Nadal ją śledzę.", afterDelay: 7000 },
+          text: "Uwaga! Strefa objęta zakazem fotografowania. Proszę natychmiast schować telefon i opuścić rejon szybu.",
+          after: "Osoba schowała telefon i odchodzi w stronę bramy. Nadal ją śledzę.", afterDelay: 7000 },
         { label: "Wyślij patrol", action: "patrol",
           arrival: "Patrol jest na miejscu. Wylegitymowano Pawła Wiśniewskiego. Zdjęcia usunięte w obecności ochrony, telefon zwrócony, sporządzono notatkę." },
         { label: "Powiadom opiekuna gościa", action: "notify",

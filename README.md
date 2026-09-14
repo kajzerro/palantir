@@ -50,7 +50,7 @@ Zaplanowane zdarzenia, w kolejności:
 | # | Kamera | Zagrożenie | Wzorzec |
 |---|---|---|---|
 | ZD-01 | KAM-01 Brama główna | WYSOKI | **Nieuprawnione użycie karty** – nie rozpoznano twarzy Mariana Kowalskiego, a użyto jego karty. Trzy własne opcje: *Wyślij patrol* (najbliższe patrole z nazwiskami i czasem dojścia na modelu, wybrany patrol idzie do kamery), *Odbierz dostępy* (okno „Dostęp zablokowany”), *Pokaż historię zdarzeń* (dwa klipy: Kowalski opuszcza teren, inna osoba wchodzi na jego kartę). |
-| ZD-02 | KAM-16 Rozdzielnia 110/6 kV | WYSOKI | **Fotografowanie w strefie zastrzeżonej** – kliknięcie kamery pokazuje spokojny obchód pracownika, zdarzenie pokazuje na tej samej kamerze osobę wyjmującą telefon i robiącą zdjęcie (z błyskiem). Rozpoznany gość z przepustką G-118. Opcje: *Nadaj komunikat głosowy* (głośnik przy kamerze, po chwili osoba chowa telefon), *Wyślij patrol* (wylegitymowanie, usunięcie zdjęć), *Powiadom opiekuna gościa* (SMS, po chwili odpowiedź opiekuna), *Zablokuj przepustkę* (okno „Przepustka zablokowana”). Dowód (klip + stopklatka) zapisuje się automatycznie. |
+| ZD-02 | KAM-03 Nadszybie szybu I | WYSOKI | **Fotografowanie w strefie zastrzeżonej** – kliknięcie kamery pokazuje prawdziwe nagranie spokojnego przejścia pracownika (`cam-03.mp4`), zdarzenie pokazuje na tej samej kamerze nagranie osoby wyjmującej telefon (`inc-phone.mp4`). Rozpoznany gość z przepustką G-118. Opcje: *Nadaj komunikat głosowy* (głośnik przy kamerze, po chwili osoba chowa telefon), *Wyślij patrol* (wylegitymowanie, usunięcie zdjęć), *Powiadom opiekuna gościa* (SMS, po chwili odpowiedź opiekuna), *Zablokuj przepustkę* (okno „Przepustka zablokowana”). Dowód (klip + stopklatka) zapisuje się automatycznie. |
 | ZD-03 | KAM-02 Lampownia | NISKI | Pracownik bez aparatu ucieczkowego idzie na nadszybie |
 | ZD-04 | KAM-10 Komora MW | WYSOKI | Osoba bez uprawnień, drzwi otwarte poza oknem strzałowym |
 | ZD-05 | KAM-08 Pochylnia taśmowa | KRYTYCZNY | Dym + punkt gorący na taśmie, taśma nadal pracuje |
@@ -78,7 +78,7 @@ nazwie (wersję `.webm` można usunąć):
 |---|---|
 | `videos/cam-01.mp4` … `videos/cam-29.mp4` | Pętla bezczynności każdej kamery (otwieranej z modelu 3D) |
 | `videos/inc-card-live.mp4`, `inc-card-exit.mp4`, `inc-card-entry.mp4` | ZD-01 (obraz na żywo + dwa klipy historii) – prawdziwe nagrania z bramy (twarz rozpoznana / nierozpoznana), `cam-01.mp4` to pusta brama z tego samego nagrania |
-| `videos/inc-phone.mp4` (+ `cam-16.mp4` jako spokojny obchód) | ZD-02 na KAM-16 |
+| `videos/inc-phone.mp4` (+ `cam-03.mp4` jako spokojne przejście) | ZD-02 na KAM-03 – prawdziwe nagrania |
 | `videos/inc-01-ppe.mp4` | ZD-03 na KAM-02 |
 | `videos/inc-02-magazine.mp4` | ZD-04 na KAM-10 |
 | `videos/inc-03-conveyor-fire.mp4` | ZD-05 na KAM-08 |
