@@ -284,6 +284,9 @@ button { font-family: inherit; }
 .feed-body { flex: 1; display: grid; grid-template-columns: 1fr 230px; min-height: 0; }
 .feed-main { position: relative; background: #000; overflow: hidden; border-right: 1px solid var(--border); }
 #feed-video, #feed-noise { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#feed-video, #feed-overlay { transition: transform 1.4s cubic-bezier(.4, 0, .2, 1); will-change: transform; }
+.osd-zoom { display: inline-block; margin-left: 10px; padding: 1px 7px; border: 1px solid var(--accent); color: var(--accent); border-radius: 2px; font-size: 9.5px; letter-spacing: .12em; animation: blink 1.2s steps(2) infinite; }
+.osd-zoom[hidden] { display: none; }
 #feed-noise { display: none; opacity: .55; }
 .feed-main.nosignal #feed-noise { display: block; }
 .feed-main.nosignal #feed-video { display: none; }

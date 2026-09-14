@@ -30,6 +30,7 @@
     seq: 0,
     focusLevel: "all",
     history: null,
+    zoom: null,
   };
 
   const els = {
@@ -486,7 +487,8 @@
   /** Ładuje wideo: najpierw podana ścieżka (np. .mp4), potem ten sam plik jako .webm. */
   function loadVideo(src) {
     const v = els.video;
-    v.onerror = null; v.onloadeddata = null;
+    v.onerror = null; v.onloadeddata = null; v.ontimeupdate = null; v.onended = null;
+    state.zoom = null; setZoom(null, false);
     v.pause(); v.removeAttribute("src"); v.innerHTML = "";
     if (!src) { v.load(); setNoSignal(true, "brak skonfigurowanego wideo dla tej kamery"); return; }
     const base = src.replace(/\.(mp4|webm|mov|m4v|ogv)$/i, "");
@@ -499,6 +501,25 @@
       v.appendChild(s);
     });
     v.load();
+  }
+
+  /* ---------- zbliżenie na twarz (transformacja CSS na elemencie wideo) ---------- */
+  function setZoom(z, on) {
+    const t = on && z ? `scale(${z.scale})` : "none";
+    const o = z ? `${z.x}% ${z.y}%` : "50% 50%";
+    [els.video, els.overlay].forEach((el) => { el.style.transformOrigin = o; el.style.transform = t; });
+    $("#osd-zoom").hidden = !(on && z);
+  }
+  /** Ustawia klip z ewentualnym zbliżeniem: odtwarzanie bez pętli, zbliżenie od `from`, stopklatka po końcu. */
+  function armZoom(z, onDone) {
+    state.zoom = z ? { cfg: z, on: false } : null;
+    setZoom(z, false);
+    els.video.loop = !z;
+    els.video.ontimeupdate = z ? () => {
+      const st = state.zoom; if (!st || st.cfg !== z) return;
+      if (!st.on && els.video.currentTime >= z.from) { st.on = true; setZoom(z, true); }
+    } : null;
+    els.video.onended = () => { if (z && state.zoom && state.zoom.cfg === z) setTimeout(() => onDone && onDone(), z.hold || 2000); else onDone && onDone(); };
   }
 
   function renderBoxes(boxes) {
@@ -543,11 +564,12 @@
       els.feedMain.classList.remove("alert");
     } else if (inc) {
       loadVideo(inc.inc.video || c.video);
+      if (inc.inc.zoom) armZoom(inc.inc.zoom, () => { /* stopklatka na twarzy do czasu zmiany kamery */ });
       renderBoxes(inc.inc.boxes); renderDetections(inc.inc.detections, true);
       setFeedStatus(inc.status === "new" ? "ANOMALIA" : "W PROCEDURZE", inc.status === "new" ? "alert" : "attn");
       els.feedMain.classList.toggle("alert", inc.status === "new");
     } else {
-      loadVideo(c.video); renderBoxes([]); renderDetections([]); setFeedStatus("NA ŻYWO", "live");
+      loadVideo(c.video); els.video.loop = true; renderBoxes([]); renderDetections([]); setFeedStatus("NA ŻYWO", "live");
       els.feedMain.classList.remove("alert");
     }
   }
@@ -781,9 +803,10 @@
     setFeedStatus("NAGRANIE", "attn"); els.feedMain.classList.remove("alert");
     renderBoxes(c.boxes || []); renderDetections([]);
     if (cam) renderMeta(cam);
-    els.video.loop = false;
     loadVideo(c.video);
-    els.video.onended = () => { if (state.history && state.history.clips === clips && i + 1 < clips.length) playHistory(clips, i + 1); else if (state.history) markHistoryDone(); };
+    const next = () => { if (state.history && state.history.clips === clips && state.history.i === i) { if (i + 1 < clips.length) playHistory(clips, i + 1); else markHistoryDone(); } };
+    armZoom(c.zoom || null, next);
+    els.video.loop = false;
     const h = $("#feed-history"); h.hidden = false;
     $("#hist-caption").innerHTML = `<span class="t">${c.time} · ${c.cam}</span>${esc(c.caption)}`;
     const strip = $("#hist-strip"); strip.innerHTML = "";
@@ -797,7 +820,7 @@
   }
   function markHistoryDone() { $("#hist-strip").querySelectorAll(".hist-chip").forEach((b) => b.classList.add("done")); }
   function exitHistory() {
-    state.history = null; $("#feed-history").hidden = true; els.video.loop = true; els.video.onended = null;
+    state.history = null; $("#feed-history").hidden = true; els.video.loop = true; els.video.onended = null; els.video.ontimeupdate = null; state.zoom = null; setZoom(null, false);
   }
 
   function closeSimple(rec) {
