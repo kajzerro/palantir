@@ -1,24 +1,40 @@
 {
   "belchatow": {
     "file": "assets/sat-belchatow.jpg",
-    "source": "placeholder",
-    "attribution": "podkład zastępczy (wygenerowany) – wstaw ortofotomapę GUGiK lub zdjęcie satelitarne",
+    "source": "esri",
+    "attribution": "zdjęcie: Esri World Imagery · Maxar, Earthstar Geographics",
+    "lat": 51.2661,
+    "lon": 19.3306,
+    "bbox3857": [
+      2143881.55,
+      6663544.98,
+      2159863.54,
+      6673453.82
+    ],
     "m_per_unit": 10,
     "px": [
-      2000,
-      1240
+      4000,
+      2480
     ],
-    "placeholder": true
+    "placeholder": false
   },
   "baltica": {
     "file": "assets/sat-baltica.jpg",
-    "source": "placeholder",
-    "attribution": "podkład zastępczy (wygenerowany) – wstaw ortofotomapę GUGiK lub zdjęcie satelitarne",
+    "source": "eox",
+    "attribution": "Sentinel-2 cloudless 2024 (EOX IT Services, CC BY-SA 4.0) · dane Copernicus",
+    "lat": 55.05,
+    "lon": 17.3,
+    "bbox3857": [
+      1917099.08,
+      7366164.72,
+      1934555.31,
+      7376987.58
+    ],
     "m_per_unit": 10,
     "px": [
-      2000,
-      1240
+      4000,
+      2480
     ],
-    "placeholder": true
+    "placeholder": false
   }
 }

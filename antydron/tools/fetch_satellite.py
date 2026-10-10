@@ -34,7 +34,7 @@ SITES = {
                       note="PGE Baltica · obszar MFW Baltica 2 (ok. 37 km na N od Łeby)"),
 }
 
-PX_PER_UNIT = 2          # 2000 × 1240 px, czyli ok. 5 m na piksel
+PX_PER_UNIT = 4          # 4000 × 2480 px, czyli ok. 2,5 m na piksel
 TIMEOUT = 90
 
 
@@ -62,13 +62,14 @@ def get(url, referer=None):
 
 
 def src_gugik(bbox, px, py):
+    """GUGiK odpowiada poprawnie tylko na WMS 1.1.1 z parametrem SRS; 1.3.0 zwraca pustą ramkę."""
     q = {
-        "SERVICE": "WMS", "VERSION": "1.3.0", "REQUEST": "GetMap", "LAYERS": "Raster",
-        "STYLES": "", "CRS": "EPSG:3857", "FORMAT": "image/jpeg", "TRANSPARENT": "FALSE",
+        "SERVICE": "WMS", "VERSION": "1.1.1", "REQUEST": "GetMap", "LAYERS": "Raster",
+        "STYLES": "", "SRS": "EPSG:3857", "FORMAT": "image/jpeg", "TRANSPARENT": "FALSE",
         "BBOX": ",".join(f"{v:.2f}" for v in bbox), "WIDTH": str(px), "HEIGHT": str(py),
     }
     url = "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?" + urllib.parse.urlencode(q)
-    return get(url), "GUGiK · ortofotomapa (dane otwarte, geoportal.gov.pl)"
+    return get(url), "ortofotomapa: GUGiK / geoportal.gov.pl (dane otwarte)"
 
 
 def src_esri(bbox, px, py):
@@ -77,21 +78,75 @@ def src_esri(bbox, px, py):
         "size": f"{px},{py}", "format": "jpg", "f": "image",
     }
     url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?" + urllib.parse.urlencode(q)
-    return get(url), "Esri World Imagery · Maxar, Earthstar Geographics"
+    return get(url), "zdjęcie: Esri World Imagery · Maxar, Earthstar Geographics"
 
 
 def src_eox(bbox, px, py):
     q = {
-        "service": "WMS", "version": "1.1.1", "request": "GetMap", "layers": "s2cloudless-2020",
+        "service": "WMS", "version": "1.1.1", "request": "GetMap", "layers": "s2cloudless-2024_3857",
         "srs": "EPSG:3857", "format": "image/jpeg",
         "bbox": ",".join(f"{v:.2f}" for v in bbox), "width": str(px), "height": str(py),
     }
     url = "https://tiles.maps.eox.at/wms?" + urllib.parse.urlencode(q)
-    return get(url), "Sentinel-2 cloudless (EOX IT Services, CC BY-SA 4.0) · dane Copernicus"
+    return get(url), "Sentinel-2 cloudless 2024 (EOX IT Services, CC BY-SA 4.0) · dane Copernicus"
+
+
+def tone_fix(path):
+    """Doprowadza podkład do zakresu czytelnego pod warstwą taktyczną.
+
+    Zdjęcie otwartego morza (Sentinel-2) jest niemal czarne i ma minimalny rozrzut –
+    zwykłe rozciąganie histogramu wzmocniłoby sam szum kompresji, więc takie sceny
+    dostają ograniczone wzmocnienie i delikatne rozmycie. Sceny kontrastowe (ląd)
+    dostają zwykły autokontrast.
+    """
+    import numpy as np
+    from PIL import Image, ImageFilter, ImageOps
+    im = Image.open(path).convert("RGB")
+    a = np.asarray(im).astype(np.float32)
+    if a.max() == 255 and a.min() == 255:
+        raise RuntimeError("serwer zwrócił pustą (białą) ramkę")
+    if float(a.std()) < 14:                       # scena jednorodna: otwarte morze
+        lo, hi = float(np.percentile(a, 1)), float(np.percentile(a, 99))
+        gain = min(3.0, 60.0 / max(1.0, hi - lo))
+        a = np.clip((a - lo) * gain + 16, 0, 255)
+        im = Image.fromarray(a.astype("uint8")).filter(ImageFilter.GaussianBlur(0.8))
+    else:
+        im = ImageOps.autocontrast(im, cutoff=(0.4, 0.4))
+    im.save(path, quality=84, optimize=True)
+    return open(path, "rb").read()
 
 
 ORDER = {"belchatow": ["gugik", "esri", "eox"], "baltica": ["eox", "esri", "gugik"]}
 SRC = {"gugik": src_gugik, "esri": src_esri, "eox": src_eox}
+TILE_MAX = 2000          # część serwerów WMS zwraca pustą ramkę przy większych żądaniach
+
+
+def fetch_tiled(fn, bbox, px, py, tmp_dir):
+    """Dzieli kadr na kafle ≤ TILE_MAX px i skleja – obejście limitów rozmiaru WMS."""
+    from PIL import Image
+    import io
+    nx, ny = math.ceil(px / TILE_MAX), math.ceil(py / TILE_MAX)
+    if nx * ny == 1:
+        data, credit = fn(bbox, px, py)
+        return data, credit
+    x0, y0, x1, y1 = bbox
+    out = Image.new("RGB", (px, py))
+    credit = None
+    for j in range(ny):
+        for i in range(nx):
+            tx0, tx1 = x0 + (x1 - x0) * i / nx, x0 + (x1 - x0) * (i + 1) / nx
+            # oś Y w EPSG:3857 rośnie na północ, a w obrazie w dół
+            ty1, ty0 = y1 - (y1 - y0) * j / ny, y1 - (y1 - y0) * (j + 1) / ny
+            tw = px // nx + (px % nx if i == nx - 1 else 0)
+            th = py // ny + (py % ny if j == ny - 1 else 0)
+            data, credit = fn((tx0, ty0, tx1, ty1), tw, th)
+            tile = Image.open(io.BytesIO(data)).convert("RGB")
+            if tile.getextrema() == ((255, 255), (255, 255), (255, 255)):
+                raise RuntimeError(f"pusty kafel {i},{j} – serwer odrzucił żądanie")
+            out.paste(tile, (px // nx * i, py // ny * j))
+            print(f"    kafel {j * nx + i + 1}/{nx * ny}")
+    buf = io.BytesIO(); out.save(buf, "JPEG", quality=84, optimize=True)
+    return buf.getvalue(), credit
 
 
 def main():
@@ -113,14 +168,13 @@ def main():
         for key in ([force] if force else ORDER[name]):
             try:
                 print(f"{name}: próbuję {key}…")
-                data, credit = SRC[key](bbox, px, py)
+                data, credit = fetch_tiled(SRC[key], bbox, px, py, ASSETS)
                 out = os.path.join(ASSETS, f"sat-{name}.jpg")
                 open(out, "wb").write(data)
-                meta[name] = dict(file=f"assets/sat-{name}.jpg", source=key, attribution=credit,
-                                  lat=s["lat"], lon=s["lon"], bbox3857=[round(v, 2) for v in bbox],
-                                  m_per_unit=s["m_per_unit"], px=[px, py], placeholder=False)
-                print(f"  ✓ {out}  ({len(data) // 1024} kB)  źródło: {credit}")
-                break
+                try:                      # korekcja tonalna podkładu
+                    data = tone_fix(out)
+                except Exception as e:
+                    print(f"  (bez korekty tonalnej: {e})")
             except Exception as e:
                 print(f"  ✗ {key}: {e}")
         else:

@@ -297,10 +297,10 @@
       case "line": svgEl("polyline", { class: o.cls, points: ptsStr(o.pts), fill: "none" }, g); break;
       case "asset": {
         svgEl("rect", { class: "asset", x: o.x, y: o.y, width: o.w, height: o.h, rx: 2 }, g);
-        if (o.label) text(g, o.x + o.w / 2, o.y + o.h + 12, o.label, "asset-lbl");
+        if (o.label) text(g, o.x + o.w / 2, o.above ? o.y - 6 : o.y + o.h + 12, o.label, "asset-lbl");
         break;
       }
-      case "text": text(g, o.x, o.y, o.label, "obj-lbl", "start"); break;
+      case "text": text(g, o.x, o.y, o.label, "obj-lbl", o.anchor || "start"); break;
       case "wtg": {
         const w = svgEl("g", { class: "wtg", "data-id": o.id }, g);
         svgEl("circle", { class: "mast", cx: o.cx, cy: o.cy, r: o.r }, w);
@@ -1093,7 +1093,7 @@
     const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
     const ar = view.w / view.h;
-    const w = clamp(Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...ys) - Math.min(...ys)) * ar) * 1.45, 700, 1120);
+    const w = clamp(Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...ys) - Math.min(...ys)) * ar) * 1.45, 560, 1120);
     fitTo(cx, cy, w);
   }
 

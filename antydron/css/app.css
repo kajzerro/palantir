@@ -572,7 +572,9 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
 #air-svg.base-sat .geo .asset, #air-svg.base-sat .geo .fence { opacity: .85; }
 #air-svg.base-sat .geo .wtg circle, #air-svg.base-sat .geo .wtg line,
 #air-svg.base-sat .geo .vessel polygon { opacity: .95; }
-#air-svg.base-sat .obj-lbl { fill: rgba(225,238,248,.9); }
+/* na zdjęciu nazwy brył są zbędne – obiekty widać; zostają aktywa i sensory */
+#air-svg.base-sat .obj-lbl { display: none; }
+#air-svg.base-sat .asset-lbl { fill: rgba(255,200,120,.95); }
 #air-svg.base-sat .grid-l { stroke: rgba(180,215,235,.05); }
 #air-svg.base-sat .ring { stroke: rgba(120,225,255,.5); }
 #air-svg.base-sat .ring-lbl, #air-svg.base-sat .bearing-lbl { fill: rgba(190,225,245,.85); }

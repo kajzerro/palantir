@@ -113,12 +113,17 @@ systemowego albo `pip install imageio-ffmpeg`).
 
 ## Podkład satelitarny
 
-W `assets/` leżą **podkłady zastępcze** (`sat-belchatow.jpg`, `sat-baltica.jpg`) –
-wygenerowane, z widocznym znakiem wodnym „PODKŁAD ZASTĘPCZY · NIE JEST ZDJĘCIEM
-SATELITARNYM”, żeby nikt nie wziął ich za zdjęcie. Dzięki nim widok SATELITA działa
-od razu, a obraz pokrywa się co do metra z planem wektorowym.
+W `assets/` leżą **prawdziwe zdjęcia** obu obiektów, pobrane skryptem
+`tools/fetch_satellite.py`:
 
-Prawdziwe zdjęcia pobierasz jedną komendą:
+| Obiekt | Źródło | Rozdzielczość |
+|---|---|---|
+| `sat-belchatow.jpg` | Esri World Imagery · Maxar, Earthstar Geographics | 4000 × 2480 px (ok. 2,5 m/px) |
+| `sat-baltica.jpg` | Sentinel-2 cloudless 2024 (EOX, CC BY-SA 4.0), dane Copernicus | 4000 × 2480 px |
+
+Podpis źródła jest pokazywany w rogu mapy i pochodzi z pola `baseCredit` w `js/data.js`.
+Zdjęcie Baltiki 2 pokazuje otwarty akwen – farma jest w budowie, więc turbiny i OSS
+pozostają warstwą wektorową na wodzie. Zdjęcia odświeżasz tą samą komendą:
 
 ```bash
 python3 tools/fetch_satellite.py            # oba obiekty
@@ -137,16 +142,23 @@ Kadr jest liczony z punktu środkowego obiektu (`SITES` w skrypcie: Bełchatów
 do potwierdzenia z dokumentacją obiektu) i obejmuje dokładnie 10 × 6,2 km,
 czyli ten sam prostokąt co mapa.
 
-**Ważne po wstawieniu prawdziwego zdjęcia:** plan wektorowy w `js/data.js` jest
-schematem, a nie odrysem konkretnego zakładu. Żeby warstwa taktyczna zgadzała się
-z podkładem, trzeba przesunąć bryły, ogrodzenie, aktywa krytyczne i sensory na
-rzeczywiste obiekty widoczne na zdjęciu (sekcje `geo` i `sensors`) oraz podmienić
-`baseCredit` na podpis źródła – jest pokazywany w rogu mapy. Dla Baltiki 2 zdjęcie
-pokaże otwarty akwen, bo farma jest w budowie; turbiny i OSS pozostają warstwą
-wektorową na wodzie.
+Skrypt próbuje też GUGiK jako pierwsze źródło dla obiektów lądowych (ortofotomapa
+25 cm jest ostrzejsza), ale jego WMS bywa niedostępny: odpowiada poprawnie tylko na
+`VERSION=1.1.1` z parametrem `SRS` i przy większych kadrach potrafi zwrócić pustą
+ramkę. Jeśli się uda, podmień `baseCredit` na „ortofotomapa: GUGiK / geoportal.gov.pl
+(dane otwarte)”.
 
-Podkłady zastępcze można wygenerować ponownie:
-`python3 tools/make_satellite_placeholder.py` (pillow, numpy, node).
+**Plan wektorowy Bełchatowa jest odrysowany z tego zdjęcia** – chłodnie kominowe,
+kotłownia, maszynownia, blok 858 MW, absorbery IOS, nawęglanie i granica terenu leżą
+na rzeczywistych obiektach, a sensory stoją na realnych budynkach i perymetrze.
+**Pozycje aktywów krytycznych (rozdzielnia 400 kV) zostały odczytane ze zdjęcia –
+w miejscu zbiegu korytarzy linii najwyższych napięć – i przed prezentacją u klienta
+wymagają potwierdzenia planem obiektu.** Współrzędne poprawia się w `js/data.js`
+(sekcje `geo` i `sensors`); ślady scenariuszy celują w te same punkty
+(`incidents[].tracks` i `events`).
+
+Gdyby trzeba było pracować bez dostępu do sieci, `python3 tools/make_satellite_placeholder.py`
+generuje podkład zastępczy ze znakiem wodnym „PODKŁAD ZASTĘPCZY” (pillow, numpy, node).
 
 ## Jak to zmieniać
 
