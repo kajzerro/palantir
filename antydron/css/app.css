@@ -407,7 +407,8 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
 
 /* morze / farma wiatrowa */
 #air-svg .wtg circle.mast { fill: #15222e; stroke: #7fa6bd; stroke-width: .7; }
-#air-svg .wtg .blade { stroke: #9dc2d6; stroke-width: .8; transform-box: fill-box; transform-origin: center; animation: spin 7s linear infinite; }
+#air-svg .wtg .blade { stroke: rgba(157,194,214,.62); stroke-width: .7; }
+#air-svg .wtg.hot .blade { stroke: var(--alert); stroke-width: .9; }
 #air-svg .wtg .id { font-family: var(--mono); font-size: 6.5px; fill: rgba(150,185,210,.6); }
 #air-svg .wtg.hot circle.mast { stroke: var(--alert); }
 #air-svg .cable { stroke: rgba(124,247,208,.22); stroke-width: .7; stroke-dasharray: 4 3; fill: none; }

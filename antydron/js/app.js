@@ -291,7 +291,8 @@
           const a = (i * 120) * Math.PI / 180;
           svgEl("line", { x1: o.cx, y1: o.cy, x2: o.cx + o.r * 2.1 * Math.cos(a), y2: o.cy + o.r * 2.1 * Math.sin(a) }, bl);
         }
-        svgEl("animateTransform", { attributeName: "transform", type: "rotate", from: `0 ${o.cx} ${o.cy}`, to: `360 ${o.cx} ${o.cy}`, dur: (7 + (o.cx % 5)) + "s", repeatCount: "indefinite" }, bl);
+        const spin = site().wtgSpin || 0;
+        if (spin) svgEl("animateTransform", { attributeName: "transform", type: "rotate", from: `0 ${o.cx} ${o.cy}`, to: `360 ${o.cx} ${o.cy}`, dur: (spin + (o.cx % 7)) + "s", repeatCount: "indefinite" }, bl);
         text(w, o.cx, o.cy - o.r - 3, o.id, "id");
         break;
       }
@@ -1013,9 +1014,12 @@
     /* obraz sytuacyjny: ślady, podświetlenia, kamera, widmo RF */
     startTracks(inc);
     setSensorState(inc.sensor, "hot");
-    (inc.highlight || []).forEach((id) => els.svg.querySelector(`.vessel[data-id="${id}"]`)?.classList.add("dark"));
+    (inc.highlight || []).forEach((id) => {
+      els.svg.querySelector(`.vessel[data-id="${id}"]`)?.classList.add("dark");
+      els.svg.querySelector(`.wtg[data-id="${id}"]`)?.classList.add("hot");
+    });
     setPanelView("map");
-    fitTo(site().center[0], site().center[1], 760);
+    frameIncident(inc);
     specMode = /BRAK/.test(inc.target.link) ? "none" : /szyfrowane/.test(inc.target.link) ? "enc" : /zakłóc/.test(inc.target.link) ? "wide" : "rc";
     document.body.classList.remove("flash"); void document.body.offsetWidth;
     if (!inc.noAlarm) { document.body.classList.add("flash"); beep(inc.severity); }
@@ -1041,6 +1045,22 @@
       options: (inc.options || []).map((o) => ({ label: o.label, cls: o.cls, action: () => runAction(o.action, rec, o) })),
       multi: inc.multi !== false,
     });
+  }
+
+  /** Kadruje mapę tak, by w widoku były: aktywo krytyczne, punkty wejścia śladów i rejon ich działania. */
+  function frameIncident(inc) {
+    const pts = [site().center];
+    (inc.tracks || []).forEach((t) => {
+      const f = t.wps[0], l = t.wps[t.wps.length - 1];
+      pts.push([f[1], f[2]], [l[1], l[2]]);
+      if (t.orbit) pts.push([t.orbit.cx, t.orbit.cy]);
+    });
+    if (inc.operator) pts.push([inc.operator.x, inc.operator.y]);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const ar = view.w / view.h;
+    const w = clamp(Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...ys) - Math.min(...ys)) * ar) * 1.45, 700, 1120);
+    fitTo(cx, cy, w);
   }
 
   /* ---------- akcje operatora ---------- */

@@ -39,7 +39,9 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 | **Prawy górny – trzy widoki** | **SYTUACJA**: obraz powietrzny – plan obiektu, strefy (zakazana / ostrzegawcza / detekcji), strefa EP R, pokrycia sensorów z obracającym się snopem radaru, ślady BSP z torem przebytym i **przewidywaną trasą**, wysokość pokazana linią pionową do cienia na ziemi. **PROFIL PIONOWY**: wysokość śladu względem odległości od aktywa krytycznego, z pułapem 120 m AGL i sylwetką obiektu. **INTELIGENCJA**: statystyki 30/90 dni, rozkład dobowy, powtarzalne podmioty, ocena analityczna AI i rekomendacje. |
 | **Prawy dolny – tor EO/IR + fuzja** | Obraz z głowicy z ramkami detekcji, obok: dane śladu (model, Remote ID, masa, ładunek, łącze, wysokość, prędkość, kurs, odległość od aktywa), **wkład każdego sensora w zbudowanie śladu**, widmo RF 2,4/5,8 GHz, klasyfikacja AI i dziennik zdarzeń. |
 
-Kółko myszy przybliża mapę, przeciąganie przesuwa, `⟲` wraca do widoku obiektu.
+Po uruchomieniu scenariusza mapa sama kadruje się na zdarzeniu (aktywo krytyczne,
+punkty wejścia śladów i rejon ich działania). Kółko myszy przybliża, przeciąganie
+przesuwa, `⟲` wraca do widoku całego obiektu.
 Kliknięcie sensora przełącza na niego podgląd; sensory bez kanału wizyjnego (radar, RF,
 AIS, ADS-B) pokazują swoje dane zamiast obrazu.
 
@@ -119,6 +121,10 @@ Wszystko, co widać w demo, jest w `js/data.js`:
 * `intel`, `intelCards` – warstwa inteligencji: statystyki, rozkłady, profile
   powtarzalnych podmiotów, ocena analityczna i rekomendacje.
 * `roe` – stan środków aktywnych przed i po udzieleniu zgody.
+* `sites.baltica.wtgSpin` – sekundy na obrót wirników turbin na mapie
+  (`0` = turbiny nieruchome, spokojniejszy obraz taktyczny na prezentacji).
+  Turbina, której dotyczy scenariusz, podświetla się na czerwono (pole
+  `highlight` w zdarzeniu – działa też dla jednostek pływających).
 
 Akcje przycisków decyzji (`options[].action`) obsługuje `js/app.js`:
 `lock` (autotracking EO/IR), `locate` (triangulacja RF/DF), `patrol`, `notify`,
