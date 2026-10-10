@@ -6,6 +6,14 @@ alarmuje operatora ochrony i prowadzi go przez obowiązkową procedurę.
 
 Bez kroku budowania, bez zależności – czysty HTML / CSS / JS.
 
+## Podprojekty
+
+| Katalog | Demo |
+|---|---|
+| (katalog główny) | **SENTINEL-CI / Spektre** – analiza wizyjna CCTV dla kopalni (opis poniżej). |
+| [`antydron/`](antydron/) | **SPEKTRE AIR** – centrum zarządzania systemem antydronowym (C-UAS) dla PGE i PGE Offshore: fuzja sensorów, klasyfikacja AI, procedury i warstwa inteligencji. Dwa obiekty: Elektrownia Bełchatów i morska farma wiatrowa Baltica 2. Scenariusze prezentacji: [`antydron/SCENARIUSZE.md`](antydron/SCENARIUSZE.md). |
+
+
 ## Uruchomienie
 
 Najprościej: **dwuklik na `start.bat`** (Windows) albo `./start.sh` (macOS / Linux).

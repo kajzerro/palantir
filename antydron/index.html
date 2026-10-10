@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPEKTRE AIR · Centrum zarządzania systemem antydronowym · PGE</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===================== PASEK GÓRNY ===================== -->
+    <header id="topbar">
+      <div class="site-sel" id="site-sel"></div>
+      <div class="site">
+        <span class="label">OBIEKT</span>
+        <span class="value" id="site-name">—</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span class="label">SENSORY</span><span class="value" id="kpi-sensors">0/0</span></div>
+        <div class="kpi"><span class="label">ŚLADY W STREFIE</span><span class="value" id="kpi-tracks">0</span></div>
+        <div class="kpi alert"><span class="label">ALARMY</span><span class="value" id="kpi-alerts">0</span></div>
+        <div class="kpi threat" id="kpi-threat-box"><span class="label">POZIOM ZAGROŻENIA</span><span class="value" id="kpi-threat">ZIELONY</span></div>
+        <div class="roe" id="roe-top"><span class="label">ŚRODKI AKTYWNE</span><span class="value" id="roe-state">ZABLOKOWANE</span></div>
+      </div>
+      <div class="clock">
+        <span id="clock-date">—</span>
+        <span id="clock-time">—</span>
+      </div>
+    </header>
+
+    <!-- ===================== LEWY PANEL: ASYSTENT OPERATORA ===================== -->
+    <section id="terminal" class="panel">
+      <div class="panel-head">
+        <span class="panel-title">ASYSTENT OPERATORA C-UAS</span>
+        <span class="panel-meta">
+          <span class="seg" id="event-ctl"></span>
+          <button class="btn tiny" id="btn-auto" title="Scenariusze odtwarzają się same">AUTO</button>
+        </span>
+      </div>
+      <div id="term-log" class="term-log" aria-live="polite"></div>
+      <div class="roe-box" id="roe-box"></div>
+    </section>
+
+    <!-- ===================== PRAWY GÓRNY: OBRAZ SYTUACYJNY ===================== -->
+    <section id="twin" class="panel">
+      <div class="panel-head">
+        <span class="panel-title">
+          <span class="tabs" id="view-ctl">
+            <button type="button" class="tab active" data-view="map">SYTUACJA</button>
+            <button type="button" class="tab" data-view="prof">PROFIL PIONOWY</button>
+            <button type="button" class="tab" data-view="intel">INTELIGENCJA</button>
+          </span>
+        </span>
+        <span class="panel-meta">
+          <span class="legend"><i class="dot alert"></i>wroga</span>
+          <span class="legend"><i class="dot attn"></i>nieznana</span>
+          <span class="legend"><i class="dot ok"></i>własna / autoryzowana</span>
+          <span class="zoom-ctl"><button class="btn tiny" id="btn-zout" title="Oddal">−</button><button class="btn tiny" id="btn-zin" title="Przybliż">+</button><button class="btn tiny" id="btn-zreset" title="Cały obiekt">⟲</button></span>
+        </span>
+      </div>
+      <div class="twin-views">
+        <div class="view on twin-svg-wrap" id="view-map">
+          <svg id="air-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Obraz sytuacyjny – obiekt, sensory, strefy i ślady powietrzne">
+            <defs>
+              <radialGradient id="sweepgrad" cx="0" cy="0" r="1">
+                <stop offset="0%" stop-color="rgba(79,209,255,0.30)"/>
+                <stop offset="70%" stop-color="rgba(79,209,255,0.06)"/>
+                <stop offset="100%" stop-color="rgba(79,209,255,0)"/>
+              </radialGradient>
+              <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <g id="scene"></g>
+          </svg>
+          <div id="twin-tooltip" class="tooltip" hidden></div>
+        </div>
+        <div class="view prof-wrap" id="view-prof">
+          <svg id="prof-svg" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Profil pionowy – wysokość śladów względem obiektu"></svg>
+        </div>
+        <div class="view intel-wrap" id="view-intel"></div>
+      </div>
+    </section>
+
+    <!-- ===================== PRAWY DOLNY: EO/IR + FUZJA ===================== -->
+    <section id="feed" class="panel">
+      <div class="panel-head">
+        <span class="panel-title"><span id="feed-title-prefix">TOR OPTO-ELEKTRONICZNY · </span><span id="feed-cam-id">—</span></span>
+        <span class="panel-meta">
+          <span class="rec"><i></i>REC</span>
+          <span class="pill" id="feed-status">BEZCZYNNY</span>
+          <button class="btn tiny" id="btn-fullscreen" title="Pełny ekran">⛶</button>
+        </span>
+      </div>
+      <div class="feed-body">
+        <div class="feed-main idle">
+          <video id="feed-video" muted autoplay loop playsinline></video>
+          <canvas id="feed-noise"></canvas>
+          <div id="feed-overlay" class="overlay"></div>
+          <div class="feed-osd top-left"><span id="osd-cam">NIE WYBRANO SENSORA</span><span id="osd-zoom" class="osd-zoom" hidden>ZBLIŻENIE · CEL</span></div>
+          <div class="feed-osd top-right"><span id="osd-time">--:--:--</span></div>
+          <div class="feed-osd bottom-left"><span id="osd-zone">kliknij sensor na obrazie sytuacyjnym</span></div>
+          <div class="feed-osd bottom-right"><span id="osd-trk">—</span></div>
+          <div id="feed-history" class="feed-history" hidden>
+            <div class="hist-caption" id="hist-caption"></div>
+            <div class="hist-strip" id="hist-strip"></div>
+          </div>
+          <div id="feed-placeholder" class="feed-placeholder">
+            <div class="nosig">BRAK SYGNAŁU</div>
+            <div class="nosig-sub" id="nosig-sub">wybierz sensor</div>
+          </div>
+        </div>
+        <aside class="feed-side">
+          <div class="side-block">
+            <div class="side-title">ŚLAD / CEL</div>
+            <dl class="trk-kv" id="trk-meta"><dt>ślad</dt><dd>—</dd></dl>
+          </div>
+          <div class="side-block">
+            <div class="side-title">FUZJA SENSORÓW</div>
+            <ul id="fuse-list" class="fuse-list"><li class="off"><span class="note">brak aktywnego celu</span></li></ul>
+          </div>
+          <div class="side-block">
+            <div class="side-title">WIDMO RF · 2,4 / 5,8 GHz</div>
+            <canvas id="rf-spec"></canvas>
+            <div class="spec-x"><span>2,400</span><span>5,800 GHz</span></div>
+          </div>
+          <div class="side-block">
+            <div class="side-title">KLASYFIKACJA AI</div>
+            <ul id="feed-detections" class="det-list"><li class="muted">—</li></ul>
+          </div>
+          <div class="side-block grow">
+            <div class="side-title">DZIENNIK ZDARZEŃ</div>
+            <ul id="feed-events" class="ev-list"></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-text" id="modal-text"></div>
+      <button type="button" class="opt good modal-ok" id="modal-ok">OK</button>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
