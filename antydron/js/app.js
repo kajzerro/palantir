@@ -297,7 +297,10 @@
       case "line": svgEl("polyline", { class: o.cls, points: ptsStr(o.pts), fill: "none" }, g); break;
       case "asset": {
         svgEl("rect", { class: "asset", x: o.x, y: o.y, width: o.w, height: o.h, rx: 2 }, g);
-        if (o.label) text(g, o.x + o.w / 2, o.above ? o.y - 6 : o.y + o.h + 12, o.label, "asset-lbl");
+        if (o.label) {
+          if (o.side === "left") text(g, o.x - 5, o.y + o.h / 2 + 3, o.label, "asset-lbl", "end");
+          else text(g, o.x + o.w / 2, o.above ? o.y - 6 : o.y + o.h + 12, o.label, "asset-lbl");
+        }
         break;
       }
       case "text": text(g, o.x, o.y, o.label, "obj-lbl", o.anchor || "start"); break;

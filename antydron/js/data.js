@@ -41,8 +41,8 @@ window.AIR_DATA = (function () {
        leżą na rzeczywistych obiektach. Pozycje aktywów krytycznych i sensorów są
        odczytane ze zdjęcia i przed prezentacją u klienta wymagają potwierdzenia
        planem obiektu. 1 jednostka = 10 m. */
-    center: [500, 270],
-    homeW: 700,
+    center: [400, 280],   /* środek stref = chronione aktywo: rozdzielnie 400 kV */
+    homeW: 760,
     ceiling: 120,
     airspaceNote: "Strefa EP R zgłoszona w PAŻP · NOTAM A1143/25 · pułap lotów BSP 120 m AGL",
     base: "assets/sat-belchatow.jpg",
@@ -82,14 +82,19 @@ window.AIR_DATA = (function () {
       { t: "circle", cx: 522, cy: 330, r: 3.5, cls: "tower" },
       { t: "circle", cx: 522, cy: 340, r: 3.5, cls: "tower" },
       { t: "text", x: 530, y: 352, label: "IOS · ABSORBERY", anchor: "start" },
-      /* rozdzielnia 400 kV – w miejscu zbiegu korytarzy linii najwyższych napięć */
-      { t: "rect", x: 526, y: 228, w: 34, h: 22, cls: "sw-yard" },
-      { t: "line", cls: "sw-bay", pts: [[530, 233], [556, 233]] },
-      { t: "line", cls: "sw-bay", pts: [[530, 239], [556, 239]] },
-      { t: "line", cls: "sw-bay", pts: [[530, 245], [556, 245]] },
-      /* korytarze linii 400 kV wychodzące na NE i E */
-      { t: "line", cls: "rail", pts: [[560, 236], [640, 196], [720, 150]] },
-      { t: "line", cls: "rail", pts: [[560, 242], [660, 236], [760, 220]] },
+      /* rozdzielnie 400 kV – pozycje z OpenStreetMap (power=substation, voltage=400000),
+         potwierdzone na zdjęciu: pole szyn widać po zachodniej stronie kotłowni.
+         way/681264796 = rozdzielnia przesyłowa, way/681264785 = rozdzielnia blokowa
+         (transformatory bloków), way/681264996 = pole przesyłowe wschodnie. */
+      { t: "rect", x: 389, y: 273, w: 12, h: 11, cls: "sw-yard" },
+      { t: "line", cls: "sw-bay", pts: [[390, 276], [400, 276]] },
+      { t: "line", cls: "sw-bay", pts: [[390, 279], [400, 279]] },
+      { t: "line", cls: "sw-bay", pts: [[390, 282], [400, 282]] },
+      { t: "rect", x: 406, y: 277, w: 4, h: 6, cls: "bld hot" },
+      { t: "rect", x: 431, y: 277, w: 6, h: 4, cls: "sw-yard" },
+      /* linie najwyższych napięć: na północ do SE Rogowiec (PSE, 5,6 km N, poza kadrem) i na wschód */
+      { t: "line", cls: "rail", pts: [[398, 272], [432, 196], [470, 96], [487, 0]] },
+      { t: "line", cls: "rail", pts: [[401, 278], [520, 252], [640, 212], [760, 170]] },
       /* zaplecze zachodnie i nawęglanie */
       { t: "rect", x: 262, y: 236, w: 110, h: 24, cls: "bld", label: "ZAPLECZE TECHNICZNE" },
       { t: "rect", x: 262, y: 276, w: 120, h: 20, cls: "yard", label: "NAWĘGLANIE" },
@@ -101,7 +106,7 @@ window.AIR_DATA = (function () {
       { t: "line", cls: "road", pts: [[252, 300], [180, 320], [60, 352]] },
       { t: "line", cls: "road", pts: [[470, 364], [482, 420], [520, 470]] },
       /* aktywa krytyczne */
-      { t: "asset", x: 520, y: 222, w: 46, h: 34, above: true, label: "AKTYWO KRYT. · ROZDZIELNIA 400 kV" },
+      { t: "asset", x: 385, y: 269, w: 30, h: 20, side: "left", label: "AKTYWO KRYTYCZNE · ROZDZIELNIA 400 kV + TR BLOKOWE" },
       { t: "asset", x: 446, y: 282, w: 66, h: 34, label: "" },
     ],
     sensors: [
@@ -110,7 +115,7 @@ window.AIR_DATA = (function () {
       { id: "RF-1",   kind: "rf",    name: "Czujnik RF/DF · zachód",        zone: "Perymetr W",               x: 254, y: 258, range: 620, type: "RF 70 MHz–6 GHz · DF · Remote ID" },
       { id: "RF-2",   kind: "rf",    name: "Czujnik RF/DF · wschód",        zone: "Perymetr E",               x: 566, y: 262, range: 620, type: "RF 70 MHz–6 GHz · DF · Remote ID" },
       { id: "RF-3",   kind: "rf",    name: "Czujnik RF/DF · południe",      zone: "Perymetr S",               x: 406, y: 360, range: 620, type: "RF 70 MHz–6 GHz · DF · Remote ID" },
-      { id: "EOIR-1", kind: "eoir",  name: "Głowica EO/IR · rozdzielnia",   zone: "Rozdzielnia 400 kV",       x: 524, y: 248, range: 220, dir: 250, fov: 16, type: "EO 4K 60× + IR 640 · autotracking", video: "videos/eoir-01.mp4" },
+      { id: "EOIR-1", kind: "eoir",  name: "Głowica EO/IR · rozdzielnia",   zone: "Rozdzielnia 400 kV",       x: 382, y: 290, range: 220, dir: 318, fov: 16, type: "EO 4K 60× + IR 640 · autotracking", video: "videos/eoir-01.mp4" },
       { id: "EOIR-2", kind: "eoir",  name: "Głowica EO/IR · maszynownia",   zone: "Blok 858 MW · dach",       x: 462, y: 296, range: 220, dir: 20,  fov: 16, type: "EO 4K 60× + IR 640 · autotracking", video: "videos/eoir-02.mp4" },
       { id: "EOIR-3", kind: "eoir",  name: "Głowica EO/IR · chłodnie",      zone: "Chłodnie kominowe",        x: 426, y: 274, range: 220, dir: 320, fov: 16, type: "EO 4K 60× + IR 640 · autotracking", video: "videos/eoir-03.mp4" },
       { id: "AKU-1",  kind: "aku",   name: "Macierz akustyczna",            zone: "Maszynownia · dach",       x: 492, y: 282, range: 90,  type: "8-mikrofonowa macierz · klasyfikacja wirników" },
@@ -121,7 +126,7 @@ window.AIR_DATA = (function () {
     ],
     patrols: [
       { id: "SUFO-1", names: ["Adam Nowak", "Tomasz Kowalczyk"], kind: "pojazd ochrony", x: 268, y: 304, speed: 8 },
-      { id: "SUFO-2", names: ["Piotr Zieliński"],                kind: "pojazd ochrony", x: 548, y: 286, speed: 8 },
+      { id: "SUFO-2", names: ["Piotr Zieliński"],                kind: "pojazd ochrony", x: 372, y: 300, speed: 8 },
       { id: "SUFO-3", names: ["Marek Wójcik", "Jan Lis"],        kind: "patrol pieszy",  x: 452, y: 232, speed: 1.4 },
       { id: "POL-1",  names: ["KPP Bełchatów · radiowóz"],       kind: "Policja",        x: 60,  y: 352, speed: 14, external: true },
     ],
@@ -319,7 +324,7 @@ window.AIR_DATA = (function () {
         trk: "TRK-1141", cls: "hostile", kindLabel: "BSP wielowirnikowy (klasa C2)",
         model: "DJI Mavic 3T", serial: "1581F5BND24C0098", rid: "ODCZYTANY",
         mtow: "920 g", payload: "kamera EO 4/3 + termowizja 640×512", link: "OcuSync 2.4 GHz (aktywne)",
-        home: "pobocze drogi dojazdowej, 2,8 km SW", pilotNote: "Remote ID podaje pozycję startu i pozycję operatora",
+        home: "pobocze drogi dojazdowej, 2,2 km W", pilotNote: "Remote ID podaje pozycję startu i pozycję operatora",
       },
       fusion: [
         { s: "RAD-1",  label: "Radar 3D RAD-1",        v: 0.94, note: "ślad 3D, RCS 0,012 m², prędkość 11 m/s, wysokość 95 m" },
@@ -336,11 +341,11 @@ window.AIR_DATA = (function () {
       tracks: [
         {
           id: "TRK-1141", cls: "hostile", label: "TRK-1141 · DJI MAVIC 3T",
-          wps: [[0, 300, 332, 55], [30, 352, 322, 78], [64, 412, 302, 92], [98, 472, 276, 96], [130, 520, 258, 95]],
-          orbit: { cx: 543, cy: 239, r: 30, period: 104, alt: 95 },
+          wps: [[0, 150, 330, 55], [34, 212, 324, 78], [70, 272, 312, 92], [104, 324, 302, 96], [136, 368, 292, 95]],
+          orbit: { cx: 395, cy: 279, r: 30, period: 118, alt: 95 },
         },
       ],
-      operator: { x: 286, y: 344, label: "OPERATOR BSP · elipsa 35 m", df: ["RF-1", "RF-3", "RF-2"], note: "Triangulacja RF/DF trzech czujników · zgodna z pozycją operatora z Remote ID (2,8 km SW od rozdzielni)" },
+      operator: { x: 176, y: 322, label: "OPERATOR BSP · elipsa 35 m", df: ["RF-1", "RF-3", "RF-2"], note: "Triangulacja RF/DF trzech czujników · zgodna z pozycją operatora z Remote ID (2,2 km W od rozdzielni)" },
       procedure: "PROC-UAV-01",
       aiNotes: "Profil lotu odpowiada rozpoznaniu, nie przelotowi: obiekt zwolnił nad rozdzielnią, wykonał dwa zawisy i krąży po okręgu o promieniu ok. 440 m, utrzymując aktywo w kadrze. Łącze RC jest aktywne, więc operator jest w zasięgu – triangulacja wskazuje pobocze drogi dojazdowej. To trzecie takie wejście z tym samym numerem seryjnym w ciągu 30 dni (patrz: Inteligencja).",
       autoNote: "Pakiet dowodowy nagrywa się od chwili pierwszej detekcji: ślad radarowy, nagranie EO/IR i zrzut Remote ID.",
@@ -401,10 +406,10 @@ window.AIR_DATA = (function () {
       tracks: [
         {
           id: "TRK-1207", cls: "hostile", label: "TRK-1207 · BSP CIĘŻKI",
-          wps: [[0, 700, 404, 40], [40, 652, 360, 64], [78, 612, 320, 60], [112, 580, 286, 50], [142, 556, 256, 44], [174, 546, 244, 42], [206, 566, 278, 60], [250, 620, 334, 74], [298, 700, 400, 78]],
+          wps: [[0, 700, 404, 40], [40, 640, 362, 64], [78, 580, 324, 60], [112, 520, 300, 50], [142, 460, 288, 44], [174, 412, 281, 42], [192, 408, 280, 42], [214, 450, 296, 60], [258, 560, 340, 74], [306, 690, 400, 78]],
         },
       ],
-      events: [{ t: 152, kind: "drop", x: 548, y: 246, label: "PRZEDMIOT ZRZUCONY · pole rozdzielni 400 kV" }],
+      events: [{ t: 194, kind: "drop", x: 409, y: 281, label: "PRZEDMIOT ZRZUCONY · przy transformatorze blokowym" }],
       procedure: "PROC-UAV-02",
       aiNotes: "To nie jest rozpoznanie. Obiekt leci najkrótszą trasą do transformatorów blokowych, poniżej linii dachów – tak, by pozostać w cieniu radarowym hal. Brak Remote ID i szyfrowane łącze 1,2 GHz oznaczają, że przejęcie protokołu producenta nie zadziała. Zakłócanie łącza przy ładunku nad aktywem jest ryzykowne: niekontrolowany upadek nastąpiłby nad transformatorami. Rekomendacja: natychmiastowa ewakuacja rejonu, zgoda na środki aktywne, przechwycenie poza obrysem aktywa.",
       autoNote: "Zapisuję tor lotu, moment zrzutu i stopklatkę przedmiotu z czasem UTC.",
@@ -515,15 +520,15 @@ window.AIR_DATA = (function () {
       ],
       tracks: [
         { id: "TRK-1401", cls: "hostile", label: "TRK-1401 · CEL 3 · PRIORYTET",
-          wps: [[0, 900, 250, 120], [40, 800, 246, 115], [76, 700, 242, 108], [104, 620, 240, 92], [122, 576, 240, 76]], orbit: { cx: 543, cy: 239, r: 34, period: 60, alt: 72 } },
+          wps: [[0, 60, 268, 120], [40, 160, 272, 115], [76, 250, 274, 108], [104, 330, 276, 92], [122, 370, 278, 76]], orbit: { cx: 395, cy: 279, r: 26, period: 50, alt: 72 } },
         { id: "TRK-1402", cls: "hostile", label: "TRK-1402 · CEL 1",
           wps: [[4, 500, 40, 120], [38, 494, 120, 114], [74, 488, 196, 104], [106, 484, 252, 88], [126, 480, 276, 74]], orbit: { cx: 470, cy: 290, r: 18, period: 40, alt: 70 } },
         { id: "TRK-1403", cls: "hostile", label: "TRK-1403 · CEL 2",
-          wps: [[8, 240, 140, 120], [42, 300, 180, 114], [78, 364, 220, 104], [112, 420, 260, 88], [132, 444, 276, 76]], orbit: { cx: 470, cy: 290, r: 28, period: 48, alt: 80 } },
+          wps: [[8, 240, 140, 120], [42, 300, 180, 114], [78, 352, 214, 104], [112, 384, 250, 88], [132, 392, 266, 76]], orbit: { cx: 395, cy: 279, r: 14, period: 34, alt: 80 } },
         { id: "TRK-1404", cls: "hostile", label: "TRK-1404 · CEL 4",
           wps: [[12, 520, 560, 120], [46, 512, 480, 112], [82, 508, 408, 100], [112, 506, 346, 86], [134, 512, 312, 74]], orbit: { cx: 470, cy: 290, r: 40, period: 60, alt: 74 } },
         { id: "TRK-1405", cls: "hostile", label: "TRK-1405 · CEL 5",
-          wps: [[16, 820, 470, 125], [50, 760, 420, 118], [86, 690, 368, 108], [118, 620, 316, 92], [140, 580, 278, 80]], orbit: { cx: 543, cy: 239, r: 52, period: 80, alt: 85 } },
+          wps: [[16, 820, 470, 125], [50, 760, 420, 118], [86, 690, 368, 108], [118, 600, 324, 92], [140, 540, 300, 80]], orbit: { cx: 470, cy: 292, r: 70, period: 100, alt: 85 } },
       ],
       procedure: "PROC-UAV-03",
       aiNotes: "Korelacja czasowa wejść wynosi 0,96 – pięć obiektów weszło w strefę w ciągu 20 s z czterech kierunków, co wyklucza przypadek. Brak emisji RC i Remote ID oznacza lot po zaprogramowanych punktach: zakłócanie łącza sterowania nie da efektu, natomiast zakłócanie GNSS może wprowadzić je w tryb awaryjny (zawis lub powrót po ostatnim kursie). Cele 3 i 4 zbiegają się na rozdzielni 400 kV, cele 1 i 2 na nastawni centralnej. Priorytet: cel 3 (najmniejsza odległość do aktywa, najszybsze zniżanie). Dron przechwytujący obsłuży jeden cel w jednym podejściu – potrzebna zgoda na środki aktywne i wsparcie służb.",

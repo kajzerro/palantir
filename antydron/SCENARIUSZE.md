@@ -51,6 +51,10 @@ Warstwa taktyczna jest ta sama.”
 
 **Kliknij:** przycisk **1**.
 
+**Kontekst dla siebie:** aktywem jest rozdzielnia 400 kV po zachodniej stronie
+kotłowni (pozycja z OpenStreetMap, potwierdzona na zdjęciu); stacja PSE Rogowiec
+leży 5,6 km dalej na północ, poza kadrem.
+
 **Mów, kiedy ślad wchodzi z zachodu:**
 „Radar złapał obiekt 2 km od rozdzielni. Czujniki RF odczytały Remote ID: to DJI
 Mavic 3T, mamy numer seryjny. W PansaUTM nie ma zgłoszonego lotu. Obiekt zwalnia

@@ -151,11 +151,25 @@ ramkę. Jeśli się uda, podmień `baseCredit` na „ortofotomapa: GUGiK / geopo
 **Plan wektorowy Bełchatowa jest odrysowany z tego zdjęcia** – chłodnie kominowe,
 kotłownia, maszynownia, blok 858 MW, absorbery IOS, nawęglanie i granica terenu leżą
 na rzeczywistych obiektach, a sensory stoją na realnych budynkach i perymetrze.
-**Pozycje aktywów krytycznych (rozdzielnia 400 kV) zostały odczytane ze zdjęcia –
-w miejscu zbiegu korytarzy linii najwyższych napięć – i przed prezentacją u klienta
-wymagają potwierdzenia planem obiektu.** Współrzędne poprawia się w `js/data.js`
-(sekcje `geo` i `sensors`); ślady scenariuszy celują w te same punkty
-(`incidents[].tracks` i `events`).
+
+**Rozdzielnie 400 kV** nie są zgadywane ze zdjęcia – ich pozycje pochodzą z
+OpenStreetMap (`power=substation`, `voltage=400000`) i zostały potwierdzone wizualnie
+na ortofoto (pole szyn po zachodniej stronie kotłowni):
+
+| Obiekt | OSM | Współrzędne | Plan (jednostki) |
+|---|---|---|---|
+| Rozdzielnia przesyłowa 400 kV | `way/681264796` | 51,26890 N · 19,31565 E | x 392–400, y 275–283 |
+| Rozdzielnia blokowa 400 kV (transformatory bloków) | `way/681264785` | 51,26879 N · 19,31738 E | x 406–410, y 277–283 |
+| Pole przesyłowe wschodnie | `way/681264996` | 51,26888 N · 19,32116 E | x 431–437, y 277–281 |
+
+Stacja PSE **Rogowiec 400/220 kV** (`way/293484891`, 51,31603 N · 19,32881 E) leży
+5,6 km na północ od zakładu, czyli **poza kadrem mapy** – demo pokazuje rozdzielnie
+na terenie elektrowni, a linie 400 kV wychodzące na północ prowadzą właśnie do niej.
+Dane o rozmieszczeniu: © współtwórcy OpenStreetMap (ODbL).
+
+Współrzędne poprawia się w `js/data.js` (sekcje `geo` i `sensors`); ślady scenariuszy
+celują w te same punkty (`incidents[].tracks` i `events`), więc po przesunięciu aktywa
+trzeba przesunąć także tor lotu i punkt zrzutu.
 
 Gdyby trzeba było pracować bez dostępu do sieci, `python3 tools/make_satellite_placeholder.py`
 generuje podkład zastępczy ze znakiem wodnym „PODKŁAD ZASTĘPCZY” (pillow, numpy, node).
