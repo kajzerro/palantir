@@ -48,6 +48,10 @@ window.AIR_DATA = (function () {
     ],
     nfz: { pts: [[380, 190], [640, 190], [660, 300], [620, 420], [400, 420], [360, 300]], label: "EP R 142 · ZAKAZ LOTÓW BSP" },
     homeW: 840,
+    /* podkład rastrowy pod widok SATELITA (ten sam kadr co mapa: 1000 × 620 jednostek).
+       Podmieniasz go skryptem tools/fetch_satellite.py – wtedy zmień też `baseCredit`. */
+    base: "assets/sat-belchatow.jpg",
+    baseCredit: "PODKŁAD ZASTĘPCZY (wygenerowany) · wstaw ortofotomapę GUGiK: tools/fetch_satellite.py",
     geo: [
       /* tło terenu */
       { t: "rect", x: -60, y: -60, w: 1120, h: 740, cls: "land" },
@@ -153,6 +157,8 @@ window.AIR_DATA = (function () {
     ],
     nfz: { pts: [[240, 90], [800, 90], [830, 300], [760, 500], [280, 500], [210, 300]], label: "STREFA OGRANICZEŃ · AKWEN FARMY" },
     homeW: 900,
+    base: "assets/sat-baltica.jpg",
+    baseCredit: "PODKŁAD ZASTĘPCZY (wygenerowany) · wstaw zdjęcie akwenu: tools/fetch_satellite.py",
     geo: [
       { t: "rect", x: -40, y: -40, w: 1080, h: 700, cls: "sea" },
       ...wtgs,

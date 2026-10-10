@@ -18,8 +18,10 @@ Czasy są realne, mierzone na pełnym przebiegu.
 1. `./start.sh` (albo `start.bat`), okno przeglądarki na pełnym ekranie, F11.
 2. Sprawdź dźwięk – alarmy mają sygnał, kliknij raz w stronę, żeby przeglądarka go dopuściła.
 3. Podmień nagrania w `videos/` na prawdziwe, jeśli są dostępne (lista w README).
-4. Zacznij przy obiekcie **Bełchatów**, panel po prawej w widoku **SYTUACJA**.
-5. Nie włączaj AUTO podczas rozmowy – AUTO jest do pokazu w tle, na stoisku.
+4. Pobierz prawdziwy podkład satelitarny: `python3 tools/fetch_satellite.py`
+   (bez tego widok SATELITA pokazuje oznaczony podkład zastępczy).
+5. Zacznij przy obiekcie **Bełchatów**, panel po prawej w widoku **SYTUACJA**.
+6. Nie włączaj AUTO podczas rozmowy – AUTO jest do pokazu w tle, na stoisku.
 
 **Zasada narracji:** najpierw pokazujesz, że system **nie zawraca głowy operatorowi**
 (scenariusz 3), potem że **widzi to, czego człowiek nie zobaczy** (1, 5),
@@ -38,6 +40,10 @@ zwróćcie uwagę, że są **zablokowane**. Do tego wrócimy.”
 
 **Pokaż:** przełącznik obiektu w lewym górnym rogu – ten sam system obsługuje
 elektrownię konwencjonalną i morską farmę wiatrową. Potem wróć na Bełchatów.
+
+Przełącz też podkład **WEKTOR → SATELITA** (nagłówek panelu) i z powrotem:
+„schemat jest do pracy operatora, zdjęcie do rozmowy z kimś, kto zna teren.
+Warstwa taktyczna jest ta sama.”
 
 ---
 

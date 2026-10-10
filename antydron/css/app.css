@@ -559,3 +559,29 @@ body.flash #app { animation: flash .6s ease-in-out 3; }
 #air-svg .obj-lbl { font-size: 9px; }
 #air-svg .land { fill: #0d1310; stroke: none; }
 .site .value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; display: block; }
+
+/* ---------- podkład rastrowy (widok SATELITA) ---------- */
+#air-svg .base-layer { display: none; }
+#air-svg.base-sat .base-layer { display: block; }
+#air-svg .base-layer image { filter: saturate(.72) brightness(.70) contrast(1.06); }
+#air-svg .base-scrim { fill: rgba(6,12,18,.34); }
+/* na zdjęciu bryły i teren schodzą do roli obrysów – prawdziwe obiekty widać na podkładzie */
+#air-svg.base-sat .geo rect, #air-svg.base-sat .geo circle,
+#air-svg.base-sat .geo polygon, #air-svg.base-sat .geo polyline { opacity: .3; }
+#air-svg.base-sat .geo .land, #air-svg.base-sat .geo .sea { display: none; }
+#air-svg.base-sat .geo .asset, #air-svg.base-sat .geo .fence { opacity: .85; }
+#air-svg.base-sat .geo .wtg circle, #air-svg.base-sat .geo .wtg line,
+#air-svg.base-sat .geo .vessel polygon { opacity: .95; }
+#air-svg.base-sat .obj-lbl { fill: rgba(225,238,248,.9); }
+#air-svg.base-sat .grid-l { stroke: rgba(180,215,235,.05); }
+#air-svg.base-sat .ring { stroke: rgba(120,225,255,.5); }
+#air-svg.base-sat .ring-lbl, #air-svg.base-sat .bearing-lbl { fill: rgba(190,225,245,.85); }
+.base-ctl { margin-left: 6px; }
+.base-credit {
+  position: absolute; left: 10px; bottom: 8px; z-index: 3;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .06em;
+  color: rgba(220,235,245,.72); background: rgba(5,10,14,.62);
+  border: 1px solid rgba(120,160,185,.25); border-radius: 2px; padding: 2px 7px;
+  max-width: 70%; pointer-events: none;
+}
+.base-credit[hidden] { display: none; }

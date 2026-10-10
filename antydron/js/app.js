@@ -32,6 +32,7 @@
     audioCtx: null,
     seq: 0,
     view: "map",
+    base: "vec",
     tracks: [],
     scnT0: 0,
     roeArmed: false,
@@ -188,6 +189,7 @@
     clearFx();
     renderSiteButtons();
     renderScene();
+    setBase(state.base);
     resetView();
     renderIntel();
     renderProfile();
@@ -225,6 +227,22 @@
     const S = site();
     els.scene.innerHTML = "";
     const root = els.scene;
+
+    /* podkład rastrowy (widok SATELITA) – dokładnie na kadrze mapy */
+    if (S.base) {
+      const bl = svgEl("g", { class: "base-layer" }, root);
+      const im = svgEl("image", { x: 0, y: 0, width: 1000, height: 620, preserveAspectRatio: "none" }, bl);
+      im.setAttribute("href", S.base);
+      im.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", S.base);
+      /* przyciemnienie podkładu – warstwa taktyczna musi pozostać czytelna */
+      svgEl("rect", { class: "base-scrim", x: 0, y: 0, width: 1000, height: 620 }, bl);
+      im.addEventListener("error", () => {
+        bl.innerHTML = "";
+        svgEl("rect", { x: 0, y: 0, width: 1000, height: 620, fill: "#0d141b" }, bl);
+        text(bl, 500, 300, "BRAK PODKŁADU RASTROWEGO", "nfz-lbl");
+        text(bl, 500, 316, "uruchom: python3 tools/fetch_satellite.py", "ring-lbl");
+      });
+    }
 
     /* siatka */
     const g0 = svgEl("g", { class: "grid" }, root);
@@ -410,6 +428,20 @@
   $("#btn-zreset").addEventListener("click", () => resetView());
   window.addEventListener("resize", () => { syncAspect(); drawSpectrum(true); });
 
+  /* ---------- przełącznik podkładu: wektor / satelita ---------- */
+  $("#base-ctl").addEventListener("click", (e) => {
+    const b = e.target.closest(".lvl-btn"); if (!b) return;
+    setBase(b.dataset.base);
+  });
+  function setBase(mode) {
+    state.base = mode;
+    els.svg.classList.toggle("base-sat", mode === "sat");
+    $("#base-ctl").querySelectorAll(".lvl-btn").forEach((b) => b.classList.toggle("active", b.dataset.base === mode));
+    const c = $("#base-credit"), S = site();
+    c.hidden = mode !== "sat";
+    c.textContent = S.baseCredit || "";
+  }
+
   /* ---------- przełącznik widoków panelu ---------- */
   els.viewCtl.addEventListener("click", (e) => {
     const b = e.target.closest(".tab"); if (!b) return;
@@ -419,6 +451,8 @@
     state.view = v;
     els.viewCtl.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.view === v));
     ["map", "prof", "intel"].forEach((k) => $("#view-" + k).classList.toggle("on", k === v));
+    $("#base-ctl").hidden = v !== "map";
+    $("#base-credit").hidden = !(v === "map" && state.base === "sat");
     if (v === "map") syncAspect();
     if (v === "intel") renderIntel();
     if (v === "prof") renderProfile();
@@ -1444,6 +1478,7 @@ ${proc ? `Jeśli to potwierdzisz, poprowadzę Cię przez procedurę <span class=
     renderSiteButtons();
     renderEventButtons();
     renderScene();
+    setBase(state.base);
     resetView();
     renderProfile();
     renderIntel();

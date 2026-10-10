@@ -56,6 +56,10 @@
           <span class="legend"><i class="dot alert"></i>wroga</span>
           <span class="legend"><i class="dot attn"></i>nieznana</span>
           <span class="legend"><i class="dot ok"></i>własna / autoryzowana</span>
+          <span class="seg base-ctl" id="base-ctl">
+            <button type="button" class="lvl-btn active" data-base="vec">WEKTOR</button>
+            <button type="button" class="lvl-btn" data-base="sat">SATELITA</button>
+          </span>
           <span class="zoom-ctl"><button class="btn tiny" id="btn-zout" title="Oddal">−</button><button class="btn tiny" id="btn-zin" title="Przybliż">+</button><button class="btn tiny" id="btn-zreset" title="Cały obiekt">⟲</button></span>
         </span>
       </div>
@@ -73,6 +77,7 @@
             <g id="scene"></g>
           </svg>
           <div id="twin-tooltip" class="tooltip" hidden></div>
+          <div id="base-credit" class="base-credit" hidden></div>
         </div>
         <div class="view prof-wrap" id="view-prof">
           <svg id="prof-svg" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Profil pionowy – wysokość śladów względem obiektu"></svg>

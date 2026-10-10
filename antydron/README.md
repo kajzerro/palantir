@@ -39,6 +39,12 @@ Otwarcie `index.html` bezpośrednio z dysku też działa w Chrome/Edge.
 | **Prawy górny – trzy widoki** | **SYTUACJA**: obraz powietrzny – plan obiektu, strefy (zakazana / ostrzegawcza / detekcji), strefa EP R, pokrycia sensorów z obracającym się snopem radaru, ślady BSP z torem przebytym i **przewidywaną trasą**, wysokość pokazana linią pionową do cienia na ziemi. **PROFIL PIONOWY**: wysokość śladu względem odległości od aktywa krytycznego, z pułapem 120 m AGL i sylwetką obiektu. **INTELIGENCJA**: statystyki 30/90 dni, rozkład dobowy, powtarzalne podmioty, ocena analityczna AI i rekomendacje. |
 | **Prawy dolny – tor EO/IR + fuzja** | Obraz z głowicy z ramkami detekcji, obok: dane śladu (model, Remote ID, masa, ładunek, łącze, wysokość, prędkość, kurs, odległość od aktywa), **wkład każdego sensora w zbudowanie śladu**, widmo RF 2,4/5,8 GHz, klasyfikacja AI i dziennik zdarzeń. |
 
+Widok **SYTUACJA** ma dwa podkłady, przełączane w nagłówku panelu:
+**WEKTOR** (schemat obiektu, domyślny) i **SATELITA** (zdjęcie lotnicze / ortofotomapa
+w tym samym kadrze). Warstwa taktyczna – strefy, sensory, pola widzenia, ślady, patrole –
+jest ta sama w obu; na zdjęciu bryły planu schodzą do roli przezroczystych obrysów,
+bo prawdziwe obiekty widać na podkładzie.
+
 Po uruchomieniu scenariusza mapa sama kadruje się na zdarzeniu (aktywo krytyczne,
 punkty wejścia śladów i rejon ich działania). Kółko myszy przybliża, przeciąganie
 przesuwa, `⟲` wraca do widoku całego obiektu.
@@ -105,6 +111,43 @@ Zastępcze klipy można wygenerować ponownie:
 `python3 tools/make_placeholder_videos.py` (wymaga `pillow`, `numpy` i ffmpeg –
 systemowego albo `pip install imageio-ffmpeg`).
 
+## Podkład satelitarny
+
+W `assets/` leżą **podkłady zastępcze** (`sat-belchatow.jpg`, `sat-baltica.jpg`) –
+wygenerowane, z widocznym znakiem wodnym „PODKŁAD ZASTĘPCZY · NIE JEST ZDJĘCIEM
+SATELITARNYM”, żeby nikt nie wziął ich za zdjęcie. Dzięki nim widok SATELITA działa
+od razu, a obraz pokrywa się co do metra z planem wektorowym.
+
+Prawdziwe zdjęcia pobierasz jedną komendą:
+
+```bash
+python3 tools/fetch_satellite.py            # oba obiekty
+python3 tools/fetch_satellite.py belchatow  # jeden
+```
+
+Skrypt próbuje po kolei: **GUGiK · ortofotomapa Polski** (dane otwarte, najlepsza
+rozdzielczość dla obiektów lądowych), **Esri World Imagery**, **Sentinel-2 cloudless**
+(EOX, CC BY-SA 4.0 – dobre dla obszarów morskich). Wymaga dostępu sieciowego do
+`mapy.geoportal.gov.pl`, `services.arcgisonline.com` i `tiles.maps.eox.at`.
+Zdjęcia z Google Maps nie są używane celowo – ich pobieranie i redystrybucja
+łamią warunki licencji.
+
+Kadr jest liczony z punktu środkowego obiektu (`SITES` w skrypcie: Bełchatów
+51,2661 N / 19,3306 E, Baltica 2 ok. 55,05 N / 17,30 E – współrzędne przybliżone,
+do potwierdzenia z dokumentacją obiektu) i obejmuje dokładnie 10 × 6,2 km,
+czyli ten sam prostokąt co mapa.
+
+**Ważne po wstawieniu prawdziwego zdjęcia:** plan wektorowy w `js/data.js` jest
+schematem, a nie odrysem konkretnego zakładu. Żeby warstwa taktyczna zgadzała się
+z podkładem, trzeba przesunąć bryły, ogrodzenie, aktywa krytyczne i sensory na
+rzeczywiste obiekty widoczne na zdjęciu (sekcje `geo` i `sensors`) oraz podmienić
+`baseCredit` na podpis źródła – jest pokazywany w rogu mapy. Dla Baltiki 2 zdjęcie
+pokaże otwarty akwen, bo farma jest w budowie; turbiny i OSS pozostają warstwą
+wektorową na wodzie.
+
+Podkłady zastępcze można wygenerować ponownie:
+`python3 tools/make_satellite_placeholder.py` (pillow, numpy, node).
+
 ## Jak to zmieniać
 
 Wszystko, co widać w demo, jest w `js/data.js`:
@@ -121,6 +164,8 @@ Wszystko, co widać w demo, jest w `js/data.js`:
 * `intel`, `intelCards` – warstwa inteligencji: statystyki, rozkłady, profile
   powtarzalnych podmiotów, ocena analityczna i rekomendacje.
 * `roe` – stan środków aktywnych przed i po udzieleniu zgody.
+* `sites.*.base`, `sites.*.baseCredit` – plik podkładu rastrowego dla widoku
+  SATELITA i podpis źródła wyświetlany w rogu mapy.
 * `sites.baltica.wtgSpin` – sekundy na obrót wirników turbin na mapie
   (`0` = turbiny nieruchome, spokojniejszy obraz taktyczny na prezentacji).
   Turbina, której dotyczy scenariusz, podświetla się na czerwono (pole

@@ -1,0 +1,24 @@
+{
+  "belchatow": {
+    "file": "assets/sat-belchatow.jpg",
+    "source": "placeholder",
+    "attribution": "podkład zastępczy (wygenerowany) – wstaw ortofotomapę GUGiK lub zdjęcie satelitarne",
+    "m_per_unit": 10,
+    "px": [
+      2000,
+      1240
+    ],
+    "placeholder": true
+  },
+  "baltica": {
+    "file": "assets/sat-baltica.jpg",
+    "source": "placeholder",
+    "attribution": "podkład zastępczy (wygenerowany) – wstaw ortofotomapę GUGiK lub zdjęcie satelitarne",
+    "m_per_unit": 10,
+    "px": [
+      2000,
+      1240
+    ],
+    "placeholder": true
+  }
+}
