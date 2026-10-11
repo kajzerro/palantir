@@ -107,6 +107,11 @@ Aby podmienić na prawdziwe nagrania, wystarczy nadpisać plik `.mp4` o tej same
 Ramki detekcji rysuje aplikacja (pole `boxes` w `js/data.js`, w % kadru) – po podmianie
 nagrania wystarczy poprawić współrzędne ramek, żeby trafiały w obiekt na obrazie.
 
+Gotowe prompty do wygenerowania prawdziwych nagrań (Runway) są w
+[`PROMPTY-WIDEO.md`](PROMPTY-WIDEO.md) – wraz z pozycjami celów w kadrze, których
+oczekuje warstwa detekcji. Plik `eoir-13.mp4` nie jest potrzebny: sensor EOIR-13 jest
+oznaczony jako offline, więc aplikacja pokazuje dla niego planszę zamiast obrazu.
+
 Zastępcze klipy można wygenerować ponownie:
 `python3 tools/make_placeholder_videos.py` (wymaga `pillow`, `numpy` i ffmpeg –
 systemowego albo `pip install imageio-ffmpeg`).
